@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Authentication') - ITMS</title>
+    
+    <!-- Google Fonts - Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Color Theme Variables */
+        :root {
+            /* Default Navy/Orange Theme */
+            --primary-color-1: #1e3a8a;      /* Navy */
+            --primary-color-2: #f97316;      /* Orange */
+            --light-color-1: #3b82f6;        /* Light Navy */
+            --light-color-2: #fb923c;        /* Light Orange */
+            --dark-color-1: #1e40af;         /* Dark Navy */
+            --dark-color-2: #ea580c;         /* Dark Orange */
+        }
+
+        /* Blue/Green Theme */
+        [data-theme="blue-green"] {
+            --primary-color-1: #0ea5e9;      /* Sky Blue */
+            --primary-color-2: #10b981;      /* Emerald Green */
+            --light-color-1: #38bdf8;        /* Light Blue */
+            --light-color-2: #34d399;        /* Light Green */
+            --dark-color-1: #0284c7;         /* Dark Blue */
+            --dark-color-2: #059669;         /* Dark Green */
+        }
+
+        /* Purple/Pink Theme */
+        [data-theme="purple-pink"] {
+            --primary-color-1: #8b5cf6;      /* Purple */
+            --primary-color-2: #ec4899;      /* Pink */
+            --light-color-1: #a78bfa;        /* Light Purple */
+            --light-color-2: #f472b6;        /* Light Pink */
+            --dark-color-1: #7c3aed;         /* Dark Purple */
+            --dark-color-2: #db2777;         /* Dark Pink */
+        }
+
+        /* Red/Amber Theme */
+        [data-theme="red-amber"] {
+            --primary-color-1: #dc2626;      /* Red */
+            --primary-color-2: #f59e0b;      /* Amber */
+            --light-color-1: #ef4444;        /* Light Red */
+            --light-color-2: #fbbf24;        /* Light Amber */
+            --dark-color-1: #b91c1c;         /* Dark Red */
+            --dark-color-2: #d97706;         /* Dark Amber */
+        }
+
+        /* Teal/Indigo Theme */
+        [data-theme="teal-indigo"] {
+            --primary-color-1: #0d9488;      /* Teal */
+            --primary-color-2: #6366f1;      /* Indigo */
+            --light-color-1: #14b8a6;        /* Light Teal */
+            --light-color-2: #818cf8;        /* Light Indigo */
+            --dark-color-1: #0f766e;         /* Dark Teal */
+            --dark-color-2: #4f46e5;         /* Dark Indigo */
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --primary-color-1: #374151;      /* Gray */
+            --primary-color-2: #fbbf24;      /* Amber */
+            --light-color-1: #4b5563;        /* Light Gray */
+            --light-color-2: #fcd34d;        /* Light Amber */
+            --dark-color-1: #1f2937;         /* Dark Gray */
+            --dark-color-2: #f59e0b;         /* Dark Amber */
+        }
+
+        /* Apply theme colors */
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-color-1) 0%, var(--light-color-1) 50%, var(--primary-color-2) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .auth-header {
+            background: linear-gradient(45deg, var(--primary-color-1), var(--primary-color-2));
+            color: white;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-color-1), var(--primary-color-2));
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(45deg, var(--dark-color-1), var(--dark-color-2));
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color-2);
+            box-shadow: 0 0 0 0.25rem rgba(249, 115, 22, 0.25);
+        }
+        
+        .input-group-text {
+            background: linear-gradient(45deg, var(--primary-color-1), var(--primary-color-2));
+            color: white;
+            border: none;
+            border-radius: 10px 0 0 10px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            color: white;
+        }
+        
+        .alert-success {
+            background: linear-gradient(45deg, #28a745, #2ecc71);
+            color: white;
+        }
+        
+        .alert-info {
+            background: linear-gradient(45deg, #17a2b8, #3498db);
+            color: white;
+        }
+        
+        .text-primary {
+            color: var(--primary-color-2) !important;
+        }
+        
+        .link-primary {
+            color: var(--primary-color-2);
+            text-decoration: none;
+        }
+        
+        .link-primary:hover {
+            color: var(--dark-color-2);
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color-2);
+            border-color: var(--primary-color-2);
+        }
+        
+        .auth-footer {
+            background: #f8f9fa;
+            border-radius: 0 0 20px 20px;
+            text-align: center;
+            padding: 1.5rem;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .btn-loading .loading-spinner {
+            display: inline-block;
+        }
+        
+        .btn-loading .btn-text {
+            display: none;
+        }
+
+        /* Theme Selector Styles */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .theme-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            margin: 0 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .theme-btn.active {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            border-width: 3px;
+        }
+
+        .theme-navy-orange { background: linear-gradient(45deg, #1e3a8a, #f97316); }
+        .theme-blue-green { background: linear-gradient(45deg, #0ea5e9, #10b981); }
+        .theme-purple-pink { background: linear-gradient(45deg, #8b5cf6, #ec4899); }
+        .theme-red-amber { background: linear-gradient(45deg, #dc2626, #f59e0b); }
+        .theme-teal-indigo { background: linear-gradient(45deg, #0d9488, #6366f1); }
+        .theme-dark { background: linear-gradient(45deg, #374151, #fbbf24); }
+        
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 1rem;
+                border-radius: 15px;
+            }
+            
+            .auth-header {
+                border-radius: 15px 15px 0 0;
+                padding: 1.5rem;
+            }
+            
+            .auth-footer {
+                border-radius: 0 0 15px 15px;
+            }
+
+            .theme-selector {
+                top: 10px;
+                right: 10px;
+            }
+
+            .theme-btn {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-palette"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><h6 class="dropdown-header">เลือกธีมสี</h6></li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('default')">
+                        <span class="theme-btn theme-navy-orange me-2"></span>
+                        Navy & Orange (Default)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('blue-green')">
+                        <span class="theme-btn theme-blue-green me-2"></span>
+                        Blue & Green
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('purple-pink')">
+                        <span class="theme-btn theme-purple-pink me-2"></span>
+                        Purple & Pink
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('red-amber')">
+                        <span class="theme-btn theme-red-amber me-2"></span>
+                        Red & Amber
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('teal-indigo')">
+                        <span class="theme-btn theme-teal-indigo me-2"></span>
+                        Teal & Indigo
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" onclick="changeTheme('dark')">
+                        <span class="theme-btn theme-dark me-2"></span>
+                        Dark Theme
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <div class="auth-logo">
+                            <i class="fas fa-cogs fa-2x text-primary"></i>
+                        </div>
+                        <h2 class="mb-0">@yield('header-title', 'ITMS')</h2>
+                        <p class="mb-0 opacity-75">@yield('header-subtitle', 'IT Management System')</p>
+                    </div>
+                    
+                    <div class="p-4">
+                        @if($errors->any())
+                            <div class="alert alert-danger mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                @if($errors->has('error'))
+                                    {{ $errors->first('error') }}
+                                @else
+                                    Please fix the following errors:
+                                    <ul class="mb-0 mt-2">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        @endif
+                        
+                        @if(session('success'))
+                            <div class="alert alert-success mb-3">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <!-- Debug Info (แสดงเฉพาะ local env) -->
+                        @if(app()->environment('local'))
+                        <div class="alert alert-info mb-3">
+                            <small>
+                                <strong>Debug Info:</strong><br>
+                                Session Token: {{ session()->token() }}<br>
+                                CSRF Token: {{ csrf_token() }}<br>
+                                APP_URL: {{ config('app.url') }}
+                            </small>
+                        </div>
+                        @endif
+                        
+                        @yield('content')
+                    </div>
+                    
+                    <div class="auth-footer">
+                        <div class="text-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <small class="text-muted mb-1">
+                                    &copy; 2025 IT Management System. All rights reserved.
+                                </small>
+                                <small class="text-muted">
+                                    System By Rungaroon Solution
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // CSRF Token Setup
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Set CSRF token for all AJAX requests
+        if (window.jQuery) {
+            jQuery.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+        }
+        
+        // Loading Button Helper
+        function setButtonLoading(button, loading = true) {
+            if (loading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
+        }
+        
+        // Show/Hide Password Toggle
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.querySelector(`[onclick="togglePassword('${fieldId}')"] i`);
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // Theme Management
+        function changeTheme(theme) {
+            if (theme === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('itms-theme', 'default');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('itms-theme', theme);
+            }
+            
+            // Show success message
+            showThemeMessage('ธีมถูกเปลี่ยนเรียบร้อยแล้ว! 🎨');
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('itms-theme');
+            if (savedTheme && savedTheme !== 'default') {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
+
+        // Show theme change message
+        function showThemeMessage(message) {
+            // Remove existing message
+            const existingMessage = document.querySelector('.theme-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Create new message
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'alert alert-success theme-message position-fixed';
+            messageDiv.style.cssText = 'top: 70px; right: 20px; z-index: 9999; min-width: 250px;';
+            messageDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(messageDiv);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                messageDiv.style.transition = 'opacity 0.5s ease';
+                messageDiv.style.opacity = '0';
+                setTimeout(() => messageDiv.remove(), 500);
+            }, 3000);
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert:not(.theme-message)');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+    
+    @stack('scripts')
+</body>
+</html>

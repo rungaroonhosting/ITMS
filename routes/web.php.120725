@@ -1,0 +1,347 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes - ITMS (IT Management System)
+|--------------------------------------------------------------------------
+|
+| Complete routing system for IT Management System
+| Includes Authentication, Dashboard, Employee Management, and API routes
+|
+*/
+
+// ===========================
+// PUBLIC ROUTES
+// ===========================
+
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+})->name('home');
+
+// Health check
+Route::get('/health', function() {
+    return response()->json([
+        'status' => 'OK',
+        'system' => 'ITMS v1.0',
+        'timestamp' => now()->toISOString()
+    ]);
+})->name('health');
+
+// ===========================
+// AUTHENTICATION ROUTES
+// ===========================
+
+Route::middleware('guest')->group(function () {
+    // Login
+    Route::get('/login', function () {
+        return view('auth.login');
+    })->name('login');
+    
+    //Route::post('/login', [AuthController::class, 'loginWeb'])->name('login.post');
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+
+    // Password Reset
+    Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->name('password.request');
+    
+    Route::post('/forgot-password', [AuthController::class, 'requestPasswordReset'])->name('password.email');
+    
+    Route::get('/reset-password', function () {
+        $token = request('token');
+        $email = request('email');
+        
+        if (!$token || !$email) {
+            abort(404);
+        }
+        
+        return view('auth.reset-password', compact('token', 'email'));
+    })->name('password.reset');
+    
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+});
+
+// ===========================
+// AUTHENTICATED ROUTES
+// ===========================
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logoutWeb'])->name('logout');
+    
+    // ===========================
+    // DASHBOARD
+    // ===========================
+    
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Dashboard API
+    Route::prefix('api/dashboard')->name('api.dashboard.')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
+        Route::get('/activity', [DashboardController::class, 'getRecentActivity'])->name('activity');
+        Route::get('/notifications', [DashboardController::class, 'getNotifications'])->name('notifications');
+    });
+
+    // ===========================
+    // EMPLOYEE MANAGEMENT (Super Admin + IT Admin Only)
+    // ===========================
+    
+    // Employee Routes Group
+    Route::group(['middleware' => function ($request, $next) {
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, ['super_admin', 'it_admin'])) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            abort(403, 'คุณไม่มีสิทธิ์ในการเข้าถึงส่วนนี้');
+        }
+        return $next($request);
+    }], function () {
+        
+        // Employee CRUD Routes
+        Route::resource('employees', EmployeeController::class);
+        
+        // Additional Employee Routes
+        Route::get('employees/export/excel', [EmployeeController::class, 'exportExcel'])
+             ->name('employees.exportExcel');
+             
+        Route::get('employees/generate/data', [EmployeeController::class, 'generateData'])
+             ->name('employees.generateData');
+             
+        Route::post('employees/{employee}/restore', [EmployeeController::class, 'restore'])
+             ->name('employees.restore');
+             
+        Route::delete('employees/{employee}/force-delete', [EmployeeController::class, 'forceDelete'])
+             ->name('employees.force-delete');
+    });
+
+    // ===========================
+    // SUPER ADMIN ONLY ROUTES
+    // ===========================
+    
+    Route::group(['middleware' => function ($request, $next) {
+        $user = auth()->user();
+        if (!$user || $user->role !== 'super_admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            abort(403, 'เฉพาะ Super Admin เท่านั้นที่เข้าถึงได้');
+        }
+        return $next($request);
+    }, 'prefix' => 'admin', 'as' => 'admin.'], function () {
+        
+        // System Settings
+        Route::get('/settings', function () {
+            return view('admin.settings');
+        })->name('settings');
+        
+        Route::post('/settings', function () {
+            return redirect()->route('admin.settings')->with('success', 'อัพเดทการตั้งค่าสำเร็จ');
+        })->name('settings.update');
+        
+        // User Management
+        Route::get('/users', function () {
+            return view('admin.users.index');
+        })->name('users');
+        
+        // System Logs
+        Route::get('/logs', function () {
+            return view('admin.logs');
+        })->name('logs');
+        
+        // System Backup
+        Route::post('/backup', function () {
+            return redirect()->back()->with('success', 'สร้าง Backup สำเร็จ');
+        })->name('backup');
+    });
+
+    // ===========================
+    // PERSONAL ROUTES (All Users)
+    // ===========================
+    
+    Route::prefix('my')->name('my.')->group(function () {
+        
+        // Profile
+        Route::get('/profile', function () {
+            return view('my.profile');
+        })->name('profile');
+        
+        Route::post('/profile', function () {
+            return redirect()->route('my.profile')->with('success', 'อัพเดทโปรไฟล์สำเร็จ');
+        })->name('profile.update');
+        
+        // Change Password
+        Route::get('/password', function () {
+            return view('my.password');
+        })->name('password');
+        
+        Route::post('/password', function () {
+            return redirect()->route('my.password')->with('success', 'เปลี่ยนรหัสผ่านสำเร็จ');
+        })->name('password.update');
+        
+        // My Requests
+        Route::get('/requests', function () {
+            return view('my.requests');
+        })->name('requests');
+        
+        // My Assets
+        Route::get('/assets', function () {
+            return view('my.assets');
+        })->name('assets');
+    });
+
+    // ===========================
+    // SHARED ROUTES (All Users)
+    // ===========================
+    
+    // Help & Support
+    Route::prefix('help')->name('help.')->group(function () {
+        Route::get('/', function () {
+            return view('help.index');
+        })->name('index');
+        
+        Route::get('/contact', function () {
+            return view('help.contact');
+        })->name('contact');
+        
+        Route::post('/contact', function () {
+            return redirect()->route('help.contact')->with('success', 'ส่งข้อความสำเร็จ');
+        })->name('contact.send');
+    });
+    
+    // Search
+    Route::get('/search', function () {
+        $query = request('q');
+        $type = request('type', 'all');
+        
+        return view('search.results', compact('query', 'type'));
+    })->name('search');
+    
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', function () {
+            return view('notifications.index');
+        })->name('index');
+        
+        Route::post('/{notification}/read', function ($notification) {
+            return response()->json(['success' => true]);
+        })->name('read');
+        
+        Route::post('/mark-all-read', function () {
+            return response()->json(['success' => true]);
+        })->name('mark-all-read');
+    });
+});
+
+// ===========================
+// API ROUTES
+// ===========================
+
+Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
+    
+    // Employee API (for DataTables, AJAX, etc.)
+    Route::group(['middleware' => function ($request, $next) {
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, ['super_admin', 'it_admin'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        return $next($request);
+    }], function () {
+        
+        // Employee DataTables
+        Route::get('/employees/datatable', [EmployeeController::class, 'index'])
+             ->name('employees.datatable');
+             
+        // Quick Actions
+        Route::post('/employees/{employee}/quick-update', function($employee) {
+            return response()->json(['success' => true, 'message' => 'อัพเดทสำเร็จ']);
+        })->name('employees.quick-update');
+    });
+    
+    // General API Routes
+    Route::get('/search', function () {
+        $query = request('q');
+        $type = request('type', 'all');
+        
+        // Return search results based on user role
+        $results = [];
+        
+        return response()->json(['results' => $results]);
+    })->name('search.api');
+    
+    // Stats API
+    Route::get('/stats', function () {
+        $user = auth()->user();
+        $stats = [];
+        
+        if ($user && in_array($user->role, ['super_admin', 'it_admin'])) {
+            $stats = [
+                'employees' => \App\Models\Employee::count(),
+                'active_employees' => \App\Models\Employee::where('status', 'active')->count(),
+                'departments' => count(\App\Models\Employee::getDepartments()),
+                'new_this_month' => \App\Models\Employee::whereMonth('created_at', now()->month)->count(),
+            ];
+        }
+        
+        return response()->json(['stats' => $stats]);
+    })->name('stats');
+});
+
+// ===========================
+// PUBLIC API
+// ===========================
+
+Route::prefix('api/public')->name('api.public.')->group(function () {
+    Route::get('/status', function () {
+        return response()->json([
+            'status' => 'online',
+            'system' => 'ITMS',
+            'version' => '1.0.0',
+            'timestamp' => now()->toISOString()
+        ]);
+    })->name('status');
+});
+
+// ===========================
+// FALLBACK & ERROR HANDLING
+// ===========================
+
+// Handle 404 errors
+Route::fallback(function () {
+    if (request()->expectsJson()) {
+        return response()->json([
+            'message' => 'ไม่พบหน้าที่ต้องการ',
+            'status' => 404
+        ], 404);
+    }
+    
+    return view('errors.404')->withStatus(404);
+});
+
+// ===========================
+// DEBUG ROUTES (Development Only)
+// ===========================
+
+if (app()->environment('local')) {
+    Route::get('/debug', function () {
+        return response()->json([
+            'environment' => app()->environment(),
+            'user_authenticated' => auth()->check(),
+            'user_role' => auth()->check() ? auth()->user()->role : 'Not authenticated',
+            'csrf_token' => csrf_token(),
+            'app_key' => config('app.key') ? 'SET' : 'NOT SET',
+            'database' => 'Connected',
+            'session_driver' => config('session.driver'),
+            'timestamp' => now()->toISOString()
+        ]);
+    })->name('debug');
+}

@@ -1,0 +1,708 @@
+@extends('layouts.app')
+
+@section('title', 'แดชบอร์ด')
+
+@section('breadcrumb')
+    <li class="breadcrumb-item active">แดชบอร์ด</li>
+@endsection
+
+@section('content')
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5" style="background: linear-gradient(135deg, rgba(181, 69, 68, 0.15) 0%, rgba(230, 149, 42, 0.15) 100%); border: 2px solid rgba(181, 69, 68, 0.1);">
+                <div style="position: relative; z-index: 2;">
+                    <h1 class="display-4 fw-bold mb-3" style="background: linear-gradient(45deg, #B54544, #E6952A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        ยินดีต้อนรับ, {{ auth()->user()->name }}! 👋
+                    </h1>
+                    <p class="lead mb-2" style="color: #2C3E50; font-weight: 600;">
+                        คุณเข้าสู่ระบบในฐานะ 
+                        <span class="fw-bold" style="color: #B54544;">
+                            @if(auth()->user()->role === 'super_admin')
+                                Super Administrator
+                            @elseif(auth()->user()->role === 'it_admin')
+                                IT Administrator
+                            @else
+                                Employee
+                            @endif
+                        </span>
+                    </p>
+                    <p style="color: #5A6C7D; font-weight: 500;">
+                        <i class="fas fa-clock me-2" style="color: #E6952A;"></i>
+                        เข้าสู่ระบบล่าสุด: {{ auth()->user()->last_login_at ? auth()->user()->last_login_at->diffForHumans() : 'เข้าครั้งแรก' }}
+                    </p>
+                </div>
+                <!-- Decorative elements -->
+                <div style="position: absolute; top: 20px; right: 20px; color: rgba(181, 69, 68, 0.15); font-size: 4rem;">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div style="position: absolute; bottom: 20px; left: 20px; color: rgba(230, 149, 42, 0.15); font-size: 3rem;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <i class="fas fa-users fa-2x" style="color: #E6952A;"></i>
+                    </div>
+                    <div class="text-end">
+                        <small style="color: #1E7E34; font-weight: 600;">
+                            <i class="fas fa-arrow-up me-1"></i>8%
+                        </small>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1" data-counter="248" style="color: #1A252F;">248</h3>
+                <p class="mb-0" style="color: #5A6C7D; font-weight: 600;">พนักงานทั้งหมด</p>
+                <div class="mt-2">
+                    <div class="progress" style="height: 5px; background-color: rgba(181, 69, 68, 0.15);">
+                        <div class="progress-bar" style="width: 85%; background: linear-gradient(45deg, #B54544, #E6952A);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <i class="fas fa-laptop fa-2x" style="color: #E6952A;"></i>
+                    </div>
+                    <div class="text-end">
+                        <small style="color: #1E7E34; font-weight: 600;">
+                            <i class="fas fa-arrow-up me-1"></i>15%
+                        </small>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1" data-counter="456" style="color: #1A252F;">456</h3>
+                <p class="mb-0" style="color: #5A6C7D; font-weight: 600;">อุปกรณ์ IT</p>
+                <div class="mt-2">
+                    <div class="progress" style="height: 5px; background-color: rgba(181, 69, 68, 0.15);">
+                        <div class="progress-bar" style="width: 72%; background: linear-gradient(45deg, #B54544, #E6952A);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <i class="fas fa-tools fa-2x" style="color: #E6952A;"></i>
+                    </div>
+                    <div class="text-end">
+                        <small style="color: #E0A800; font-weight: 600;">
+                            <i class="fas fa-minus me-1"></i>3%
+                        </small>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1" data-counter="18" style="color: #1A252F;">18</h3>
+                <p class="mb-0" style="color: #5A6C7D; font-weight: 600;">แจ้งซ่อมรอดำเนินการ</p>
+                <div class="mt-2">
+                    <div class="progress" style="height: 5px; background-color: rgba(224, 168, 0, 0.15);">
+                        <div class="progress-bar" style="width: 35%; background: linear-gradient(45deg, #E0A800, #F39C12);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <i class="fas fa-ticket-alt fa-2x" style="color: #E6952A;"></i>
+                    </div>
+                    <div class="text-end">
+                        <small style="color: #1E7E34; font-weight: 600;">
+                            <i class="fas fa-arrow-up me-1"></i>22%
+                        </small>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1" data-counter="34" style="color: #1A252F;">34</h3>
+                <p class="mb-0" style="color: #5A6C7D; font-weight: 600;">คำขอบริการรออนุมัติ</p>
+                <div class="mt-2">
+                    <div class="progress" style="height: 5px; background-color: rgba(19, 132, 150, 0.15);">
+                        <div class="progress-bar" style="width: 58%; background: linear-gradient(45deg, #138496, #17A2B8);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions & Recent Activity Row -->
+<div class="row mb-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <i class="fas fa-bolt me-2"></i>เมนูด่วน
+                </h5>
+            </div>
+            <div class="card-body">
+                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
+                    <!-- Admin Quick Actions -->
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-users fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">จัดการพนักงาน</span>
+                                <small class="mt-1" style="color: #5A6C7D;">เพิ่ม/แก้ไขข้อมูลพนักงาน</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-laptop fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">จัดการอุปกรณ์ IT</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูแลทรัพย์สิน IT</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-file-contract fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ข้อตกลง IT</span>
+                                <small class="mt-1" style="color: #5A6C7D;">จัดการข้อตกลงการใช้งาน</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-tools fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">จัดการแจ้งซ่อม</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูแลคำขอซ่อมแซม</small>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(181, 69, 68, 0.2); margin: 20px 0;">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-ticket-alt fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">คำขอบริการ</span>
+                                <small class="mt-1" style="color: #5A6C7D;">อนุมัติคำขอบริการ</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-building fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">จัดการแผนก</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ตั้งค่าแผนกต่างๆ</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-chart-bar fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">รายงาน</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูรายงานต่างๆ</small>
+                            </a>
+                        </div>
+                        
+                        @if(auth()->user()->role === 'super_admin')
+                            <div class="col-md-6 col-lg-3">
+                                <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                    <i class="fas fa-cog fa-2x mb-2" style="color: #E6952A;"></i>
+                                    <span class="fw-semibold" style="color: #2C3E50;">ตั้งค่าระบบ</span>
+                                    <small class="mt-1" style="color: #5A6C7D;">กำหนดค่าต่างๆ</small>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <!-- Employee Quick Actions -->
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-user fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ข้อมูลตัวเอง</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูข้อมูลส่วนตัว</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-file-signature fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">เซ็นข้อตกลง IT</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ลงนามข้อตกลงใช้งาน</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-tools fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">แจ้งซ่อม</span>
+                                <small class="mt-1" style="color: #5A6C7D;">รายงานปัญหาอุปกรณ์</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-ticket-alt fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ขอใช้บริการ</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ส่งคำขอบริการ IT</small>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(181, 69, 68, 0.2); margin: 20px 0;">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-tasks fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ติดตามสถานะ</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูสถานะงาน</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-history fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ประวัติการใช้งาน</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ดูประวัติคำขอ</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-question-circle fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ช่วยเหลือ</span>
+                                <small class="mt-1" style="color: #5A6C7D;">คู่มือการใช้งาน</small>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-6 col-lg-3">
+                            <a href="#" class="btn btn-outline-primary w-100 p-3 h-100 d-flex flex-column justify-content-center text-decoration-none" style="border-color: #B54544; color: #B54544; border-width: 2px;">
+                                <i class="fas fa-phone fa-2x mb-2" style="color: #E6952A;"></i>
+                                <span class="fw-semibold" style="color: #2C3E50;">ติดต่อ IT</span>
+                                <small class="mt-1" style="color: #5A6C7D;">ติดต่อทีม IT</small>
+                            </a>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <i class="fas fa-history me-2"></i>กิจกรรมล่าสุด
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 42px; height: 42px; background: linear-gradient(45deg, #1E7E34, #2ECC71);">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">การซ่อมเครื่องพิมพ์ เสร็จสิ้น</h6>
+                        <p class="small mb-0" style="color: #5A6C7D;">แผนกบัญชี - เครื่องพิมพ์หมึกหมด</p>
+                        <small style="color: #5A6C7D;">2 ชั่วโมงที่แล้ว</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 42px; height: 42px; background: linear-gradient(45deg, #B54544, #E6952A);">
+                            <i class="fas fa-plus text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">เพิ่มอุปกรณ์ใหม่</h6>
+                        <p class="small mb-0" style="color: #5A6C7D;">Laptop Dell Inspiron - DELL001</p>
+                        <small style="color: #5A6C7D;">4 ชั่วโมงที่แล้ว</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 42px; height: 42px; background: linear-gradient(45deg, #138496, #20C997);">
+                            <i class="fas fa-ticket-alt text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">คำขอติดตั้งซอฟต์แวร์</h6>
+                        <p class="small mb-0" style="color: #5A6C7D;">Microsoft Office 365</p>
+                        <small style="color: #5A6C7D;">1 วันที่แล้ว</small>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 42px; height: 42px; background: linear-gradient(45deg, #E0A800, #F39C12);">
+                            <i class="fas fa-file-signature text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">ข้อตกลง IT ใหม่</h6>
+                        <p class="small mb-0" style="color: #5A6C7D;">นายสมชาย ใจดี - แผนกขาย</p>
+                        <small style="color: #5A6C7D;">2 วันที่แล้ว</small>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="#" class="btn btn-sm btn-outline-primary" style="border-color: #B54544; color: #B54544; font-weight: 600;">ดูกิจกรรมทั้งหมด</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role-specific Additional Content -->
+<div class="row">
+    @if(auth()->user()->role === 'super_admin')
+        <!-- Super Admin: System Status & User Management -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-server me-2"></i>สถานะระบบ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3" style="width: 14px; height: 14px; background: #1E7E34;"></div>
+                                <div>
+                                    <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">ฐานข้อมูล</h6>
+                                    <small style="color: #1E7E34; font-weight: 600;">ออนไลน์</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3" style="width: 14px; height: 14px; background: #1E7E34;"></div>
+                                <div>
+                                    <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">เซิร์ฟเวอร์เว็บ</h6>
+                                    <small style="color: #1E7E34; font-weight: 600;">ออนไลน์</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3" style="width: 14px; height: 14px; background: #E0A800;"></div>
+                                <div>
+                                    <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">อีเมลเซิร์ฟเวอร์</h6>
+                                    <small style="color: #E0A800; font-weight: 600;">บำรุงรักษา</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3" style="width: 14px; height: 14px; background: #1E7E34;"></div>
+                                <div>
+                                    <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">ที่เก็บไฟล์</h6>
+                                    <small style="color: #1E7E34; font-weight: 600;">ออนไลน์</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr style="border-color: rgba(181, 69, 68, 0.2);">
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">99.8%</h6>
+                            <small style="color: #5A6C7D;">ระยะเวลาการทำงาน</small>
+                        </div>
+                        <div class="col-4">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">42ms</h6>
+                            <small style="color: #5A6C7D;">ความเร็วตอบสนอง</small>
+                        </div>
+                        <div class="col-4">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">156</h6>
+                            <small style="color: #5A6C7D;">ผู้ใช้ออนไลน์</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-users-cog me-2"></i>จัดการผู้ใช้งาน
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert border-0" style="background: linear-gradient(45deg, rgba(224, 168, 0, 0.15), rgba(243, 156, 18, 0.15));">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-crown fa-2x me-3" style="color: #FFD700;"></i>
+                            <div>
+                                <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">Super Administrator</h6>
+                                <p class="mb-0 small" style="color: #5A6C7D;">คุณมีสิทธิ์เต็มในการจัดการระบบ รวมถึงดูรหัสผ่านผู้ใช้งานทุกคน</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h6 class="mb-1" style="color: #B54544; font-weight: 700;">1</h6>
+                                <small style="color: #5A6C7D;">Super Admin</small>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-1" style="color: #B54544; font-weight: 700;">5</h6>
+                                <small style="color: #5A6C7D;">IT Admin</small>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="mb-1" style="color: #B54544; font-weight: 700;">242</h6>
+                                <small style="color: #5A6C7D;">Employee</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-primary me-2" style="border-color: #B54544; color: #B54544; font-weight: 600;">
+                            <i class="fas fa-user-plus me-1"></i>เพิ่มผู้ใช้
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-primary" style="border-color: #B54544; color: #B54544; font-weight: 600;">
+                            <i class="fas fa-key me-1"></i>ดูรหัสผ่าน
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    @elseif(auth()->user()->role === 'it_admin')
+        <!-- IT Admin: Pending Tasks & Reports -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-tasks me-2"></i>งานรอดำเนินการ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert border-0" style="background: linear-gradient(45deg, rgba(181, 69, 68, 0.15), rgba(230, 149, 42, 0.15));">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-tie fa-2x me-3" style="color: #B54544;"></i>
+                            <div>
+                                <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">IT Administrator</h6>
+                                <p class="mb-0 small" style="color: #5A6C7D;">คุณสามารถจัดการข้อมูลทั้งหมดและดูรหัสผ่านได้</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">แจ้งซ่อมรอดำเนินการ</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #E0A800, #F39C12); color: white;">18</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">คำขอบริการรออนุมัติ</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #138496, #17A2B8); color: white;">34</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">ข้อตกลง IT รอลงนาม</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">7</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">อุปกรณ์ที่ต้องตรวจสอบ</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #5A6C7D, #6C757D); color: white;">12</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-chart-line me-2"></i>สถิติรายเดือน
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">95%</h6>
+                            <small style="color: #5A6C7D;">งานซ่อมเสร็จตามเวลา</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">4.8/5</h6>
+                            <small style="color: #5A6C7D;">คะแนนความพึงพอใจ</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">142</h6>
+                            <small style="color: #5A6C7D;">งานที่เสร็จสิ้น</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 700;">2.3 วัน</h6>
+                            <small style="color: #5A6C7D;">เวลาเฉลี่ยในการแก้ไข</small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-primary" style="border-color: #B54544; color: #B54544; font-weight: 600;">
+                            <i class="fas fa-chart-bar me-1"></i>ดูรายงานทั้งหมด
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    @else
+        <!-- Employee: Personal Info & Status -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-user me-2"></i>ข้อมูลส่วนตัว
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert border-0" style="background: linear-gradient(45deg, rgba(30, 126, 52, 0.15), rgba(46, 204, 113, 0.15));">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-check fa-2x me-3" style="color: #1E7E34;"></i>
+                            <div>
+                                <h6 class="mb-1" style="color: #1A252F; font-weight: 600;">พนักงาน</h6>
+                                <p class="mb-0 small" style="color: #5A6C7D;">คุณสามารถดูข้อมูลตัวเองและใช้บริการ IT ได้</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 600;">{{ auth()->user()->email }}</h6>
+                            <small style="color: #5A6C7D;">อีเมล</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="mb-1" style="color: #B54544; font-weight: 600;">{{ auth()->user()->created_at->format('d/m/Y') }}</h6>
+                            <small style="color: #5A6C7D;">วันที่เริ่มใช้งาน</small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary" style="border-color: #B54544; color: #B54544; font-weight: 600;">
+                            <i class="fas fa-edit me-1"></i>แก้ไขข้อมูล
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <h5 class="mb-0" style="color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                        <i class="fas fa-clipboard-list me-2"></i>สถานะงานของฉัน
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">แจ้งซ่อมที่ส่ง</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #E0A800, #F39C12); color: white;">3</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">คำขอบริการที่ส่ง</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #138496, #17A2B8); color: white;">2</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">ข้อตกลง IT ที่ลงนาม</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #1E7E34, #2ECC71); color: white;">5</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0" style="border-color: rgba(181, 69, 68, 0.1);">
+                            <span style="color: #2C3E50; font-weight: 500;">งานที่เสร็จสิ้นแล้ว</span>
+                            <span class="badge rounded-pill" style="background: linear-gradient(45deg, #5A6C7D, #6C757D); color: white;">28</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-primary" style="border-color: #B54544; color: #B54544; font-weight: 600;">
+                            <i class="fas fa-list me-1"></i>ดูประวัติทั้งหมด
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate counter numbers
+        const counters = document.querySelectorAll('[data-counter]');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-counter'));
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+
+            const updateCounter = () => {
+                current += step;
+                if (current < target) {
+                    counter.textContent = Math.floor(current);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.textContent = target;
+                }
+            };
+
+            setTimeout(updateCounter, 300);
+        });
+        
+        // Animate progress bars
+        const progressBars = document.querySelectorAll('.progress-bar');
+        progressBars.forEach((bar, index) => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.transition = 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                bar.style.width = width;
+            }, index * 200 + 500);
+        });
+        
+        // Add enhanced hover effects to action buttons
+        const actionBtns = document.querySelectorAll('.btn-outline-primary');
+        actionBtns.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 6px 20px rgba(181, 69, 68, 0.3)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+                this.style.boxShadow = '';
+            });
+        });
+    });
+</script>
+@endpush

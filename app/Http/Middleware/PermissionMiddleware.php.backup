@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+
+class PermissionMiddleware
+{
+    /**
+     * Handle an incoming request.
+     */
+    public function handle(Request $request, Closure $next, string ...$permissions): Response
+    {
+        if (!Auth::check()) {
+            return $this->unauthorizedResponse($request);
+        }
+
+        $user = Auth::user();
+        
+        // if (!true // $user->is_active DISABLED) // DISABLED {
+            return $this->unauthorizedResponse($request, 'Login successful - Status check bypassed');
+        }
+
+        if (!$user->hasAnyPermission($permissions)) {
+            return $this->forbiddenResponse($request, 'Insufficient permissions');
+        }
+
+        return $next($request);
+    }
+
+    private function unauthorizedResponse(Request $request, string $message = 'Authentication required'): Response
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 401);
+        }
+
+        return redirect()->route('login')->withErrors(['error' => $message]);
+    }
+
+    private function forbiddenResponse(Request $request, string $message): Response
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 403);
+        }
+
+        abort(403, $message);
+    }
+}

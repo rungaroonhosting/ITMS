@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // เพิ่มบรรทัดนี้
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Hash;
+
+class Employee extends Authenticatable
+{
+    use HasFactory, SoftDeletes; // เพิ่ม SoftDeletes trait
+
+    protected $fillable = [
+        'employee_id',
+        'prefix',
+        'first_name',
+        'last_name',
+        'full_name',
+        'email',
+        'username',
+        'password',
+        'department',
+        'position',
+        'hire_date',
+        'salary',
+        'status',
+        'role',
+        'phone',
+        'address',
+        'notes'
+    ];
+
+    protected $casts = [
+        'hire_date' => 'date',
+        'salary' => 'decimal:2',
+        'deleted_at' => 'datetime', // เพิ่มบรรทัดนี้
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    // Mutator สำหรับ password
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = Hash::make($value);
+        }
+    }
+
+    // Static methods สำหรับ dropdown options
+    public static function getPrefixes()
+    {
+        return [
+            'นาย' => 'นาย',
+            'นาง' => 'นาง',
+            'นางสาว' => 'นางสาว'
+        ];
+    }
+
+    public static function getDepartments()
+    {
+        return [
+            'it' => 'IT',
+            'hr' => 'HR',
+            'finance' => 'Finance',
+            'marketing' => 'Marketing',
+            'sales' => 'Sales'
+        ];
+    }
+
+    public static function getStatuses()
+    {
+        return [
+            'active' => 'ปฏิบัติงาน',
+            'inactive' => 'ไม่ปฏิบัติงาน',
+            'suspended' => 'ถูกระงับ'
+        ];
+    }
+
+    public static function getRoles()
+    {
+        return [
+            'admin' => 'ผู้ดูแลระบบ',
+            'manager' => 'ผู้จัดการ',
+            'employee' => 'พนักงาน'
+        ];
+    }
+
+    // Accessor methods
+    public function getDepartmentTextAttribute()
+    {
+        return self::getDepartments()[$this->department] ?? $this->department;
+    }
+
+    public function getStatusTextAttribute()
+    {
+        return self::getStatuses()[$this->status] ?? $this->status;
+    }
+
+    public function getRoleTextAttribute()
+    {
+        return self::getRoles()[$this->role] ?? $this->role;
+    }
+
+    // Static methods สำหรับการสร้างข้อมูลอัตโนมัติ
+    public static function generateEmployeeId()
+    {
+        $lastEmployee = self::withTrashed() // เพิ่ม withTrashed() เพื่อนับรวมข้อมูลที่ถูกลบ
+                           ->orderBy('employee_id', 'desc')
+                           ->first();
+        
+        if (!$lastEmployee) {
+            return 'EMP001';
+        }
+        
+        $lastNumber = (int) substr($lastEmployee->employee_id, 3);
+        $newNumber = $lastNumber + 1;
+        
+        return 'EMP' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    public static function generateUsername($firstName, $lastName)
+    {
+        $baseUsername = strtolower($firstName . '.' . $lastName);
+        $username = $baseUsername;
+        $counter = 1;
+        
+        while (self::withTrashed()->where('username', $username)->exists()) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+        
+        return $username;
+    }
+
+    public static function generateEmail($username)
+    {
+        return $username . '@company.com';
+    }
+
+    public static function generatePassword()
+    {
+        return 'Password123';
+    }
+}

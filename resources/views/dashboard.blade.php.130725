@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - IT Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-gray-900">ITMS</h1>
+                        <p class="text-xs text-gray-500">IT Management System</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- User Info -->
+                    <div class="flex items-center space-x-3">
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900">{{ auth()->user()->full_name_th }}</p>
+                            <p class="text-xs text-gray-500">
+                                @switch(auth()->user()->role)
+                                    @case('super_admin')
+                                        Super Admin
+                                        @break
+                                    @case('it_admin')
+                                        IT Admin
+                                        @break
+                                    @case('manager')
+                                        Manager
+                                        @break
+                                    @default
+                                        Employee
+                                @endswitch
+                            </p>
+                        </div>
+                        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-medium">{{ auth()->user()->initials }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Logout Button -->
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Success Message -->
+        @if(session('success'))
+            <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p class="mt-2 text-gray-600">ภาพรวมของระบบจัดการ IT</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Employees -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-indigo-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">พนักงานทั้งหมด</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['total_employees'] ?? 0 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Employees -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-check text-green-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">พนักงานที่ใช้งาน</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['active_employees'] ?? 0 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departments -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-building text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">แผนกทั้งหมด</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ $stats['departments'] ?? 0 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Stats for Admins -->
+            @if(auth()->user()->canViewPasswords())
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-shield text-purple-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">ผู้ดูแลระบบ</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ ($stats['it_admin_count'] ?? 0) + 1 }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-orange-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">เข้าสู่ระบบเมื่อ</dt>
+                                    <dd class="text-sm font-medium text-gray-900">{{ now()->format('d/m/Y H:i') }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Quick Actions -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">เมนูหลัก</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        //@if(auth()->user()->canManageEmployees())
+			@if(auth()->user()->canViewPasswords())
+                            <a href="{{ route('employees.index') }}" class="flex items-center p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                                <i class="fas fa-users text-indigo-600 mr-3"></i>
+                                <span class="text-sm font-medium text-indigo-900">จัดการพนักงาน</span>
+                            </a>
+                        @endif
+                        
+                        @if(auth()->user()->canManageDepartments())
+                            <a href="{{ route('departments.index') }}" class="flex items-center p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                <i class="fas fa-building text-blue-600 mr-3"></i>
+                                <span class="text-sm font-medium text-blue-900">จัดการแผนก</span>
+                            </a>
+                        @endif
+                        
+                        <a href="{{ route('profile') }}" class="flex items-center p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                            <i class="fas fa-user text-green-600 mr-3"></i>
+                            <span class="text-sm font-medium text-green-900">ข้อมูลส่วนตัว</span>
+                        </a>
+                        
+                        @if(auth()->user()->canExportData())
+                            <a href="{{ route('reports.index') }}" class="flex items-center p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                                <i class="fas fa-chart-bar text-purple-600 mr-3"></i>
+                                <span class="text-sm font-medium text-purple-900">รายงาน</span>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departments Overview -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">แผนกต่างๆ</h3>
+                    @if(isset($departments) && $departments->count() > 0)
+                        <div class="space-y-3">
+                            @foreach($departments as $department)
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
+                                        <span class="text-sm font-medium text-gray-900">{{ $department->name }}</span>
+                                    </div>
+                                    <span class="text-sm text-gray-500">{{ $department->employees_count }} คน</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-gray-500">ไม่มีข้อมูลแผนก</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>&copy; 2025 IT Management System. All rights reserved.</p>
+            <p class="mt-1">System By Rungaroon Solution</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Auto hide success messages
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('[role="alert"]');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

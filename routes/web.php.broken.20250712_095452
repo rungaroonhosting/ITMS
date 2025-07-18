@@ -1,0 +1,564 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\DashboardController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+// Debug route (ใช้สำหรับ troubleshooting)
+Route::get('/debug', function () {
+    return response()->json([
+        'environment' => app()->environment(),
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+        'app_key' => config('app.key') ? 'SET' : 'NOT SET',
+        'app_url' => config('app.url'),
+        'session_driver' => config('session.driver'),
+        'session_path' => config('session.files'),
+        'session_writable' => is_writable(config('session.files')),
+        'session_files' => is_dir(config('session.files')) ? scandir(config('session.files')) : 'Directory not found',
+        'storage_writable' => is_writable(storage_path()),
+        'framework_sessions_exists' => is_dir(storage_path('framework/sessions')),
+        'csrf_middleware_active' => class_exists('\App\Http\Middleware\VerifyCsrfToken'),
+        'user_authenticated' => auth()->check(),
+        'user_role' => auth()->check() ? auth()->user()->role : 'Not authenticated',
+    ]);
+});
+
+// Public routes
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
+});
+
+// Health check route
+Route::get('/health-check', function() {
+    return response()->json([
+        'status' => 'OK',
+        'timestamp' => now()->toISOString(),
+        'version' => '1.0.0'
+    ]);
+})->name('health-check');
+
+// Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', function () {
+        return view('auth.login');
+    })->name('login');
+    
+    Route::post('/login', [AuthController::class, 'loginWeb'])->name('login.post');
+    
+    Route::get('/forgot-password', function () {
+        return view('auth.forgot-password');
+    })->name('password.request');
+    
+    Route::post('/forgot-password', [AuthController::class, 'requestPasswordReset'])->name('password.email');
+    
+    Route::get('/reset-password', function () {
+        $token = request('token');
+        $email = request('email');
+        
+        if (!$token || !$email) {
+            abort(404);
+        }
+        
+        return view('auth.reset-password', compact('token', 'email'));
+    })->name('password.reset');
+    
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+});
+
+// Protected routes (ต้อง login)
+Route::middleware(['auth'])->group(function () {
+    
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logoutWeb'])->name('logout');
+    
+    // ===========================
+    // DASHBOARD ROUTES (ใหม่)
+    // ===========================
+    
+    // Main Dashboard (ทุกคนเข้าได้)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Dashboard API endpoints for AJAX calls
+    Route::prefix('api/dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'getStats'])->name('api.dashboard.stats');
+        Route::get('/activity', [DashboardController::class, 'getRecentActivity'])->name('api.dashboard.activity');
+        Route::get('/role-data', [DashboardController::class, 'getRoleData'])->name('api.dashboard.role-data');
+        Route::get('/notifications', [DashboardController::class, 'getNotifications'])->name('api.dashboard.notifications');
+    });
+
+    // ===========================
+    // SUPER ADMIN ROUTES
+    // ===========================
+    
+    Route::middleware(['role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+        
+        // User Management (Super Admin เท่านั้น)
+        Route::get('/users', function () {
+            return view('admin.users.index');
+        })->name('users.index');
+        
+        Route::get('/users/{user}/passwords', function($user) {
+            // Super Admin สามารถดูรหัสผ่านได้
+            return view('admin.users.passwords', compact('user'));
+        })->name('users.passwords');
+        
+        // System Settings (Super Admin เท่านั้น) 
+        Route::get('/settings', function () {
+            return view('admin.settings.index');
+        })->name('settings.index');
+        
+        Route::post('/settings', function () {
+            // Handle settings update
+            return redirect()->route('admin.settings.index')->with('success', 'อัพเดทการตั้งค่าสำเร็จ');
+        })->name('settings.update');
+        
+        // System Status Monitoring
+        Route::get('/system-status', function() {
+            return view('admin.system-status');
+        })->name('system-status');
+        
+        // Advanced User Management
+        Route::get('/users/create', function() {
+            return view('admin.users.create');
+        })->name('users.create');
+        
+        Route::post('/users', function() {
+            // Handle user creation
+            return redirect()->route('admin.users.index')->with('success', 'สร้างผู้ใช้สำเร็จ');
+        })->name('users.store');
+        
+        // System Backup
+        Route::post('/backup', function() {
+            // Handle backup creation
+            return redirect()->back()->with('success', 'สร้าง Backup สำเร็จ');
+        })->name('backup');
+        
+        // System Logs
+        Route::get('/logs', function() {
+            return view('admin.logs');
+        })->name('logs');
+    });
+
+    // ===========================
+    // IT ADMIN ROUTES (Super Admin + IT Admin)
+    // ===========================
+    
+    // Route::middleware(['role:super_admin,it_admin']) // DISABLED->group(function () {
+        
+        // Employee Management
+        Route::middleware('permission:employees.view')->prefix('employees')->name('employees.')->group(function () {
+            Route::get('/', function () {
+                return view('employees.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('employees.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                // Handle employee creation
+                return redirect()->route('employees.index')->with('success', 'เพิ่มพนักงานสำเร็จ');
+            })->name('store');
+            
+            Route::get('/{employee}', function ($employee) {
+                return view('employees.show', compact('employee'));
+            })->name('show');
+            
+            Route::get('/{employee}/edit', function ($employee) {
+                return view('employees.edit', compact('employee'));
+            })->name('edit');
+            
+            Route::put('/{employee}', function ($employee) {
+                // Handle employee update
+                return redirect()->route('employees.show', $employee)->with('success', 'อัพเดทข้อมูลพนักงานสำเร็จ');
+            })->name('update');
+        });
+
+        // Asset/Equipment Management  
+        Route::middleware('permission:assets.view')->prefix('assets')->name('assets.')->group(function () {
+            Route::get('/', function () {
+                return view('assets.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('assets.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                return redirect()->route('assets.index')->with('success', 'เพิ่มอุปกรณ์สำเร็จ');
+            })->name('store');
+            
+            Route::get('/{asset}', function ($asset) {
+                return view('assets.show', compact('asset'));
+            })->name('show');
+        });
+
+        // IT Agreement Management
+        Route::middleware('permission:agreements.view')->prefix('agreements')->name('agreements.')->group(function () {
+            Route::get('/', function () {
+                return view('agreements.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('agreements.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                return redirect()->route('agreements.index')->with('success', 'สร้างข้อตกลงสำเร็จ');
+            })->name('store');
+            
+            Route::get('/{agreement}', function ($agreement) {
+                return view('agreements.show', compact('agreement'));
+            })->name('show');
+        });
+
+        // Incident/Repair Management
+        Route::middleware('permission:incidents.view')->prefix('incidents')->name('incidents.')->group(function () {
+            Route::get('/', function () {
+                return view('incidents.index');
+            })->name('index');
+            
+            Route::get('/{incident}', function ($incident) {
+                return view('incidents.show', compact('incident'));
+            })->name('show');
+            
+            Route::put('/{incident}/assign', function ($incident) {
+                // Handle incident assignment
+                return redirect()->route('incidents.show', $incident)->with('success', 'มอบหมายงานสำเร็จ');
+            })->name('assign');
+            
+            Route::put('/{incident}/resolve', function ($incident) {
+                // Handle incident resolution
+                return redirect()->route('incidents.show', $incident)->with('success', 'แก้ไขปัญหาสำเร็จ');
+            })->name('resolve');
+        });
+
+        // Service Request Management
+        Route::middleware('permission:service_requests.view')->prefix('service-requests')->name('service-requests.')->group(function () {
+            Route::get('/', function () {
+                return view('service-requests.index');
+            })->name('index');
+            
+            Route::get('/{request}', function ($request) {
+                return view('service-requests.show', compact('request'));
+            })->name('show');
+            
+            Route::put('/{request}/approve', function ($request) {
+                // Handle service request approval
+                return redirect()->route('service-requests.show', $request)->with('success', 'อนุมัติคำขอสำเร็จ');
+            })->name('approve');
+            
+            Route::put('/{request}/reject', function ($request) {
+                // Handle service request rejection
+                return redirect()->route('service-requests.show', $request)->with('success', 'ปฏิเสธคำขอสำเร็จ');
+            })->name('reject');
+        });
+
+        // Department Management
+        Route::prefix('departments')->name('departments.')->group(function () {
+            Route::get('/', function () {
+                return view('departments.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('departments.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                return redirect()->route('departments.index')->with('success', 'เพิ่มแผนกสำเร็จ');
+            })->name('store');
+        });
+
+        // Reports (IT Admin can view all reports)
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', function () {
+                return view('reports.index');
+            })->name('index');
+            
+            Route::get('/employees', function () {
+                return view('reports.employees');
+            })->name('employees');
+            
+            Route::get('/assets', function () {
+                return view('reports.assets');
+            })->name('assets');
+            
+            Route::get('/incidents', function () {
+                return view('reports.incidents');
+            })->name('incidents');
+            
+            Route::get('/service-requests', function () {
+                return view('reports.service-requests');
+            })->name('service-requests');
+            
+            Route::post('/export', function () {
+                // Handle report export
+                return response()->download(storage_path('app/reports/export.pdf'));
+            })->name('export');
+        });
+
+        // Password Management (IT Admin can see passwords)
+        Route::get('/passwords', function () {
+            return view('passwords.index');
+        })->name('passwords.index');
+
+        // Quick Actions for IT Admin
+        Route::prefix('quick')->name('quick.')->group(function () {
+            Route::post('/assign-incident/{incident}', function ($incident) {
+                // Quick incident assignment
+                return response()->json(['success' => true, 'message' => 'มอบหมายงานสำเร็จ']);
+            })->name('assign-incident');
+            
+            Route::post('/approve-request/{request}', function ($request) {
+                // Quick service request approval
+                return response()->json(['success' => true, 'message' => 'อนุมัติคำขอสำเร็จ']);
+            })->name('approve-request');
+        });
+    });
+
+    // ===========================
+    // EMPLOYEE ROUTES (ทุกคนใช้ได้)
+    // ===========================
+    
+    Route::prefix('my')->name('my.')->group(function () {
+        
+        // Personal Profile
+        Route::get('/profile', function () {
+            return view('my.profile');
+        })->name('profile');
+        
+        Route::post('/profile', function () {
+            // Handle profile update
+            return redirect()->route('my.profile')->with('success', 'อัพเดทข้อมูลส่วนตัวสำเร็จ');
+        })->name('profile.update');
+
+        // Personal IT Agreements
+        Route::prefix('agreements')->name('agreements.')->group(function () {
+            Route::get('/', function () {
+                return view('my.agreements.index');
+            })->name('index');
+            
+            Route::get('/{agreement}/sign', function ($agreement) {
+                return view('my.agreements.sign', compact('agreement'));
+            })->name('sign');
+            
+            Route::post('/{agreement}/sign', function ($agreement) {
+                // Handle agreement signing
+                return redirect()->route('my.agreements.index')->with('success', 'เซ็นข้อตกลงสำเร็จ');
+            })->name('sign.store');
+        });
+
+        // Personal Repair Requests
+        Route::prefix('repairs')->name('repairs.')->group(function () {
+            Route::get('/', function () {
+                return view('my.repairs.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('my.repairs.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                // Handle repair request creation
+                return redirect()->route('my.repairs.index')->with('success', 'แจ้งซ่อมสำเร็จ');
+            })->name('store');
+            
+            Route::get('/{repair}', function ($repair) {
+                return view('my.repairs.show', compact('repair'));
+            })->name('show');
+        });
+
+        // Personal Service Requests
+        Route::prefix('service-requests')->name('service-requests.')->group(function () {
+            Route::get('/', function () {
+                return view('my.service-requests.index');
+            })->name('index');
+            
+            Route::get('/create', function () {
+                return view('my.service-requests.create');
+            })->name('create');
+            
+            Route::post('/', function () {
+                // Handle service request creation
+                return redirect()->route('my.service-requests.index')->with('success', 'ส่งคำขอบริการสำเร็จ');
+            })->name('store');
+            
+            Route::get('/{request}', function ($request) {
+                return view('my.service-requests.show', compact('request'));
+            })->name('show');
+        });
+
+        // Status Tracking
+        Route::get('/status', function () {
+            return view('my.status');
+        })->name('status');
+
+        // Request History
+        Route::get('/history', function () {
+            return view('my.history');
+        })->name('history');
+    });
+
+    // ===========================
+    // LEGACY ROUTES (รองรับระบบเดิม)
+    // ===========================
+    
+    // เก็บ routes เดิมไว้เพื่อความเข้ากันได้
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        // Existing admin routes that don't conflict with new ones
+        // These will be merged with the new role-based routes above
+    });
+
+    // ===========================
+    // SHARED ROUTES (ทุกคนใช้ได้)
+    // ===========================
+    
+    // Help & Support
+    Route::prefix('help')->name('help.')->group(function () {
+        Route::get('/', function () {
+            return view('help.index');
+        })->name('index');
+        
+        Route::get('/contact', function () {
+            return view('help.contact');
+        })->name('contact');
+        
+        Route::post('/contact', function () {
+            // Handle contact form submission
+            return redirect()->route('help.contact')->with('success', 'ส่งข้อความติดต่อสำเร็จ');
+        })->name('contact.send');
+        
+        Route::get('/faq', function () {
+            return view('help.faq');
+        })->name('faq');
+    });
+
+    // Search functionality
+    Route::get('/search', function () {
+        $query = request('q');
+        $type = request('type', 'all');
+        
+        // Implement role-based search logic
+        return view('search.results', compact('query', 'type'));
+    })->name('search');
+
+    // Profile & Settings (สำหรับทุกคน)
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', function () {
+            return view('profile.show');
+        })->name('show');
+        
+        Route::get('/edit', function () {
+            return view('profile.edit');
+        })->name('edit');
+        
+        Route::put('/', function () {
+            // Handle profile update
+            return redirect()->route('profile.show')->with('success', 'อัพเดทโปรไฟล์สำเร็จ');
+        })->name('update');
+        
+        Route::put('/password', function () {
+            // Handle password change
+            return redirect()->route('profile.show')->with('success', 'เปลี่ยนรหัสผ่านสำเร็จ');
+        })->name('password.update');
+    });
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', function () {
+            return view('notifications.index');
+        })->name('index');
+        
+        Route::post('/{notification}/read', function ($notification) {
+            // Mark notification as read
+            return response()->json(['success' => true]);
+        })->name('read');
+        
+        Route::post('/mark-all-read', function () {
+            // Mark all notifications as read
+            return response()->json(['success' => true]);
+        })->name('mark-all-read');
+    });
+});
+
+// ===========================
+// API ROUTES (สำหรับ AJAX)
+// ===========================
+
+Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
+    
+    // Search endpoints
+    Route::get('/search/employees', function () {
+        $query = request('q');
+        // Return JSON search results based on user role
+        return response()->json(['results' => []]);
+    })->name('search.employees');
+    
+    Route::get('/search/assets', function () {
+        $query = request('q');
+        // Return JSON search results based on user role
+        return response()->json(['results' => []]);
+    })->name('search.assets');
+    
+    Route::get('/search/global', function () {
+        $query = request('q');
+        // Return JSON search results based on user role
+        return response()->json(['results' => []]);
+    })->name('search.global');
+    
+    // Quick stats for widgets
+    Route::get('/stats/summary', function () {
+        // Return role-based stats
+        return response()->json(['stats' => []]);
+    })->name('stats.summary');
+    
+    Route::get('/stats/chart-data', function () {
+        // Return chart data based on user role
+        return response()->json(['data' => []]);
+    })->name('stats.chart-data');
+});
+
+// ===========================
+// PUBLIC API ENDPOINTS
+// ===========================
+
+Route::prefix('api/public')->name('api.public.')->group(function () {
+    Route::get('/system-status', function () {
+        return response()->json([
+            'status' => 'online',
+            'message' => 'ระบบทำงานปกติ',
+            'timestamp' => now()->toISOString()
+        ]);
+    })->name('status');
+});
+
+// ===========================
+// FALLBACK ROUTES
+// ===========================
+
+// 404 handler for missing routes
+Route::fallback(function () {
+    if (request()->expectsJson()) {
+        return response()->json([
+            'message' => 'ไม่พบหน้าที่ต้องการ',
+            'status' => 404
+        ], 404);
+    }
+    
+    return view('errors.404')->withStatus(404);
+});

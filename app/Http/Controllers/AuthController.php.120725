@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use App\Models\Employee;
+
+class AuthController extends Controller
+{
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        // ตรวจสอบว่าพนักงานมีอยู่จริง
+        $employee = Employee::where('email', $credentials['email'])->first();
+
+        if (!$employee) {
+            throw ValidationException::withMessages([
+                'email' => ['ไม่พบอีเมลนี้ในระบบ'],
+            ]);
+        }
+
+        // ตรวจสอบสถานะพนักงาน
+        if ($employee->status !== 'active') {
+            throw ValidationException::withMessages([
+                'email' => ['บัญชีผู้ใช้ถูกระงับการใช้งาน'],
+            ]);
+        }
+
+        // ลองเข้าสู่ระบบ
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
+            // Log การเข้าสู่ระบบ
+            activity()
+                ->performedOn($employee)
+                ->log('เข้าสู่ระบบ');
+
+            return redirect()->intended(route('dashboard'))
+                ->with('success', 'ยินดีต้อนรับเข้าสู่ระบบ ' . $employee->full_name_th);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => ['ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง'],
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $employee = Auth::user();
+
+        // Log การออกจากระบบ
+        if ($employee) {
+            activity()
+                ->performedOn($employee)
+                ->log('ออกจากระบบ');
+        }
+
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->with('success', 'ออกจากระบบเรียบร้อยแล้ว');
+    }
+
+    public function dashboard()
+    {
+        $user = Auth::user();
+        
+        // สถิติสำหรับ Dashboard
+        $stats = [
+            'total_employees' => Employee::count(),
+            'active_employees' => Employee::where('status', 'active')->count(),
+            'departments' => \App\Models\Department::where('is_active', true)->count(),
+        ];
+
+        // ข้อมูลเฉพาะตามสิทธิ์
+        if ($user->canViewPasswords()) {
+            $stats['suspended_employees'] = Employee::where('status', 'suspended')->count();
+            $stats['inactive_employees'] = Employee::where('status', 'inactive')->count();
+        }
+
+        return view('dashboard', compact('stats'));
+    }
+
+    public function profile()
+    {
+        $user = Auth::user();
+        return view('auth.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'nickname' => ['nullable', 'string', 'max:255'],
+            'current_password' => ['required_with:password'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        // อัปเดตชื่อเล่น
+        if (isset($validated['nickname'])) {
+            $user->nickname = $validated['nickname'];
+        }
+
+        // เปลี่ยนรหัสผ่าน
+        if (!empty($validated['password'])) {
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                throw ValidationException::withMessages([
+                    'current_password' => ['รหัสผ่านปัจจุบันไม่ถูกต้อง'],
+                ]);
+            }
+
+            $user->password = Hash::make($validated['password']);
+
+            // Log การเปลี่ยนรหัสผ่าน
+            activity()
+                ->performedOn($user)
+                ->log('เปลี่ยนรหัสผ่าน');
+        }
+
+        $user->save();
+
+        return back()->with('success', 'อัปเดตข้อมูลเรียบร้อยแล้ว');
+    }
+}

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'เข้าสู่ระบบ') - ITMS</title>
+    
+    <!-- Google Fonts - Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Red to Orange Gradient Theme */
+        :root {
+            /* Primary Colors */
+            --primary-red: #C96261;         /* สีแดงอ่อม */
+            --primary-orange: #FAB250;      /* สีส้ม/เหลือง */
+            --light-red: #D47573;           /* สีแดงอ่อนขึ้น */
+            --dark-orange: #E6A043;         /* สีส้มเข้ม */
+            
+            /* Supporting Colors */
+            --white: #FFFFFF;
+            --light-gray: #F8F9FA;
+            --gray: #6C757D;
+            --dark-gray: #495057;
+            --text-primary: #212529;
+            --text-secondary: #6C757D;
+            --border-color: #DEE2E6;
+            
+            /* Status Colors */
+            --success: #28A745;
+            --danger: #DC3545;
+            --warning: #FFC107;
+            --info: #17A2B8;
+        }
+
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+        
+        body {
+             background: 
+                linear-gradient(135deg, rgba(201, 98, 97, 0.85) 0%, rgba(250, 178, 80, 0.85) 100%),
+                url('/images/bg01.png') center/cover no-repeat fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .auth-container {
+            background: var(--white);
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(201, 98, 97, 0.2);
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Left Side - Image & Content */
+        .auth-left {
+            background: 
+                linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.7) 100%),
+                url('/images/bg02.webp') center/cover no-repeat;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 600px;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Add text background for better readability */
+        .service-content {
+            background: rgba(15, 23, 42, 0.3);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 3;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .service-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,0.8),
+                0 0 10px rgba(0,0,0,0.5),
+                1px 1px 0px rgba(0,0,0,0.9);
+            letter-spacing: 0.5px;
+        }
+
+        .service-description {
+            font-size: 1.1rem;
+            color: #F1F5F9;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+            text-shadow: 
+                1px 1px 3px rgba(0,0,0,0.8),
+                0 0 8px rgba(0,0,0,0.4);
+            font-weight: 500;
+        }
+
+        .service-image {
+            width: 100%;
+            max-width: 380px;
+            height: 280px;
+            margin-top: auto;
+            position: relative;
+            z-index: 2;
+            align-self: center;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .image-main {
+            width: 300px;
+            height: 220px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            /* Updated background image */
+            background: url('https://www.simplilearn.com/ice9/free_resources_article_thumb/What_is_the_Importance_of_Technology.jpg') center/cover no-repeat;
+            transition: all 0.3s ease;
+        }
+
+        .image-main:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-overlay {
+            width: 280px;
+            height: 200px;
+            border-radius: 20px;
+            position: absolute;
+            top: 30px;
+            left: 40px;
+            z-index: 2;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-orange) 100%);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .image-background {
+            width: 260px;
+            height: 180px;
+            border-radius: 20px;
+            position: absolute;
+            top: 60px;
+            left: 80px;
+            z-index: 1;
+            background: linear-gradient(135deg, #E9ECEF 0%, #CED4DA 100%);
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        /* Right Side - Login Form */
+        .auth-right {
+            padding: 40px;
+            background: var(--white);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .form-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Form Controls */
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            padding: 14px 18px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 0.25rem rgba(250, 178, 80, 0.15);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #ADB5BD;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-orange));
+            border: none;
+            border-radius: 12px;
+            padding: 14px 32px;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--white);
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(201, 98, 97, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(201, 98, 97, 0.4);
+            filter: brightness(1.1);
+            color: var(--white);
+        }
+
+        .btn-primary:focus {
+            box-shadow: 0 0 0 0.25rem rgba(201, 98, 97, 0.25);
+            color: var(--white);
+        }
+
+        /* Sample Login Form */
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 16px 20px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(45deg, var(--danger), #E74C3C);
+            color: var(--white);
+        }
+        
+        .alert-success {
+            background: linear-gradient(45deg, var(--success), #2ECC71);
+            color: var(--white);
+        }
+        
+        .alert-info {
+            background: linear-gradient(45deg, var(--primary-red), var(--primary-orange));
+            color: var(--white);
+        }
+
+        .alert-warning {
+            background: linear-gradient(45deg, var(--warning), #F39C12);
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        .auth-footer {
+            text-align: center;
+            padding: 20px 40px;
+            background: #F8F9FA;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .auth-footer .company-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-footer .developer i {
+            color: var(--primary-orange);
+            margin-right: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 991px) {
+            .auth-container {
+                margin: 20px;
+                border-radius: 20px;
+            }
+
+            .auth-left {
+                padding: 40px 30px;
+                min-height: 400px;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+            }
+
+            .service-content {
+                margin-bottom: 0;
+                padding: 25px;
+            }
+
+            .service-title {
+                font-size: 2rem;
+            }
+
+            .auth-right {
+                padding: 30px;
+            }
+
+            .auth-footer {
+                padding: 20px 30px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .auth-wrapper {
+                padding: 10px 0;
+            }
+
+            .auth-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .auth-left {
+                padding: 30px 20px;
+                min-height: 300px;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .service-content {
+                margin-bottom: 0;
+                padding: 20px;
+            }
+
+            .service-title {
+                font-size: 1.8rem;
+            }
+
+            .service-description {
+                font-size: 1rem;
+            }
+
+            .auth-right {
+                padding: 20px;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .auth-footer {
+                padding: 15px 20px;
+            }
+        }
+
+        /* Animation for page load */
+        .auth-container {
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="auth-container">
+                        <div class="row g-0">
+                            <!-- Left Side - Service Info -->
+                            <div class="col-lg-5 col-md-6">
+                                <div class="auth-left">
+                                    <div class="service-content">
+                                        <h1 class="service-title">บริการออนไลน์</h1>
+                                        <p class="service-description">
+                                            ให้คุณจัดการกลุ่มเรื่องต่างๆ ด้วยตัวคุณเอง ตลอด 24 ชม.<br>
+                                            ระบบจัดการ IT ที่ครอบคลุมและใช้งานง่าย<br>
+                                            <small style="opacity: 0.9; color: #CBD5E1; font-weight: 400;">Professional IT Management Solutions</small>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side - Login Form -->
+                            <div class="col-lg-7 col-md-6">
+                                <div class="auth-right">
+                                    <!-- Form Header -->
+                                    <div class="form-header">
+                                        <h2 class="form-title">เข้าสู่ระบบ</h2>
+                                        <p class="form-subtitle">IT Management System</p>
+                                    </div>
+
+                                    <!-- Sample Login Form -->
+                                    <form class="login-form">
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">อีเมล</label>
+                                            <input type="email" class="form-control" id="email" placeholder="กรุณากรอกอีเมล" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">รหัสผ่าน</label>
+                                            <input type="password" class="form-control" id="password" placeholder="กรุณากรอกรหัสผ่าน" required>
+                                        </div>
+                                        
+                                        <div class="mb-3 form-check">
+                                            <input type="checkbox" class="form-check-input" id="remember">
+                                            <label class="form-check-label" for="remember">
+                                                จดจำการเข้าสู่ระบบ
+                                            </label>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="loading-spinner"></span>
+                                            <span class="btn-text">เข้าสู่ระบบ</span>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="auth-footer">
+                                    <div class="company-info">
+                                        <div class="copyright">
+                                            &copy; 2025 IT Management System. All rights reserved.
+                                        </div>
+                                         <div class="developer">
+                                            <i class="fa-solid fa-gear"></i>
+                                            System By Rungaroon Solution 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

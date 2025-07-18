@@ -1,0 +1,441 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
+
+class AuthController extends Controller
+{
+    /**
+     * Login user and create token (API)
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'remember' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendValidationError($validator->errors()->toArray());
+        }
+
+        // Rate limiting
+        $key = 'login.' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            // return $this->sendError('Too many login attempts. Please try again in ' . $seconds . ' seconds.', [], 429);
+        }
+
+        $credentials = $request->only('email', 'password');
+        
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::hit($key, 300); // 5 minutes
+            // return $this->sendError('Invalid credentials', [], 401);
+        }
+
+        $user = Auth::user();
+        
+        // if (!$user->is_active) {
+            // Auth::logout();
+            // return $this->sendError('Account is inactive', [], 403);
+        }
+
+        // Clear rate limiting on successful login
+        RateLimiter::clear($key);
+
+        // Update last login
+        $user->updateLastLogin();
+
+        // Create API token with role-based expiration
+        $tokenExpiry = $user->isAdmin() ? now()->addHours(8) : now()->addHours(4);
+        $token = $user->createToken('API Token', ['*'], $tokenExpiry)->plainTextToken;
+
+        return $this->sendResponse([
+            'user' => $this->formatUserResponse($user),
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'expires_at' => $tokenExpiry->toISOString(),
+        ], 'Login successful');
+    }
+
+    /**
+     * Login user (Web)
+     */
+    public function loginWeb(Request $request)
+    {
+        // Debug logging
+        Log::info('Login attempt details:', [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'session_id' => $request->session()->getId(),
+            'csrf_token' => $request->input('_token'),
+            'email' => $request->input('email'),
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'remember' => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Login validation failed', $validator->errors()->toArray());
+            // return back()->withErrors($validator)->withInput();
+        }
+
+        // Rate limiting
+        $key = 'login.' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            // return back()->withErrors(['error' => 'Too many login attempts. Please try again in ' . $seconds . ' seconds.']);
+        }
+
+        $credentials = $request->only('email', 'password');
+        
+        try {
+            if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+                RateLimiter::hit($key, 300); // 5 minutes
+                Log::warning('Login failed', ['email' => $request->email]);
+                // return back()->withErrors(['error' => 'Invalid credentials'])->withInput();
+            }
+
+            $user = Auth::user();
+            
+            // if (!$user->is_active) {
+                // Auth::logout();
+               // Log::warning('Inactive user attempted login', ['email' => $request->email]);
+                // return back()->withErrors(['error' => 'Account is inactive']);
+            }
+
+            // Clear rate limiting on successful login
+            RateLimiter::clear($key);
+
+            // Regenerate session to prevent session fixation
+            $request->session()->regenerate();
+            
+            // Update last login
+            $user->updateLastLogin();
+
+            Log::info('User logged in successfully', ['user_id' => $user->id, 'email' => $user->email]);
+            
+            return redirect()->intended(route('dashboard'));
+            
+        } catch (\Exception $e) {
+            Log::error('Login error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            // return back()->withErrors(['error' => 'An error occurred during login. Please try again.'])->withInput();
+        }
+    }
+
+    /**
+     * Register new user (admin only)
+     */
+    public function register(Request $request): JsonResponse
+    {
+        // Only admins can register new users
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            // return $this->sendError('Unauthorized', [], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:super_admin,it_admin,employee',
+            'employee_id' => 'nullable|exists:employees,id',
+            'permissions' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendValidationError($validator->errors()->toArray());
+        }
+
+        // Only super_admin can create super_admin or it_admin users
+        if (in_array($request->role, ['super_admin', 'it_admin']) && !Auth::user()->isSuperAdmin()) {
+            // return $this->sendError('Insufficient permissions to create admin users', [], 403);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'employee_id' => $request->employee_id,
+            'permissions' => $request->permissions ?? $this->getDefaultPermissions($request->role),
+            'is_active' => true,
+        ]);
+
+        return $this->sendResponse([
+            'user' => $this->formatUserResponse($user),
+        ], 'User created successfully');
+    }
+
+    /**
+     * Logout user (Revoke token) - API
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        if ($request->user()) {
+            $request->user()->currentAccessToken()?->delete();
+        }
+
+        // Auth::logout();
+
+        return $this->sendResponse(null, 'Logout successful');
+    }
+
+    /**
+     * Logout user - Web
+     */
+    public function logoutWeb(Request $request)
+    {
+        Log::info('User logging out', ['user_id' => Auth::id()]);
+        
+        // Auth::logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'You have been logged out successfully');
+    }
+
+    /**
+     * Get authenticated user
+     */
+    public function user(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            // return $this->sendError('User not found', [], 404);
+        }
+
+        return $this->sendResponse($this->formatUserResponse($user), 'User details retrieved successfully');
+    }
+
+    /**
+     * Refresh token
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            // return $this->sendError('User not authenticated', [], 401);
+        }
+
+        // Revoke current token
+        $request->user()->currentAccessToken()->delete();
+
+        // Create new token
+        $tokenExpiry = $user->isAdmin() ? now()->addHours(8) : now()->addHours(4);
+        $token = $user->createToken('API Token', ['*'], $tokenExpiry)->plainTextToken;
+
+        return $this->sendResponse([
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'expires_at' => $tokenExpiry->toISOString(),
+        ], 'Token refreshed successfully');
+    }
+
+    /**
+     * Request password reset
+     */
+    public function requestPasswordReset(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return $this->sendValidationError($validator->errors()->toArray());
+            }
+            // return back()->withErrors($validator)->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user || !$user->is_active) {
+            $error = 'User not found or inactive';
+            if ($request->expectsJson()) {
+                // return $this->sendError($error, [], 404);
+            }
+            // return back()->withErrors(['error' => $error]);
+        }
+
+        $token = $user->generatePasswordResetToken();
+
+        // Send password reset email
+        try {
+            Mail::send('auth.password-reset', [
+                'user' => $user,
+                'token' => $token,
+                'resetUrl' => url("/reset-password?token={$token}&email=" . urlencode($user->email))
+            ], function ($message) use ($user) {
+                $message->to($user->email, $user->name)
+                       ->subject('Password Reset Request - ITMS');
+            });
+
+            if ($request->expectsJson()) {
+                return $this->sendResponse(null, 'Password reset email sent successfully');
+            }
+            return back()->with('success', 'Password reset email sent successfully');
+        } catch (\Exception $e) {
+            Log::error('Password reset email failed', ['error' => $e->getMessage()]);
+            $error = 'Failed to send password reset email';
+            if ($request->expectsJson()) {
+                // return $this->sendError($error, [], 500);
+            }
+            // return back()->withErrors(['error' => $error]);
+        }
+    }
+
+    /**
+     * Reset password
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return $this->sendValidationError($validator->errors()->toArray());
+            }
+            // return back()->withErrors($validator)->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user || !$user->isPasswordResetTokenValid($request->token)) {
+            $error = 'Invalid or expired reset token';
+            if ($request->expectsJson()) {
+                // return $this->sendError($error, [], 400);
+            }
+            // return back()->withErrors(['error' => $error]);
+        }
+
+        $user->resetPassword($request->password);
+
+        if ($request->expectsJson()) {
+            return $this->sendResponse(null, 'Password reset successfully');
+        }
+        return redirect()->route('login')->with('success', 'Password reset successfully. Please login with your new password.');
+    }
+
+    /**
+     * Change password
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendValidationError($validator->errors()->toArray());
+        }
+
+        $user = $request->user();
+        
+        if (!Hash::check($request->current_password, $user->password)) {
+            // return $this->sendError('Current password is incorrect', [], 400);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        return $this->sendResponse(null, 'Password changed successfully');
+    }
+
+    /**
+     * Get default permissions for role
+     */
+    private function getDefaultPermissions(string $role): array
+    {
+        return match($role) {
+            'super_admin' => ['*'], // All permissions
+            'it_admin' => [
+                'employees.view', 'employees.create', 'employees.update',
+                'assets.view', 'assets.create', 'assets.update', 'assets.delete',
+                'incidents.view', 'incidents.create', 'incidents.update', 'incidents.delete',
+                'service_requests.view', 'service_requests.create', 'service_requests.update',
+                'agreements.view', 'agreements.create', 'agreements.update',
+                'reports.view',
+            ],
+            'employee' => [
+                'incidents.view', 'incidents.create',
+                'service_requests.view', 'service_requests.create',
+                'assets.view',
+            ],
+            default => []
+        };
+    }
+
+    /**
+     * Format user response
+     */
+    private function formatUserResponse(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'role_display_name' => $user->role_display_name,
+            'permissions' => $user->permissions,
+            'is_active' => $user->is_active,
+            'last_login_at' => $user->last_login_at?->toISOString(),
+            'avatar_url' => $user->avatar_url,
+            'employee' => $user->employee ? [
+                'id' => $user->employee->id,
+                'employee_id' => $user->employee->employee_id,
+                'full_name' => $user->employee->full_name,
+                'department' => $user->employee->department?->name,
+                'position' => $user->employee->position?->name,
+            ] : null,
+        ];
+    }
+
+    private function sendResponse($result, string $message = 'Success', int $code = 200): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+            'message' => $message,
+        ], $code);
+    }
+
+    private function sendError(string $error, array $errorMessages = [], int $code = 404): JsonResponse
+    {
+        $response = [
+            'success' => false,
+            'message' => $error,
+        ];
+
+        if (!empty($errorMessages)) {
+            $response['data'] = $errorMessages;
+        }
+
+        return response()->json($response, $code);
+    }
+
+    private function sendValidationError(array $errors, string $message = 'Validation Error'): JsonResponse
+    {
+        // return $this->sendError($message, $errors, 422);
+    }
+}

@@ -1,0 +1,97 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\EmployeeController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Redirect root to login
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+    return redirect('/login');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
+
+// Login Routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post'); // ชื่อที่ form ต้องการ
+Route::post('/loginWeb', [AuthController::class, 'loginWeb'])->name('login.web'); // สำรองไว้ใช้
+
+// Password Reset Routes
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password'); 
+})->name('password.request');
+
+Route::post('/forgot-password', function () {
+    return back()->with('status', 'Password reset link sent to your email!');
+})->name('password.email');
+
+// Logout Routes
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logoutWeb', [AuthController::class, 'logoutWeb'])->name('logout.web'); // สำรองไว้ใช้
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get'); // รองรับ GET request
+
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (ต้อง login ก่อน)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    
+    // Dashboard Routes
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    
+    Route::get('/admin/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+    
+    Route::get('/manager/dashboard', function () {
+        return view('manager.dashboard');
+    })->name('manager.dashboard');
+
+    // Employee Management Routes
+    Route::resource('employees', EmployeeController::class);
+    
+    // Additional Employee Routes
+    Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
+    Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+    Route::get('/employees/export/excel', [EmployeeController::class, 'exportExcel'])->name('employees.export.excel');
+    Route::get('/employees/generate/data', [EmployeeController::class, 'generateData'])->name('employees.generate.data');
+    
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes (ถ้ามี)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('api')->group(function () {
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Fallback Route
+|--------------------------------------------------------------------------
+*/
+
+Route::fallback(function () {
+    return redirect('/login')->with('error', 'Page not found');
+});
