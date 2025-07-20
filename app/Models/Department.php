@@ -5,18 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class Department extends Model
 {
     use HasFactory, SoftDeletes;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'departments';
 
     /**
      * The attributes that are mass assignable.
@@ -25,16 +17,9 @@ class Department extends Model
      */
     protected $fillable = [
         'name',
-        'description',
         'code',
-        'manager_id',
-        'parent_id',
-        'status',
-        'budget',
-        'location',
-        'phone',
-        'email',
-        'sort_order',
+        'description',
+        'is_active',
     ];
 
     /**
@@ -43,21 +28,10 @@ class Department extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'status' => 'string',
-        'budget' => 'decimal:2',
-        'sort_order' => 'integer',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'deleted_at',
     ];
 
     /**
@@ -66,10 +40,8 @@ class Department extends Model
      * @var array
      */
     protected $appends = [
-        'active_employees_count',
-        'total_employees_count',
         'status_display',
-        'full_name',
+        'employees_count',
     ];
 
     // ===========================================
@@ -81,47 +53,23 @@ class Department extends Model
      */
     public function employees()
     {
-        return $this->hasMany(Employee::class, 'department_id');
+        return $this->hasMany(Employee::class);
     }
 
     /**
-     * Get the manager of the department.
+     * Get active employees for the department.
+     */
+    public function activeEmployees()
+    {
+        return $this->hasMany(Employee::class)->where('status', 'active');
+    }
+
+    /**
+     * Get the manager for the department.
      */
     public function manager()
     {
         return $this->belongsTo(Employee::class, 'manager_id');
-    }
-
-    /**
-     * Get the parent department.
-     */
-    public function parent()
-    {
-        return $this->belongsTo(Department::class, 'parent_id');
-    }
-
-    /**
-     * Get the child departments.
-     */
-    public function children()
-    {
-        return $this->hasMany(Department::class, 'parent_id');
-    }
-
-    /**
-     * Get all descendants recursively.
-     */
-    public function descendants()
-    {
-        return $this->children()->with('descendants');
-    }
-
-    /**
-     * Get all ancestors recursively.
-     */
-    public function ancestors()
-    {
-        return $this->parent()->with('ancestors');
     }
 
     // ===========================================
@@ -129,103 +77,43 @@ class Department extends Model
     // ===========================================
 
     /**
-     * Get the department's active employees count.
+     * Get the department's status display name.
      */
-    public function getActiveEmployeesCountAttribute()
+    public function getStatusDisplayAttribute()
     {
-        return $this->employees()->where('status', 'active')->count();
+        return $this->is_active ? 'ใช้งาน' : 'ไม่ใช้งาน';
     }
 
     /**
-     * Get the department's total employees count.
+     * Get the employees count for the department.
      */
-    public function getTotalEmployeesCountAttribute()
+    public function getEmployeesCountAttribute()
     {
         return $this->employees()->count();
     }
 
     /**
-     * Get the department's status display name.
+     * Get the active employees count for the department.
      */
-    public function getStatusDisplayAttribute()
+    public function getActiveEmployeesCountAttribute()
     {
-        $statuses = [
-            'active' => 'ใช้งาน',
-            'inactive' => 'ไม่ใช้งาน',
-            'suspended' => 'ระงับ',
-            'archived' => 'เก็บถาวร',
-        ];
-
-        return $statuses[$this->status] ?? 'ไม่ระบุ';
+        return $this->activeEmployees()->count();
     }
 
     /**
-     * Get the department's full name (with parent hierarchy).
-     */
-    public function getFullNameAttribute()
-    {
-        $names = collect([$this->name]);
-        $parent = $this->parent;
-
-        while ($parent) {
-            $names->prepend($parent->name);
-            $parent = $parent->parent;
-        }
-
-        return $names->implode(' > ');
-    }
-
-    /**
-     * Get the department hierarchy level.
-     */
-    public function getLevelAttribute()
-    {
-        $level = 0;
-        $parent = $this->parent;
-
-        while ($parent) {
-            $level++;
-            $parent = $parent->parent;
-        }
-
-        return $level;
-    }
-
-    /**
-     * Get the department's budget formatted.
-     */
-    public function getBudgetFormattedAttribute()
-    {
-        if ($this->budget) {
-            return number_format($this->budget, 2) . ' บาท';
-        }
-        return 'ไม่ระบุ';
-    }
-
-    /**
-     * Get employees by role in this department.
-     */
-    public function getEmployeesByRole($role)
-    {
-        return $this->employees()->where('role', $role)->get();
-    }
-
-    /**
-     * Mutator for name - always capitalize first letter.
+     * Mutator for name - trim and title case.
      */
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = ucfirst(trim($value));
+        $this->attributes['name'] = trim($value);
     }
 
     /**
-     * Mutator for code - always uppercase.
+     * Mutator for code - uppercase and trim.
      */
     public function setCodeAttribute($value)
     {
-        if ($value) {
-            $this->attributes['code'] = strtoupper(trim($value));
-        }
+        $this->attributes['code'] = strtoupper(trim($value));
     }
 
     // ===========================================
@@ -235,39 +123,23 @@ class Department extends Model
     /**
      * Scope a query to only include active departments.
      */
-    public function scopeActive(Builder $query)
+    public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('is_active', true);
     }
 
     /**
      * Scope a query to only include inactive departments.
      */
-    public function scopeInactive(Builder $query)
+    public function scopeInactive($query)
     {
-        return $query->where('status', 'inactive');
+        return $query->where('is_active', false);
     }
 
     /**
-     * Scope a query to only include top-level departments (no parent).
+     * Scope a query to search departments.
      */
-    public function scopeTopLevel(Builder $query)
-    {
-        return $query->whereNull('parent_id');
-    }
-
-    /**
-     * Scope a query to include departments with employees.
-     */
-    public function scopeWithEmployees(Builder $query)
-    {
-        return $query->has('employees');
-    }
-
-    /**
-     * Scope a query to search departments by name or code.
-     */
-    public function scopeSearch(Builder $query, $search)
+    public function scopeSearch($query, $search)
     {
         return $query->where(function($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")
@@ -277,29 +149,11 @@ class Department extends Model
     }
 
     /**
-     * Scope a query to order by hierarchy and sort order.
+     * Scope a query to order departments by name.
      */
-    public function scopeOrdered(Builder $query)
+    public function scopeOrderByName($query, $direction = 'asc')
     {
-        return $query->orderBy('parent_id', 'asc')
-                    ->orderBy('sort_order', 'asc')
-                    ->orderBy('name', 'asc');
-    }
-
-    /**
-     * Scope a query to include department statistics.
-     */
-    public function scopeWithStats(Builder $query)
-    {
-        return $query->withCount([
-            'employees',
-            'employees as active_employees_count' => function($q) {
-                $q->where('status', 'active');
-            },
-            'employees as inactive_employees_count' => function($q) {
-                $q->where('status', 'inactive');
-            }
-        ]);
+        return $query->orderBy('name', $direction);
     }
 
     // ===========================================
@@ -307,147 +161,20 @@ class Department extends Model
     // ===========================================
 
     /**
-     * Check if department has any employees.
+     * Check if department is accounting department.
+     */
+    public function isAccounting()
+    {
+        return in_array($this->name, ['บัญชี', 'แผนกบัญชี', 'แผนกบัญชีและการเงิน']) 
+               || $this->code === 'ACC';
+    }
+
+    /**
+     * Check if department has employees.
      */
     public function hasEmployees()
     {
-        return $this->employees()->exists();
-    }
-
-    /**
-     * Check if department has any active employees.
-     */
-    public function hasActiveEmployees()
-    {
-        return $this->employees()->where('status', 'active')->exists();
-    }
-
-    /**
-     * Check if department can be deleted.
-     */
-    public function canBeDeleted()
-    {
-        return !$this->hasEmployees() && !$this->children()->exists();
-    }
-
-    /**
-     * Get all employees including from child departments.
-     */
-    public function getAllEmployees()
-    {
-        $employeeIds = collect([$this->id]);
-        
-        // Get all descendant department IDs
-        $this->addDescendantIds($employeeIds);
-        
-        return Employee::whereIn('department_id', $employeeIds)->get();
-    }
-
-    /**
-     * Recursively add descendant department IDs.
-     */
-    private function addDescendantIds($collection)
-    {
-        $children = $this->children;
-        
-        foreach ($children as $child) {
-            $collection->push($child->id);
-            $child->addDescendantIds($collection);
-        }
-    }
-
-    /**
-     * Get department tree structure.
-     */
-    public static function getTree($parentId = null, $level = 0)
-    {
-        $departments = static::where('parent_id', $parentId)
-                            ->where('status', 'active')
-                            ->orderBy('sort_order')
-                            ->orderBy('name')
-                            ->get();
-
-        $tree = [];
-        
-        foreach ($departments as $department) {
-            $department->level = $level;
-            $tree[] = $department;
-            
-            // Get children recursively
-            $children = static::getTree($department->id, $level + 1);
-            $tree = array_merge($tree, $children);
-        }
-
-        return $tree;
-    }
-
-    /**
-     * Get department options for select dropdown.
-     */
-    public static function getSelectOptions($includeInactive = false)
-    {
-        $query = static::query();
-        
-        if (!$includeInactive) {
-            $query->where('status', 'active');
-        }
-        
-        return $query->ordered()->get()->mapWithKeys(function ($department) {
-            $prefix = str_repeat('— ', $department->level);
-            return [$department->id => $prefix . $department->name];
-        });
-    }
-
-    /**
-     * Generate unique department code.
-     */
-    public static function generateCode($name)
-    {
-        // Get first 3 characters of name (Thai or English)
-        $code = strtoupper(substr($name, 0, 3));
-        
-        // If code exists, add number suffix
-        $originalCode = $code;
-        $counter = 1;
-        
-        while (static::where('code', $code)->exists()) {
-            $code = $originalCode . str_pad($counter, 2, '0', STR_PAD_LEFT);
-            $counter++;
-        }
-        
-        return $code;
-    }
-
-    /**
-     * Move department to new parent.
-     */
-    public function moveTo($newParentId = null)
-    {
-        // Prevent circular reference
-        if ($newParentId && $this->isDescendantOf($newParentId)) {
-            throw new \InvalidArgumentException('Cannot move department to its own descendant.');
-        }
-        
-        $this->update(['parent_id' => $newParentId]);
-        
-        return $this;
-    }
-
-    /**
-     * Check if this department is descendant of given department.
-     */
-    public function isDescendantOf($departmentId)
-    {
-        $parent = $this->parent;
-        
-        while ($parent) {
-            if ($parent->id == $departmentId) {
-                return true;
-            }
-            $parent = $parent->parent;
-        }
-        
-        return false;
+        return $this->employees()->count() > 0;
     }
 
     /**
@@ -457,67 +184,37 @@ class Department extends Model
     {
         return [
             'total_employees' => $this->employees()->count(),
-            'active_employees' => $this->employees()->where('status', 'active')->count(),
+            'active_employees' => $this->activeEmployees()->count(),
             'inactive_employees' => $this->employees()->where('status', 'inactive')->count(),
-            'roles' => $this->employees()
-                          ->selectRaw('role, COUNT(*) as count')
-                          ->groupBy('role')
-                          ->pluck('count', 'role'),
-            'budget' => $this->budget,
-            'child_departments' => $this->children()->count(),
+            'managers' => $this->employees()->where('role', 'manager')->count(),
+            'admins' => $this->employees()->whereIn('role', ['super_admin', 'it_admin'])->count(),
         ];
     }
 
     /**
-     * Archive department (soft delete with status change).
+     * Activate department.
      */
-    public function archive()
+    public function activate()
     {
-        $this->update(['status' => 'archived']);
-        $this->delete(); // Soft delete
-        
+        $this->update(['is_active' => true]);
         return $this;
     }
 
     /**
-     * Restore archived department.
+     * Deactivate department.
      */
-    public function restore()
+    public function deactivate()
     {
-        parent::restore();
-        $this->update(['status' => 'active']);
-        
+        $this->update(['is_active' => false]);
         return $this;
     }
 
-    // ===========================================
-    // BOOT METHODS
-    // ===========================================
-
     /**
-     * The "booted" method of the model.
+     * Transfer all employees to another department.
      */
-    protected static function booted()
+    public function transferEmployeesTo($newDepartmentId)
     {
-        // Auto-generate code if not provided
-        static::creating(function ($department) {
-            if (empty($department->code)) {
-                $department->code = static::generateCode($department->name);
-            }
-            
-            if (empty($department->sort_order)) {
-                $maxOrder = static::where('parent_id', $department->parent_id)
-                                 ->max('sort_order') ?? 0;
-                $department->sort_order = $maxOrder + 1;
-            }
-        });
-
-        // Prevent deletion if has employees or children
-        static::deleting(function ($department) {
-            if (!$department->canBeDeleted()) {
-                throw new \Exception('ไม่สามารถลบแผนกที่มีพนักงานหรือแผนกย่อยได้');
-            }
-        });
+        return $this->employees()->update(['department_id' => $newDepartmentId]);
     }
 
     // ===========================================
@@ -530,17 +227,10 @@ class Department extends Model
     public static function getCreateRules()
     {
         return [
-            'name' => 'required|string|max:100|unique:departments,name',
-            'code' => 'nullable|string|max:10|unique:departments,code',
-            'description' => 'nullable|string|max:500',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
-            'status' => 'required|in:active,inactive,suspended,archived',
-            'budget' => 'nullable|numeric|min:0',
-            'location' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'sort_order' => 'nullable|integer|min:0',
+            'name' => 'required|string|max:255|unique:departments,name',
+            'code' => 'required|string|max:10|alpha_dash|unique:departments,code',
+            'description' => 'nullable|string|max:1000',
+            'is_active' => 'boolean'
         ];
     }
 
@@ -550,38 +240,128 @@ class Department extends Model
     public static function getUpdateRules($id)
     {
         return [
-            'name' => "required|string|max:100|unique:departments,name,{$id}",
-            'code' => "nullable|string|max:10|unique:departments,code,{$id}",
-            'description' => 'nullable|string|max:500',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
-            'status' => 'required|in:active,inactive,suspended,archived',
-            'budget' => 'nullable|numeric|min:0',
-            'location' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'sort_order' => 'nullable|integer|min:0',
+            'name' => "required|string|max:255|unique:departments,name,{$id}",
+            'code' => "required|string|max:10|alpha_dash|unique:departments,code,{$id}",
+            'description' => 'nullable|string|max:1000',
+            'is_active' => 'boolean'
         ];
     }
 
     /**
-     * Get validation messages.
+     * Boot method for model events.
      */
-    public static function getValidationMessages()
+    protected static function booted()
+    {
+        // Auto-generate code from name if not provided
+        static::creating(function ($department) {
+            if (empty($department->code)) {
+                $department->code = static::generateCodeFromName($department->name);
+            }
+        });
+    }
+
+    /**
+     * Generate department code from name.
+     */
+    public static function generateCodeFromName($name)
+    {
+        // Extract first letters from each word
+        $words = explode(' ', $name);
+        $code = '';
+        
+        foreach ($words as $word) {
+            if (!empty($word)) {
+                $code .= strtoupper(substr($word, 0, 1));
+            }
+        }
+        
+        // If code is too short, pad with first characters of name
+        if (strlen($code) < 3) {
+            $code = strtoupper(substr(str_replace(' ', '', $name), 0, 3));
+        }
+        
+        // Check if code already exists and modify if needed
+        $originalCode = $code;
+        $counter = 1;
+        
+        while (static::where('code', $code)->exists()) {
+            $code = $originalCode . $counter;
+            $counter++;
+        }
+        
+        return $code;
+    }
+
+    /**
+     * Get departments for select dropdown.
+     */
+    public static function getSelectOptions($activeOnly = true)
+    {
+        $query = static::select('id', 'name', 'code')->orderBy('name');
+        
+        if ($activeOnly) {
+            $query->where('is_active', true);
+        }
+        
+        return $query->get()->mapWithKeys(function ($department) {
+            return [$department->id => $department->name];
+        });
+    }
+
+    /**
+     * Get default departments for seeding.
+     */
+    public static function getDefaultDepartments()
     {
         return [
-            'name.required' => 'ชื่อแผนกจำเป็นต้องกรอก',
-            'name.unique' => 'ชื่อแผนกนี้มีอยู่แล้วในระบบ',
-            'code.unique' => 'รหัสแผนกนี้มีอยู่แล้วในระบบ',
-            'parent_id.exists' => 'แผนกหลักที่เลือกไม่มีในระบบ',
-            'manager_id.exists' => 'ผู้จัดการที่เลือกไม่มีในระบบ',
-            'status.required' => 'สถานะจำเป็นต้องเลือก',
-            'status.in' => 'สถานะที่เลือกไม่ถูกต้อง',
-            'budget.numeric' => 'งบประมาณต้องเป็นตัวเลข',
-            'budget.min' => 'งบประมาณต้องไม่น้อยกว่า 0',
-            'email.email' => 'รูปแบบอีเมลไม่ถูกต้อง',
-            'sort_order.integer' => 'ลำดับการแสดงต้องเป็นตัวเลข',
-            'sort_order.min' => 'ลำดับการแสดงต้องไม่น้อยกว่า 0',
+            [
+                'name' => 'แผนกเทคโนโลยีสารสนเทศ',
+                'code' => 'IT',
+                'description' => 'แผนกที่ดูแลระบบคอมพิวเตอร์และเทคโนโลยี',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกบัญชี',
+                'code' => 'ACC',
+                'description' => 'แผนกการเงินและบัญชี',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกทรัพยากรบุคคล',
+                'code' => 'HR',
+                'description' => 'แผนกทรัพยากรบุคคล',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกขาย',
+                'code' => 'SALES',
+                'description' => 'แผนกการขายและการตลาด',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกการตลาด',
+                'code' => 'MKT',
+                'description' => 'แผนกการตลาดและประชาสัมพันธ์',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกผลิต',
+                'code' => 'PROD',
+                'description' => 'แผนกการผลิต',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกคลังสินค้า',
+                'code' => 'WH',
+                'description' => 'แผนกคลังสินค้า',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'แผนกบริหาร',
+                'code' => 'ADMIN',
+                'description' => 'แผนกบริหารงานทั่วไป',
+                'is_active' => true,
+            ],
         ];
     }
 }

@@ -32,7 +32,7 @@ class Employee extends Authenticatable
         'email',
         'email_password',
         'express_username',
-        'express_code',
+        'express_password',
         'department_id',
         'position',
         'role',
@@ -52,7 +52,7 @@ class Employee extends Authenticatable
         'password',
         'computer_password',
         'email_password',
-        'express_code',
+        'express_password',
         'remember_token',
     ];
 

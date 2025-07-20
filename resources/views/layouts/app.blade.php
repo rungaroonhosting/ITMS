@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - ITMS</title>
     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+
     <!-- Google Fonts - Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,8 +119,34 @@
             padding: 20px 0;
         }
 
+        .nav-section {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+        }
+
+        .nav-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .nav-section-title {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 20px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            display: none;
+        }
+
         .nav-item {
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .nav-link {
@@ -165,6 +195,27 @@
 
         .sidebar.collapsed .nav-link i {
             margin-right: 0;
+        }
+
+        /* Express Badge Animation */
+        .express-badge {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 700;
+            animation: expressGlow 2s infinite alternate;
+            margin-left: auto;
+        }
+
+        @keyframes expressGlow {
+            from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        }
+
+        .sidebar.collapsed .express-badge {
+            display: none;
         }
 
         /* User Profile in Sidebar */
@@ -488,11 +539,24 @@
             background: linear-gradient(45deg, #FFD700, #FFA500);
             color: #000;
             text-shadow: none;
+            animation: adminGlow 2s infinite alternate;
+        }
+
+        @keyframes adminGlow {
+            from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
         }
 
         .role-badge.it-admin {
             background: linear-gradient(45deg, var(--primary-red), var(--primary-orange));
             color: var(--white);
+        }
+
+        .role-badge.express {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            text-shadow: none;
+            animation: expressGlow 3s infinite alternate;
         }
 
         .role-badge.employee {
@@ -606,115 +670,211 @@
 
         <!-- Navigation Menu -->
         <div class="nav-menu">
-            <div class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
+            <!-- Dashboard -->
+            <div class="nav-section">
+                <div class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
             </div>
             
             @php $userRole = auth()->user()->role ?? 'employee'; @endphp
+            
+            <!-- Employee & Department Management -->
+            @if($userRole === 'super_admin' || $userRole === 'it_admin' || $userRole === 'hr' || $userRole === 'express')
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-users me-1"></i>จัดการบุคลากร
+                    </div>
+                    
+                    <!-- Employee Management -->
+                    <div class="nav-item">
+                        <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i>
+                            <span>จัดการพนักงาน</span>
+                            @if($userRole === 'express')
+                                <span class="express-badge">EXPRESS</span>
+                            @endif
+                        </a>
+                    </div>
+                    
+                    <!-- Department Management (Admin Only) -->
+                    @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                        <div class="nav-item">
+                            <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}">
+                                <i class="fas fa-building"></i>
+                                <span>จัดการแผนก</span>
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            @endif
+            
+            <!-- IT Management (Super Admin & IT Admin Only) -->
             @if($userRole === 'super_admin' || $userRole === 'it_admin')
-                <div class="nav-item">
-                    <a href="{{ route('employees.index') }}" class="nav-link {{ request()->routeIs('employees.*') ? 'active' : '' }}">
-                        <i class="fas fa-users"></i>
-                        <span>จัดการพนักงาน</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-laptop"></i>
-                        <span>จัดการอุปกรณ์ IT</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-file-contract"></i>
-                        <span>จัดการข้อตกลง IT</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-tools"></i>
-                        <span>จัดการแจ้งซ่อม</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>จัดการคำขอบริการ</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-building"></i>
-                        <span>จัดการแผนก</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>รายงานทั้งหมด</span>
-                    </a>
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-cogs me-1"></i>จัดการ IT
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-laptop"></i>
+                            <span>จัดการอุปกรณ์ IT</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-file-contract"></i>
+                            <span>จัดการข้อตกลง IT</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tools"></i>
+                            <span>จัดการแจ้งซ่อม</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-ticket-alt"></i>
+                            <span>จัดการคำขอบริการ</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>รายงานทั้งหมด</span>
+                        </a>
+                    </div>
                 </div>
             @endif
             
-            @if($userRole === 'employee')
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-user"></i>
-                        <span>ข้อมูลตัวเอง</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-file-signature"></i>
-                        <span>เซ็นข้อตกลง IT</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-tools"></i>
-                        <span>แจ้งซ่อม</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>ขอใช้บริการ</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-tasks"></i>
-                        <span>ติดตามสถานะงาน</span>
-                    </a>
+            <!-- Employee Services -->
+            @if($userRole === 'employee' || $userRole === 'express')
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-user me-1"></i>บริการพนักงาน
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-user"></i>
+                            <span>ข้อมูลตัวเอง</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-file-signature"></i>
+                            <span>เซ็นข้อตกลง IT</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tools"></i>
+                            <span>แจ้งซ่อม</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-ticket-alt"></i>
+                            <span>ขอใช้บริการ</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tasks"></i>
+                            <span>ติดตามสถานะงาน</span>
+                        </a>
+                    </div>
                 </div>
             @endif
             
+            <!-- Express Special Section -->
+            @if($userRole === 'express')
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-bolt me-1"></i>Express Services
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="{{ route('employees.create') }}" class="nav-link">
+                            <i class="fas fa-user-plus"></i>
+                            <span>เพิ่มพนักงานบัญชี</span>
+                            <span class="express-badge">FAST</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-calculator"></i>
+                            <span>ระบบบัญชี Express</span>
+                            <span class="express-badge">NEW</span>
+                        </a>
+                    </div>
+                </div>
+            @endif
+            
+            <!-- Quick Actions -->
+            @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-plus me-1"></i>เพิ่มข้อมูล
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="{{ route('employees.create') }}" class="nav-link">
+                            <i class="fas fa-user-plus"></i>
+                            <span>เพิ่มพนักงาน</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="{{ route('departments.create') }}" class="nav-link">
+                            <i class="fas fa-building"></i>
+                            <span>เพิ่มแผนก</span>
+                        </a>
+                    </div>
+                </div>
+            @endif
+            
+            <!-- System Management (Super Admin Only) -->
             @if($userRole === 'super_admin')
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>ตั้งค่าระบบ</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fas fa-users-cog"></i>
-                        <span>จัดการผู้ใช้งาน</span>
-                    </a>
+                <div class="nav-section">
+                    <div class="nav-section-title">
+                        <i class="fas fa-crown me-1"></i>ระบบขั้นสูง
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>ตั้งค่าระบบ</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-users-cog"></i>
+                            <span>จัดการผู้ใช้งาน</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-database"></i>
+                            <span>จัดการฐานข้อมูล</span>
+                        </a>
+                    </div>
                 </div>
             @endif
         </div>
@@ -724,7 +884,15 @@
             <div class="dropdown">
                 <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="user-avatar">
-                        <i class="fas fa-user"></i>
+                        @if($userRole === 'super_admin')
+                            <i class="fas fa-crown"></i>
+                        @elseif($userRole === 'it_admin')
+                            <i class="fas fa-laptop-code"></i>
+                        @elseif($userRole === 'express')
+                            <i class="fas fa-bolt"></i>
+                        @else
+                            <i class="fas fa-user"></i>
+                        @endif
                     </div>
                     <div class="user-info">
                         <div style="color: white; font-weight: 500; font-size: 0.9rem;">
@@ -748,6 +916,9 @@
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>โปรไฟล์</a></li>
                     <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>ตั้งค่า</a></li>
+                    @if($userRole === 'express')
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-bolt me-2"></i>ตั้งค่า Express</a></li>
+                    @endif
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -917,6 +1088,24 @@
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+
+            // Role-specific console messages
+            @if($userRole === 'super_admin')
+                console.log('🔧 Super Admin Access: Full system control');
+                console.log('👑 Permissions: All modules, User management, System settings');
+            @elseif($userRole === 'it_admin')
+                console.log('💻 IT Admin Access: IT management focus');
+                console.log('🔧 Permissions: Employee management, Department management, IT modules');
+            @elseif($userRole === 'express')
+                console.log('⚡ Express User Access: Accounting department focus');
+                console.log('📊 Permissions: Employee management (Accounting only), Express features');
+            @elseif($userRole === 'hr')
+                console.log('👥 HR Access: Human resources focus');
+                console.log('📋 Permissions: Employee management, HR modules');
+            @else
+                console.log('👤 Employee Access: Standard user permissions');
+                console.log('📄 Permissions: Personal profile, Service requests');
+            @endif
         });
 
         // Global error handler
@@ -924,7 +1113,9 @@
             console.error('JavaScript Error:', e.error);
         });
     </script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @stack('scripts')
 </body>
 </html>

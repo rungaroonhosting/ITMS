@@ -101,7 +101,7 @@ class EmployeeController extends Controller
             ],
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
@@ -177,10 +177,10 @@ class EmployeeController extends Controller
 
             // Handle Express fields - only for accounting department
             $department = Department::find($validated['department_id']);
-            if ($department && $department->name !== 'บัญชี') {
-                $validated['express_username'] = null;
-                $validated['express_code'] = null;
-            }
+            if ($department && !($department->name === 'แผนกบัญชีและการเงิน' || $department->name === 'บัญชี' || $department->code === 'ACC')) {
+               $validated['express_username'] = null;
+               $validated['express_password'] = null;
+        }
 
             // Create the employee
             $employee = Employee::create($validated);
@@ -271,7 +271,7 @@ class EmployeeController extends Controller
             ],
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
@@ -294,7 +294,7 @@ class EmployeeController extends Controller
 
             // Handle Express fields
             $department = Department::find($validated['department_id']);
-            if ($department && $department->name !== 'บัญชี') {
+            if ($department && !($department->name === 'แผนกบัญชีและการเงิน' || $department->name === 'บัญชี' || $department->code === 'ACC')) {
                 $validated['express_username'] = null;
                 $validated['express_code'] = null;
             }
@@ -319,17 +319,161 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         try {
+            // ตรวจสอบสิทธิ์
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ SuperAdmin เท่านั้นที่สามารถลบพนักงานได้'
+                ], 403);
+            }
+
             $employeeName = $employee->first_name_th . ' ' . $employee->last_name_th;
             $employee->delete();
 
-            return redirect()->route('employees.index')
-                ->with('success', 'ลบข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employeeName);
+            return response()->json([
+                'success' => true,
+                'message' => 'ลบข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employeeName
+            ]);
 
         } catch (\Exception $e) {
             \Log::error('Employee deletion failed: ' . $e->getMessage());
             
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล'
+            ], 500);
+        }
+    }
+
+    // *** เพิ่ม Methods ใหม่ ***
+
+    /**
+     * ส่งข้อมูล Login ให้พนักงาน
+     */
+    public function sendCredentials(Employee $employee)
+    {
+        try {
+            // ตรวจสอบสิทธิ์
+            $user = auth()->user();
+            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ในการดำเนินการ'
+                ], 403);
+            }
+
+            // ส่ง Email ข้อมูล Login (จำลอง)
+            // Mail::to($employee->email)->send(new EmployeeCredentialsMail($employee));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ส่งข้อมูลเข้าสู่ระบบไปยัง ' . $employee->email . ' เรียบร้อยแล้ว'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Send credentials failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * สร้าง Username และ Password อัตโนมัติ
+     */
+    public function generateCredentials(Employee $employee)
+    {
+        try {
+            // ตรวจสอบสิทธิ์
+            $user = auth()->user();
+            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ในการดำเนินการ'
+                ], 403);
+            }
+
+            $englishName = $employee->first_name_en . ' ' . $employee->last_name_en;
+            
+            // สร้าง Username (ชื่อภาษาอังกฤษ 7 ตัวอักษร)
+            $username = $this->generateExpressUsername($englishName);
+            
+            // สร้าง Password (4 ตัวอักษรมีตัวเลข)
+            $password = $this->generateExpressPassword();
+            
+            // อัพเดท Employee
+            $employee->update([
+                'express_username' => $username,
+                'express_password' => $password
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'username' => $username,
+                'password' => $password,
+                'message' => 'สร้างข้อมูล Express เรียบร้อยแล้ว'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Generate credentials failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ดูตัวอย่างข้อมูลพนักงาน
+     */
+    public function preview(Employee $employee)
+    {
+        try {
+            // ตรวจสอบสิทธิ์การเข้าถึง
+            if (!$this->canViewEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ดูข้อมูลพนักงานนี้'
+                ], 403);
+            }
+
+            $employeeData = $this->getEmployeeData($employee);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $employeeData
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Preview failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ส่งออกข้อมูลเป็น PDF
+     */
+    public function exportPdf()
+    {
+        try {
+            // ใช้ Laravel PDF Package
+            // $employees = $this->getEmployeesForExport();
+            // $pdf = PDF::loadView('employees.export.pdf', compact('employees'));
+            // return $pdf->download('employees.pdf');
+            
             return redirect()->route('employees.index')
-                ->with('error', 'เกิดข้อผิดพลาดในการลบข้อมูล');
+                ->with('info', 'ฟีเจอร์ส่งออก PDF จะพร้อมใช้งานเร็วๆ นี้');
+                
+        } catch (\Exception $e) {
+            return redirect()->route('employees.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล');
         }
     }
 
@@ -378,6 +522,122 @@ class EmployeeController extends Controller
     private function generateCopierCode()
     {
         return str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Express Username (7 ตัวอักษร)
+     */
+    private function generateExpressUsername($englishName)
+    {
+        // ลบช่องว่างและเอาแค่ 7 ตัวอักษร
+        $username = strtolower(str_replace(' ', '', $englishName));
+        $username = substr($username, 0, 7);
+        
+        // ตรวจสอบ Username ซ้ำ
+        $counter = 1;
+        $originalUsername = $username;
+        
+        while (Employee::where('express_username', $username)->exists()) {
+            $username = substr($originalUsername, 0, 6) . $counter;
+            $counter++;
+        }
+        
+        return $username;
+    }
+
+    /**
+     * Generate Express Password (4 ตัวอักษรมีตัวเลข)
+     */
+    private function generateExpressPassword()
+    {
+        $chars = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        
+        $password = '';
+        
+        // เลือก 2-3 ตัวอักษร
+        for ($i = 0; $i < 3; $i++) {
+            $password .= $chars[rand(0, strlen($chars) - 1)];
+        }
+        
+        // เลือก 1 ตัวเลข
+        $password .= $numbers[rand(0, strlen($numbers) - 1)];
+        
+        // สุ่มลำดับ
+        return str_shuffle($password);
+    }
+
+    /**
+     * ตรวจสอบสิทธิ์การดูข้อมูลพนักงาน
+     */
+    private function canViewEmployee($employee)
+    {
+        $user = auth()->user();
+        
+        // SuperAdmin ดูได้หมด
+        if ($user->role === 'super_admin') {
+            return true;
+        }
+        
+        // IT Admin ดูได้หมด
+        if ($user->role === 'it_admin') {
+            return true;
+        }
+        
+        // พนักงานดูข้อมูลตัวเองได้ (ถ้ามี user_id)
+        if (isset($employee->user_id) && $user->id === $employee->user_id) {
+            return true;
+        }
+        
+        // Manager ดูได้
+        if ($user->role === 'manager') {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * ดึงข้อมูลพนักงานตาม Role
+     */
+    private function getEmployeeData($employee)
+    {
+        $user = auth()->user();
+        $data = $employee->load('department')->toArray();
+        
+        // ซ่อน Password สำหรับ Role ที่ไม่ใช่ SuperAdmin
+        if ($user->role !== 'super_admin') {
+            unset($data['password']);
+            unset($data['computer_password']);
+            unset($data['email_password']);
+            if ($user->role !== 'it_admin') {
+                unset($data['express_password']);
+            }
+        }
+        
+        return $data;
+    }
+
+    /**
+     * ดึงข้อมูลพนักงานสำหรับส่งออก
+     */
+    private function getEmployeesForExport()
+    {
+        $user = auth()->user();
+        
+        if ($user->role === 'super_admin') {
+            // SuperAdmin เห็นข้อมูลทั้งหมด
+            return Employee::with('department')->get();
+        } else {
+            // Role อื่นไม่เห็น Password
+            return Employee::with('department')->get()->map(function($employee) {
+                unset($employee->password);
+                unset($employee->computer_password); 
+                unset($employee->email_password);
+                unset($employee->express_password);
+                return $employee;
+            });
+        }
     }
 
     /**
@@ -511,6 +771,45 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'เกิดข้อผิดพลาดในการค้นหา'
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset employee password
+     */
+    public function resetPassword(Employee $employee)
+    {
+        try {
+            // Check if user has permission
+            $user = auth()->user();
+            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ในการรีเซ็ตรหัสผ่าน'
+                ], 403);
+            }
+
+            // Generate new password
+            $newPassword = $this->generatePassword();
+            
+            // Update employee password
+            $employee->update([
+                'password' => Hash::make($newPassword)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'รีเซ็ตรหัสผ่านสำเร็จ',
+                'new_password' => $newPassword
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Password reset failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน'
             ], 500);
         }
     }

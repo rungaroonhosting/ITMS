@@ -1269,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         
-        showPreview: () => {
+showPreview: () => {
             const formData = new FormData(document.getElementById('employeeForm'));
             const data = {};
             for (let [key, value] of formData.entries()) {
@@ -1279,37 +1279,215 @@ document.addEventListener('DOMContentLoaded', function() {
             const previewContent = document.getElementById('previewContent');
             if (!previewContent) return;
             
+            // Get select values with text
             const departmentSelect = document.getElementById('department_id');
             const departmentName = departmentSelect && departmentSelect.selectedIndex > 0 ? 
-                departmentSelect.options[departmentSelect.selectedIndex].textContent : '-';
+                departmentSelect.options[departmentSelect.selectedIndex].textContent.trim() : '-';
+                
+            const roleSelect = document.getElementById('role');
+            const roleName = roleSelect && roleSelect.selectedIndex > 0 ? 
+                roleSelect.options[roleSelect.selectedIndex].textContent.trim() : '-';
+                
+            const statusSelect = document.getElementById('status');
+            const statusName = statusSelect && statusSelect.selectedIndex > 0 ? 
+                statusSelect.options[statusSelect.selectedIndex].textContent.trim() : '-';
+            
+            const emailDomain = document.getElementById('email_domain').value;
+            
+            // Check if Express data exists
+            const hasExpress = data.express_username || data.express_password;
+            const isAccounting = departmentName.includes('บัญชี') || departmentName.includes('แผนกบัญชี');
+            
+            // Check user role for password visibility
+            const userRole = '{{ $userRole }}';
+            const canSeePasswords = userRole === 'super_admin' || userRole === 'it_admin';
             
             previewContent.innerHTML = `
                 <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-primary">ข้อมูลพื้นฐาน</h6>
-                        <p><strong>รหัสพนักงาน:</strong> ${data.employee_code || '-'}</p>
-                        <p><strong>ชื่อ-นามสกุล (ไทย):</strong> ${data.first_name_th || '-'} ${data.last_name_th || '-'}</p>
-                        <p><strong>ชื่อ-นามสกุล (อังกฤษ):</strong> ${data.first_name_en || '-'} ${data.last_name_en || '-'}</p>
-                        <p><strong>เบอร์โทร:</strong> ${data.phone || '-'}</p>
-                        <p><strong>ชื่อเล่น:</strong> ${data.nickname || '-'}</p>
+                    <!-- ข้อมูลพื้นฐาน -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-user me-2"></i>ข้อมูลพื้นฐาน</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>รหัสพนักงาน:</strong></td><td><span class="badge bg-secondary">${data.employee_code || '-'}</span></td></tr>
+                                    <tr><td><strong>ID Keycard:</strong></td><td><span class="badge bg-info">${data.keycard_id || '-'}</span></td></tr>
+                                    <tr><td><strong>ชื่อ-นามสกุล (ไทย):</strong></td><td class="fw-bold text-primary">${data.first_name_th || '-'} ${data.last_name_th || '-'}</td></tr>
+                                    <tr><td><strong>ชื่อ-นามสกุล (อังกฤษ):</strong></td><td class="fw-bold">${data.first_name_en || '-'} ${data.last_name_en || '-'}</td></tr>
+                                    <tr><td><strong>เบอร์โทร:</strong></td><td>${data.phone || '-'}</td></tr>
+                                    <tr><td><strong>ชื่อเล่น:</strong></td><td>${data.nickname ? `<span class="badge bg-light text-dark">"${data.nickname}"</span>` : '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="text-primary">ระบบคอมพิวเตอร์</h6>
-                        <p><strong>Username:</strong> ${data.username || '-'}</p>
-                        <p><strong>Email:</strong> <span class="text-success">${data.email || '-'}</span></p>
-                        <p><strong>รหัสถ่ายเอกสาร:</strong> ${data.copier_code || '-'}</p>
-                        <p><strong>แผนก:</strong> ${departmentName}</p>
-                        <p><strong>ตำแหน่ง:</strong> ${data.position || '-'}</p>
-                        ${data.express_username ? `<p><strong>Express Username:</strong> ${data.express_username}</p>` : ''}
-                        ${data.express_password ? `<p><strong>Express Password:</strong> ${data.express_password}</p>` : ''}
+                    
+                    <!-- ระบบคอมพิวเตอร์ -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-desktop me-2"></i>ระบบคอมพิวเตอร์</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Username:</strong></td><td><span class="badge bg-primary">${data.username || '-'}</span></td></tr>
+                                    <tr><td><strong>Password คอมพิวเตอร์:</strong></td><td>${canSeePasswords ? (data.computer_password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>รหัสถ่ายเอกสาร:</strong></td><td><span class="badge bg-warning text-dark">${data.copier_code || '-'}</span></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ระบบอีเมล -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>ระบบอีเมล</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>อีเมล:</strong></td><td class="fw-bold text-success">${data.email || '-'}</td></tr>
+                                    <tr><td><strong>โดเมน:</strong></td><td><span class="badge bg-info">@${emailDomain}</span></td></tr>
+                                    <tr><td><strong>Password อีเมล:</strong></td><td>${canSeePasswords ? (data.email_password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>Login Email:</strong></td><td class="text-muted">${data.email || '-'} <small>(เหมือนกัน)</small></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- แผนกและสิทธิ์ -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-building me-2"></i>แผนกและสิทธิ์</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>แผนก:</strong></td><td><span class="badge bg-info">${departmentName}</span></td></tr>
+                                    <tr><td><strong>ตำแหน่ง:</strong></td><td class="fw-bold">${data.position || '-'}</td></tr>
+                                    <tr><td><strong>บทบาท:</strong></td><td><span class="badge bg-secondary">${roleName}</span></td></tr>
+                                    <tr><td><strong>สถานะ:</strong></td><td><span class="badge bg-${data.status === 'active' ? 'success' : 'danger'}">${statusName}</span></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${hasExpress ? `
+                    <!-- โปรแกรม Express -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>โปรแกรม Express</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Express Username:</strong></td><td><span class="badge bg-warning text-dark">${data.express_username || '-'}</span></td></tr>
+                                    <tr><td><strong>Express Password:</strong></td><td>${canSeePasswords ? (data.express_password || '-') : '<span class="text-warning">••••</span>'}</td></tr>
+                                    <tr><td><strong>ลักษณะ:</strong></td><td><small class="text-muted">เฉพาะแผนกบัญชี</small></td></tr>
+                                </table>
+                                <div class="alert alert-warning mt-2 mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <small>รองรับโปรแกรม Express สำหรับงานบัญชี</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- ระบบ Login -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-dark">
+                            <div class="card-header bg-dark text-white">
+                                <h6 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>ระบบ Login</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Login Email:</strong></td><td class="text-success">${data.email || '-'}</td></tr>
+                                    <tr><td><strong>Password ระบบ:</strong></td><td>${canSeePasswords ? (data.password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>ระบบ:</strong></td><td><small class="text-muted">IT Management System</small></td></tr>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="row mt-3">
+                
+                <!-- ข้อมูลสรุป -->
+                <div class="row mt-4">
                     <div class="col-12">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle me-2"></i>รูปแบบ Email</h6>
-                            <p class="mb-0">Email จะถูกสร้างในรูปแบบ: <strong>ชื่อ.ตัวแรกนามสกุล@โดเมน</strong></p>
-                            <p class="mb-0">ตัวอย่าง: john.s@bettersystem.co.th</p>
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>สรุปข้อมูลสำคัญ</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6 class="text-primary"><i class="fas fa-user-tag me-1"></i> ข้อมูลระบุตัวตน</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-id-badge me-2 text-muted"></i><strong>รหัสพนักงาน:</strong> ${data.employee_code || 'ยังไม่ได้กำหนด'}</li>
+                                            <li><i class="fas fa-credit-card me-2 text-muted"></i><strong>ID Card:</strong> ${data.keycard_id || 'ยังไม่ได้กำหนด'}</li>
+                                            <li><i class="fas fa-phone me-2 text-muted"></i><strong>เบอร์โทร:</strong> ${data.phone || 'ยังไม่ได้กำหนด'}</li>
+                                        </ul>
+                                        
+                                        <h6 class="text-success mt-3"><i class="fas fa-cogs me-1"></i> ระบบและเครื่องมือ</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-desktop me-2 text-muted"></i><strong>คอมพิวเตอร์:</strong> ${data.username ? 'พร้อมใช้งาน' : 'ยังไม่พร้อม'}</li>
+                                            <li><i class="fas fa-print me-2 text-muted"></i><strong>เครื่องถ่ายเอกสาร:</strong> ${data.copier_code ? 'พร้อมใช้งาน' : 'ยังไม่พร้อม'}</li>
+                                            <li><i class="fas fa-envelope me-2 text-muted"></i><strong>อีเมล:</strong> ${data.email ? 'พร้อมใช้งาน' : 'ยังไม่พร้อม'}</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning"><i class="fas fa-building me-1"></i> ข้อมูลองค์กร</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-users me-2 text-muted"></i><strong>แผนก:</strong> ${departmentName}</li>
+                                            <li><i class="fas fa-briefcase me-2 text-muted"></i><strong>ตำแหน่ง:</strong> ${data.position || 'ยังไม่ได้กำหนด'}</li>
+                                            <li><i class="fas fa-user-shield me-2 text-muted"></i><strong>บทบาท:</strong> ${roleName}</li>
+                                        </ul>
+                                        
+                                        ${isAccounting ? `
+                                        <h6 class="text-warning mt-3"><i class="fas fa-bolt me-1"></i> ฟีเจอร์พิเศษ</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-star me-2 text-warning"></i><strong>Express:</strong> ${hasExpress ? 'เปิดใช้งาน' : 'ยังไม่พร้อม'}</li>
+                                            <li><i class="fas fa-calculator me-2 text-muted"></i><strong>งานบัญชี:</strong> รองรับเต็มรูปแบบ</li>
+                                        </ul>
+                                        ` : `
+                                        <h6 class="text-info mt-3"><i class="fas fa-info-circle me-1"></i> ข้อมูลเพิ่มเติม</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check-circle me-2 text-success"></i><strong>สถานะ:</strong> ${statusName}</li>
+                                            <li><i class="fas fa-clock me-2 text-muted"></i><strong>วันที่สร้าง:</strong> ${new Date().toLocaleDateString('th-TH')}</li>
+                                        </ul>
+                                        `}
+                                    </div>
+                                </div>
+                                
+                                <!-- Email Pattern Info -->
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>รูปแบบ Email อัตโนมัติ</h6>
+                                            <p class="mb-0">Email จะถูกสร้างในรูปแบบ: <strong>ชื่อ.ตัวแรกนามสกุล@โดเมน</strong></p>
+                                            <small class="text-muted">ตัวอย่าง: john.s@bettersystem.co.th</small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <span class="badge bg-info fs-6">
+                                                <i class="fas fa-magic me-1"></i>Auto Generate
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                ${!canSeePasswords ? `
+                                <div class="alert alert-warning mt-2 mb-0">
+                                    <i class="fas fa-eye-slash me-2"></i>
+                                    <strong>หมายเหตุ:</strong> รหัสผ่านจะแสดงเป็น ••••••••• เนื่องจากสิทธิ์การเข้าถึง (เฉพาะ Admin เท่านั้นที่เห็นได้)
+                                </div>
+                                ` : `
+                                <div class="alert alert-success mt-2 mb-0">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    <strong>Admin Mode:</strong> คุณสามารถมองเห็นรหัสผ่านทั้งหมดได้
+                                </div>
+                                `}
+                            </div>
                         </div>
                     </div>
                 </div>
