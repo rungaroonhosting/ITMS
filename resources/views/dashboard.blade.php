@@ -1,414 +1,459 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-
-@section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard</li>
-@endsection
+@section('title', 'Dashboard - IT Management System')
 
 @section('content')
-<!-- Page Header -->
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="h3 mb-0 text-primary fw-bold">
-            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-        </h1>
-        <p class="text-muted mb-0">ภาพรวมของระบบจัดการ IT</p>
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-tachometer-alt text-primary"></i> Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">IT Management System (ITMS) v1.4 - Employee Management</p>
+                </div>
+                <div class="text-end">
+                    <div class="text-muted small">
+                        <i class="fas fa-clock"></i> {{ now()->format('d/m/Y H:i น.') }}
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-user"></i> {{ auth()->user()->first_name_th ?? 'ผู้ใช้' }} {{ auth()->user()->last_name_th ?? '' }}
+                        <span class="badge bg-info">{{ ucfirst(auth()->user()->role ?? 'user') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Welcome Message -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="alert alert-info" role="alert">
-            <i class="fas fa-info-circle me-2"></i>
-            <strong>ยินดีต้อนรับ!</strong> 
-            คุณ {{ auth()->user()->first_name_th ?? auth()->user()->display_name ?? 'ผู้ใช้' }} 
-            ({{ auth()->user()->role_display ?? 'Employee' }}) 
-            เข้าสู่ระบบเมื่อ {{ now()->locale('th')->translatedFormat('H:i น. วันที่ d F Y') }}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="fs-3 fw-bold">{{ $employees->count() }}</div>
+                            <div class="small">พนักงานทั้งหมด</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ route('employees.index') }}">
+                        ดูรายละเอียด
+                    </a>
+                    <div class="small text-white">
+                        <i class="fas fa-angle-right"></i>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-start border-primary border-4 h-100">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            พนักงานทั้งหมด
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-check fa-2x"></i>
                         </div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">
-                            @php
-                                try {
-                                    $totalEmployees = isset($employees) ? $employees->count() : \App\Models\Employee::count();
-                                } catch (\Exception $e) {
-                                    $totalEmployees = 0;
-                                }
-                            @endphp
-                            {{ $totalEmployees }}
+                        <div class="flex-grow-1 ms-3">
+                            <div class="fs-3 fw-bold">{{ $employees->where('status', 'active')->count() }}</div>
+                            <div class="small">พนักงานที่ใช้งาน</div>
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-primary opacity-75"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ route('employees.search', ['q' => 'active']) }}">
+                        ดูรายละเอียด
+                    </a>
+                    <div class="small text-white">
+                        <i class="fas fa-angle-right"></i>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-start border-success border-4 h-100">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            พนักงานที่ใช้งาน
-                        </div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">
-                            @php
-                                try {
-                                    $activeEmployees = isset($employees) ? 
-                                        $employees->where('status', 'active')->count() : 
-                                        \App\Models\Employee::where('status', 'active')->count();
-                                } catch (\Exception $e) {
-                                    $activeEmployees = 0;
-                                }
-                            @endphp
-                            {{ $activeEmployees }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-user-check fa-2x text-success opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-start border-info border-4 h-100">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            แผนกทั้งหมด
-                        </div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">
-                            @php
-                                try {
-                                    $totalDepartments = isset($departments) ? 
-                                        $departments->count() : 
-                                        \App\Models\Department::count();
-                                } catch (\Exception $e) {
-                                    $totalDepartments = 8;
-                                }
-                            @endphp
-                            {{ $totalDepartments }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-building fa-2x text-info opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card stat-card border-start border-warning border-4 h-100">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            ระบบออนไลน์
-                        </div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">
-                            24/7
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-server fa-2x text-warning opacity-75"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Quick Actions & Recent Activity -->
-<div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-calculator fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="fs-3 fw-bold">{{ $employees->whereNotNull('express_username')->count() }}</div>
+                            <div class="small">Express Users</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ route('employees.index') }}#express">
+                        ดูรายละเอียด
+                    </a>
+                    <div class="small text-white">
+                        <i class="fas fa-angle-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if(auth()->user()->role === 'super_admin')
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card bg-gradient-danger text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-trash fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="fs-3 fw-bold">{{ $trashCount ?? 0 }}</div>
+                                <div class="small">ในถังขยะ</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-white stretched-link" href="{{ route('employees.trash') }}">
+                            จัดการถังขยะ
+                        </a>
+                        <div class="small text-white">
+                            <i class="fas fa-angle-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+
     <!-- Quick Actions -->
-    <div class="col-lg-8 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-rocket me-2"></i>การจัดการด่วน
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    @php $userRole = auth()->user()->role ?? 'employee'; @endphp
-                    
-                    @if(in_array($userRole, ['super_admin', 'it_admin', 'hr', 'manager']))
-                        <div class="col-md-4 col-sm-6">
-                            <a href="{{ route('employees.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-users fa-2x mb-2"></i>
-                                <span>จัดการพนักงาน</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-4 col-sm-6">
-                            <a href="{{ route('employees.create') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt text-warning"></i> การดำเนินการด่วน
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ route('employees.create') }}" class="btn btn-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                                 <i class="fas fa-user-plus fa-2x mb-2"></i>
                                 <span>เพิ่มพนักงานใหม่</span>
                             </a>
                         </div>
                         
-                        <div class="col-md-4 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-laptop fa-2x mb-2"></i>
-                                <span>จัดการอุปกรณ์ IT</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-4 col-sm-6">
-                            <a href="{{ route('employees.exportExcel') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ route('employees.exportExcel') }}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                                 <i class="fas fa-file-excel fa-2x mb-2"></i>
-                                <span>ส่งออกข้อมูล</span>
+                                <span>ส่งออก Excel</span>
                             </a>
                         </div>
                         
-                        <div class="col-md-4 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
-                                <span>รายงานทั้งหมด</span>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{{ route('employees.exportPdf') }}" class="btn btn-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                <i class="fas fa-file-pdf fa-2x mb-2"></i>
+                                <span>รายงาน PDF</span>
                             </a>
                         </div>
                         
-                        <div class="col-md-4 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-cog fa-2x mb-2"></i>
-                                <span>ตั้งค่าระบบ</span>
-                            </a>
+                        @if(auth()->user()->role === 'super_admin')
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <a href="{{ route('employees.trash') }}" class="btn btn-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="fas fa-trash fa-2x mb-2"></i>
+                                    <span>จัดการถังขยะ</span>
+                                    @if($trashCount > 0)
+                                        <span class="badge bg-danger">{{ $trashCount }}</span>
+                                    @endif
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Employees & Department Summary -->
+    <div class="row">
+        <!-- Recent Employees -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock text-info"></i> พนักงานล่าสุด
+                    </h5>
+                    <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-primary">
+                        ดูทั้งหมด
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if($employees->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>รหัสพนักงาน</th>
+                                        <th>ชื่อ-นามสกุล</th>
+                                        <th>แผนก</th>
+                                        <th>ตำแหน่ง</th>
+                                        <th>สถานะ</th>
+                                        <th>การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($employees->sortByDesc('created_at')->take(5) as $employee)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $employee->employee_id }}</strong>
+                                                @if($employee->express_username)
+                                                    <br><small class="text-info">
+                                                        <i class="fas fa-calculator"></i> Express
+                                                    </small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $employee->full_name }}
+                                                @if($employee->english_name)
+                                                    <br><small class="text-muted">{{ $employee->english_name }}</small>
+                                                @endif
+                                            </td>
+                                            <td>{{ $employee->department }}</td>
+                                            <td>{{ $employee->position }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
+                                                    {{ $employee->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ route('employees.show', $employee) }}" 
+                                                       class="btn btn-outline-info" title="ดู">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ route('employees.edit', $employee) }}" 
+                                                       class="btn btn-outline-warning" title="แก้ไข">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @else
-                        <div class="col-md-6 col-sm-6">
-                            <a href="{{ route('profile') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-user fa-2x mb-2"></i>
-                                <span>ข้อมูลส่วนตัว</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-6 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-tools fa-2x mb-2"></i>
-                                <span>แจ้งซ่อม</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-6 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-ticket-alt fa-2x mb-2"></i>
-                                <span>ขอใช้บริการ</span>
-                            </a>
-                        </div>
-                        
-                        <div class="col-md-6 col-sm-6">
-                            <a href="#" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
-                                <i class="fas fa-tasks fa-2x mb-2"></i>
-                                <span>ติดตามสถานะงาน</span>
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">ยังไม่มีข้อมูลพนักงาน</h6>
+                            <a href="{{ route('employees.create') }}" class="btn btn-primary">
+                                เพิ่มพนักงานคนแรก
                             </a>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- System Status -->
-    <div class="col-lg-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-server me-2"></i>สถานะระบบ
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-medium">ฐานข้อมูล</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check-circle me-1"></i>ปกติ
-                    </span>
+        <!-- Department Summary -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building text-success"></i> สรุปตามแผนก
+                    </h5>
                 </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-medium">เซิร์ฟเวอร์</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check-circle me-1"></i>ออนไลน์
-                    </span>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-medium">การเชื่อมต่อ</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-wifi me-1"></i>เสถียร
-                    </span>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="fw-medium">พื้นที่จัดเก็บ</span>
-                    <span class="badge bg-warning">
-                        <i class="fas fa-hdd me-1"></i>75%
-                    </span>
-                </div>
-                
-                <hr>
-                
-                <div class="text-center">
-                    <small class="text-muted">
-                        <i class="fas fa-clock me-1"></i>
-                        อัปเดตล่าสุด: {{ now()->format('H:i:s') }}
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Activity -->
-@if(in_array($userRole, ['super_admin', 'it_admin', 'hr']))
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-history me-2"></i>กิจกรรมล่าสุด
-                </h5>
-            </div>
-            <div class="card-body">
-                @php
-                    try {
-                        $recentEmployees = isset($employees) ? 
-                            $employees->sortByDesc('created_at')->take(5) : 
-                            \App\Models\Employee::latest('created_at')->limit(5)->get();
-                    } catch (\Exception $e) {
-                        $recentEmployees = collect();
-                    }
-                @endphp
-                
-                @if($recentEmployees->count() > 0)
-                    <div class="list-group list-group-flush">
-                        @foreach($recentEmployees as $employee)
-                            <div class="list-group-item d-flex align-items-center border-0 px-0">
-                                <div class="me-3">
-                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-user text-white"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-medium">
-                                        {{ $employee->display_name ?? $employee->full_name_th ?? 'ไม่ระบุชื่อ' }}
-                                    </div>
-                                    <div class="text-muted small">
-                                        <i class="fas fa-plus-circle me-1"></i>พนักงานใหม่เข้าระบบ
-                                    </div>
-                                </div>
-                                <div class="text-muted small">
-                                    @if(isset($employee->created_at))
-                                        {{ $employee->created_at->diffForHumans() }}
-                                    @else
-                                        เมื่อสักครู่
+                <div class="card-body">
+                    @if($employees->count() > 0)
+                        @php $departmentCounts = $employees->groupBy('department'); @endphp
+                        
+                        @foreach($departmentCounts as $department => $employees_in_dept)
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="fw-bold">{{ $department }}</span>
+                                    @if(in_array($department, ['แผนกบัญชี', 'แผนกบัญชีและการเงิน', 'แผนกการเงิน']))
+                                        <span class="badge bg-info ms-1">Express</span>
                                     @endif
                                 </div>
+                                <span class="badge bg-primary">{{ $employees_in_dept->count() }} คน</span>
                             </div>
                         @endforeach
+                    @else
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-building fa-2x mb-2"></i>
+                            <p class="mb-0">ไม่มีข้อมูลแผนก</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cogs text-primary"></i> สถานะระบบ
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="text-success">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                                <small class="text-muted">ระบบปกติ</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-info">
+                                <i class="fas fa-database fa-2x"></i>
+                            </div>
+                            <small class="text-muted">ฐานข้อมูลเชื่อมต่อ</small>
+                        </div>
                     </div>
-                @else
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-history fa-3x mb-3 opacity-25"></i>
-                        <p class="mb-0">ยังไม่มีกิจกรรม</p>
+                    
+                    <hr>
+                    
+                    <div class="small">
+                        <div class="d-flex justify-content-between">
+                            <span>เวอร์ชัน:</span>
+                            <span class="fw-bold">v1.4.0</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>อัปเดตล่าสุด:</span>
+                            <span class="fw-bold">{{ now()->format('d/m/Y') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>ฟีเจอร์:</span>
+                            <span>
+                                <span class="badge bg-success">Express</span>
+                                <span class="badge bg-info">Trash</span>
+                                <span class="badge bg-warning">Export</span>
+                            </span>
+                        </div>
                     </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Express Users Section (if applicable) -->
+    @if($employees->whereNotNull('express_username')->count() > 0)
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator"></i> พนักงานที่ใช้ระบบ Express
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($employees->whereNotNull('express_username') as $expressUser)
+                                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                                    <div class="card border-info">
+                                        <div class="card-body text-center">
+                                            <div class="mb-2">
+                                                <i class="fas fa-user-circle fa-2x text-info"></i>
+                                            </div>
+                                            <h6 class="card-title">{{ $expressUser->full_name }}</h6>
+                                            <p class="card-text small text-muted">{{ $expressUser->department }}</p>
+                                            <div class="badge bg-info">{{ $expressUser->express_username }}</div>
+                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->email === $expressUser->email)
+                                                @if($expressUser->express_password)
+                                                    <br><small class="text-muted">{{ $expressUser->express_password }}</small>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
-@endif
 
-@endsection
-
-@push('styles')
-<style>
-    .stat-card {
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    
-    .list-group-item {
-        transition: all 0.2s ease;
-    }
-    
-    .list-group-item:hover {
-        background-color: rgba(181, 69, 68, 0.05);
-    }
-    
-    .quick-action-btn {
-        transition: all 0.3s ease;
-    }
-    
-    .quick-action-btn:hover {
-        transform: scale(1.05);
-    }
-</style>
-@endpush
-
-@push('scripts')
+<!-- Auto-refresh data every 5 minutes -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Animate stat cards on page load
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach((card, index) => {
+    // Auto-refresh page data every 5 minutes
+    setInterval(function() {
+        // Only refresh if user is active (has interacted in last 10 minutes)
+        if (document.visibilityState === 'visible') {
+            fetch('/api/employees/trash-count')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update trash count badges
+                        const trashBadges = document.querySelectorAll('.trash-count');
+                        trashBadges.forEach(badge => {
+                            badge.textContent = data.count;
+                            badge.style.display = data.count > 0 ? 'inline' : 'none';
+                        });
+                    }
+                })
+                .catch(error => console.log('Auto-refresh failed:', error));
+        }
+    }, 300000); // 5 minutes
+
+    // Animate statistics cards on page load
+    const statsCards = document.querySelectorAll('.bg-gradient-primary, .bg-gradient-success, .bg-gradient-warning, .bg-gradient-danger');
+    statsCards.forEach((card, index) => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
         
         setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
-        }, index * 150);
+        }, index * 100);
     });
-    
-    // Add click effect to stat cards
-    statCards.forEach(card => {
-        card.addEventListener('click', function() {
-            this.style.transform = 'scale(0.98)';
-            setTimeout(() => {
-                this.style.transform = '';
-            }, 150);
-        });
-    });
-    
-    // Update time every minute
-    setInterval(function() {
-        const timeElement = document.querySelector('.text-center small');
-        if (timeElement) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('th-TH', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            timeElement.innerHTML = '<i class="fas fa-clock me-1"></i>อัปเดตล่าสุด: ' + timeStr;
-        }
-    }, 60000);
 });
 </script>
-@endpush
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3) !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, #28a745, #20c997) !important;
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(45deg, #dc3545, #c82333) !important;
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+.stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: "";
+}
+</style>
+@endsection

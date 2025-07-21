@@ -75,15 +75,15 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', function () {
         try {
-            $employees = \App\Models\Employee::with('department')->withoutTrashed()->get();
-            $departments = \App\Models\Department::all();
+            $employees = \App\Models\Employee::withoutTrashed()->get();
+            $trashCount = \App\Models\Employee::onlyTrashed()->count();
             
-            return view('dashboard', compact('employees', 'departments'));
+            return view('dashboard', compact('employees', 'trashCount'));
         } catch (\Exception $e) {
             // Fallback if database is not ready
             return view('dashboard', [
                 'employees' => collect(),
-                'departments' => collect()
+                'trashCount' => 0
             ]);
         }
     })->name('dashboard');
@@ -117,31 +117,25 @@ Route::middleware('auth')->group(function () {
     */
     
     // Special employee routes (before resource routes)
-    Route::get('/employees/generate-data', [EmployeeController::class, 'generateData'])->name('employees.generate-data');
     Route::get('/employees/export-excel', [EmployeeController::class, 'exportExcel'])->name('employees.exportExcel');
     Route::get('/employees/export-pdf', [EmployeeController::class, 'exportPdf'])->name('employees.exportPdf');
     Route::post('/employees/bulk-action', [EmployeeController::class, 'bulkAction'])->name('employees.bulkAction');
-    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
-    
+    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');    
     // *** Trash Management Routes (SuperAdmin Only) ***
-    Route::middleware(function ($request, $next) {
-        if (auth()->user()->role !== 'super_admin') {
-            return redirect()->route('employees.index')->with('error', 'ไม่มีสิทธิ์เข้าถึง');
-        }
-        return $next($request);
-    })->group(function () {
+    // แก้ไข: ใช้ middleware ที่สร้างขึ้นแทน closure
+    Route::middleware(['role:super_admin'])->group(function () {
         Route::get('/employees/trash', [EmployeeController::class, 'trash'])->name('employees.trash');
         Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
-        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.forceDelete');
-        Route::post('/employees/bulk-restore', [EmployeeController::class, 'bulkRestore'])->name('employees.bulkRestore');
-        Route::delete('/employees/empty-trash', [EmployeeController::class, 'emptyTrash'])->name('employees.emptyTrash');
+        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+        Route::post('/employees/bulk-restore', [EmployeeController::class, 'bulkRestore'])->name('employees.bulk-restore');
+        Route::delete('/employees/empty-trash', [EmployeeController::class, 'emptyTrash'])->name('employees.empty-trash');
     });
     
     // *** Employee Action Routes ***
-    Route::post('/employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.resetPassword');
-    Route::post('/employees/{employee}/send-credentials', [EmployeeController::class, 'sendCredentials'])->name('employees.sendCredentials');
+    Route::post('/employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
+    Route::post('/employees/{employee}/send-credentials', [EmployeeController::class, 'sendCredentials'])->name('employees.send-credentials');
     Route::get('/employees/{employee}/preview', [EmployeeController::class, 'preview'])->name('employees.preview');
-    Route::post('/employees/{employee}/generate-credentials', [EmployeeController::class, 'generateCredentials'])->name('employees.generateCredentials');
+    Route::post('/employees/{employee}/generate-credentials', [EmployeeController::class, 'generateCredentials'])->name('employees.generate-credentials');
     
     // Employee CRUD routes
     Route::resource('employees', EmployeeController::class);
@@ -196,15 +190,22 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes สำหรับ AJAX
+| API Routes สำหรับ AJAX และ Express Generation
 |--------------------------------------------------------------------------
 */
 
 Route::prefix('api')->middleware('auth')->group(function () {
     
     // Employee API
+    Route::get('/employees', [EmployeeController::class, 'apiIndex'])->name('api.employees.index');
     Route::get('/employees/search', [EmployeeController::class, 'apiSearch'])->name('api.employees.search');
     Route::get('/employees/{employee}', [EmployeeController::class, 'apiShow'])->name('api.employees.show');
+    
+    // Express credential generation API
+    Route::get('/generate/express-username', [EmployeeController::class, 'generateExpressUsername'])->name('api.generate.express-username');
+    Route::get('/generate/express-password', [EmployeeController::class, 'generateExpressPassword'])->name('api.generate.express-password');
+    
+    // Trash count API
     Route::get('/employees/trash-count', function () {
         try {
             $count = \App\Models\Employee::onlyTrashed()->count();
@@ -212,7 +213,7 @@ Route::prefix('api')->middleware('auth')->group(function () {
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'count' => 0]);
         }
-    })->name('api.employees.trashCount');
+    })->name('api.employees.trash-count');
     
     // Employee status toggle
     Route::post('/employees/{employee}/toggle-status', function (\App\Models\Employee $employee, Illuminate\Http\Request $request) {
@@ -236,41 +237,46 @@ Route::prefix('api')->middleware('auth')->group(function () {
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
-    })->name('api.employees.toggleStatus');
+    })->name('api.employees.toggle-status');
     
-    // Generate data API
-    Route::get('/generate-data', [EmployeeController::class, 'generateData'])->name('api.generate-data');
-    
-    // Department API
-    Route::get('/departments', [DepartmentController::class, 'apiList'])->name('api.departments');
-    Route::get('/departments/active', function () {
+    // Department API (สำหรับการเพิ่มแผนกใหม่)
+    Route::get('/departments', function () {
         try {
-            $departments = \App\Models\Department::where('is_active', true)
-                                               ->select('id', 'name', 'code')
-                                               ->orderBy('name')
-                                               ->get();
-            return response()->json(['success' => true, 'data' => $departments]);
+            // Static departments list for now
+            $departments = [
+                'แผนกบริหาร',
+                'แผนกการเงิน', 
+                'แผนกบัญชี',
+                'แผนกบัญชีและการเงิน',
+                'แผนกขาย',
+                'แผนกการตลาด',
+                'แผนกผลิต',
+                'แผนกควบคุมคุณภาพ',
+                'แผนกจัดซื้อ',
+                'แผนกทรัพยากรบุคคล',
+                'แผนกเทคโนโลยีสารสนเทศ',
+                'แผนกกฎหมาย',
+                'แผนกวิจัยและพัฒนา'
+            ];
+            
+            return response()->json(['success' => true, 'departments' => $departments]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
-    })->name('api.departments.active');
+    })->name('api.departments');
     
     // Check if department is accounting
-    Route::get('/departments/{department}/is-accounting', function (\App\Models\Department $department) {
+    Route::get('/departments/is-accounting', function (Illuminate\Http\Request $request) {
         try {
-            $accountingNames = [
+            $department = $request->get('department');
+            
+            $accountingDepartments = [
+                'แผนกบัญชี',
                 'แผนกบัญชีและการเงิน',
-                'บัญชีและการเงิน', 
-                'บัญชี',
-                'การเงิน',
-                'accounting',
-                'finance'
+                'แผนกการเงิน'
             ];
             
-            $accountingCodes = ['ACC', 'FIN', 'AF'];
-            
-            $isAccounting = in_array(strtolower($department->name), array_map('strtolower', $accountingNames)) ||
-                           in_array(strtoupper($department->code ?? ''), $accountingCodes);
+            $isAccounting = in_array($department, $accountingDepartments);
             
             return response()->json([
                 'success' => true,
@@ -280,126 +286,8 @@ Route::prefix('api')->middleware('auth')->group(function () {
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
-    })->name('api.departments.isAccounting');
+    })->name('api.departments.is-accounting');
     
-    // Express data generation
-    Route::get('/generate-express-data', function (Illuminate\Http\Request $request) {
-        $type = $request->get('type');
-        
-        switch ($type) {
-            case 'username':
-                $name = $request->get('name', '');
-                $clean = preg_replace('/[^a-zA-Z]/', '', $name);
-                $username = strtolower(substr($clean, 0, 7));
-                
-                if (strlen($username) < 7) {
-                    $username = str_pad($username, 7, 'x');
-                }
-                
-                // Check for duplicates
-                $counter = 1;
-                $originalUsername = $username;
-                
-                while (\App\Models\Employee::where('express_username', $username)->exists()) {
-                    $username = substr($originalUsername, 0, 6) . $counter;
-                    $counter++;
-                }
-                
-                return response()->json(['username' => $username]);
-            
-            case 'password':
-                $chars = 'abcdefghijklmnopqrstuvwxyz';
-                $numbers = '0123456789';
-                
-                $password = '';
-                for ($i = 0; $i < 3; $i++) {
-                    $password .= $chars[rand(0, strlen($chars) - 1)];
-                }
-                $password .= $numbers[rand(0, strlen($numbers) - 1)];
-                $password = str_shuffle($password);
-                
-                return response()->json(['password' => $password]);
-            
-            default:
-                return response()->json(['error' => 'Invalid type'], 400);
-        }
-    })->name('api.generate-express-data');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| Bulk Actions for Trash Management (SuperAdmin Only)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', function ($request, $next) {
-    if (auth()->user()->role !== 'super_admin') {
-        return response()->json(['success' => false, 'message' => 'ไม่มีสิทธิ์'], 403);
-    }
-    return $next($request);
-}])->group(function () {
-    
-    // Bulk restore from trash
-    Route::post('/employees/bulk-restore', function (Illuminate\Http\Request $request) {
-        try {
-            $validated = $request->validate([
-                'employee_ids' => 'required|array',
-                'employee_ids.*' => 'exists:employees,id'
-            ]);
-            
-            $employeeIds = $validated['employee_ids'];
-            $count = count($employeeIds);
-            
-            // Restore employees
-            \App\Models\Employee::withTrashed()
-                               ->whereIn('id', $employeeIds)
-                               ->restore();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "กู้คืนพนักงาน {$count} คนเรียบร้อยแล้ว"
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Bulk restore failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดในการกู้คืน'
-            ], 500);
-        }
-    });
-    
-    // Empty trash (delete all trashed employees permanently)
-    Route::delete('/employees/empty-trash', function () {
-        try {
-            $count = \App\Models\Employee::onlyTrashed()->count();
-            
-            if ($count === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ถังขยะว่างเปล่า'
-                ]);
-            }
-            
-            // Force delete all trashed employees
-            \App\Models\Employee::onlyTrashed()->forceDelete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "ลบข้อมูลถาวร {$count} รายการเรียบร้อยแล้ว"
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Empty trash failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดในการล้างถังขยะ'
-            ], 500);
-        }
-    });
 });
 
 /*
@@ -414,7 +302,6 @@ if (app()->environment('local')) {
         try {
             $employees = \App\Models\Employee::withoutTrashed()->count();
             $trashedEmployees = \App\Models\Employee::onlyTrashed()->count();
-            $departments = \App\Models\Department::count();
             
             return response()->json([
                 'success' => true,
@@ -422,7 +309,6 @@ if (app()->environment('local')) {
                 'data' => [
                     'employees_count' => $employees,
                     'trashed_employees_count' => $trashedEmployees,
-                    'departments_count' => $departments,
                     'timestamp' => now(),
                 ]
             ]);
@@ -436,13 +322,9 @@ if (app()->environment('local')) {
     
     Route::get('/test-generate', function () {
         try {
-            $controller = new EmployeeController();
-            
             $tests = [
                 'employee_code' => 'EMP' . str_pad(random_int(1, 999), 3, '0', STR_PAD_LEFT),
-                'keycard_id' => 'KC' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT),
                 'password' => 'TestPassword123',
-                'copier_code' => str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT),
                 'express_username' => 'testuser',
                 'express_password' => 'abc1',
             ];
@@ -482,47 +364,20 @@ if (app()->environment('local')) {
         }
     })->name('test.auth');
     
-    Route::get('/test-departments', function () {
-        try {
-            $departments = \App\Models\Department::all();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Department test successful',
-                'data' => [
-                    'departments_count' => $departments->count(),
-                    'active_departments' => $departments->where('is_active', true)->count(),
-                    'departments' => $departments->map(function($dept) {
-                        return [
-                            'id' => $dept->id,
-                            'name' => $dept->name,
-                            'code' => $dept->code,
-                            'is_active' => $dept->is_active
-                        ];
-                    })
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Department test failed: ' . $e->getMessage(),
-            ], 500);
-        }
-    })->name('test.departments');
-    
     // Test Express credential generation
     Route::get('/test-express', function () {
         try {
             $testNames = [
-                'จอห์น สมิธ',
-                'มารี ซู',
-                'ทดสอบ ระบบ',
-                'Test User'
+                'John Smith',
+                'Mary Sue',
+                'Test User',
+                'Alice Cooper'
             ];
             
             $results = [];
             
             foreach ($testNames as $name) {
+                // Generate username
                 $clean = preg_replace('/[^a-zA-Z]/', '', $name);
                 $username = strtolower(substr($clean, 0, 7));
                 
@@ -530,14 +385,19 @@ if (app()->environment('local')) {
                     $username = str_pad($username, 7, 'x');
                 }
                 
-                $chars = 'abcdefghijklmnopqrstuvwxyz';
-                $numbers = '0123456789';
-                
+                // Generate password
+                $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
                 $password = '';
+                
+                // Ensure at least one number
+                $password .= rand(0, 9);
+                
+                // Fill remaining 3 characters
                 for ($i = 0; $i < 3; $i++) {
                     $password .= $chars[rand(0, strlen($chars) - 1)];
                 }
-                $password .= $numbers[rand(0, strlen($numbers) - 1)];
+                
+                // Shuffle the password
                 $password = str_shuffle($password);
                 
                 $results[] = [
@@ -576,7 +436,7 @@ Route::get('/health', function () {
         'environment' => app()->environment(),
         'features' => [
             'employee_management' => true,
-            'department_management' => true,
+            'department_management' => false,
             'express_support' => true,
             'role_based_access' => true,
             'soft_delete' => true,
