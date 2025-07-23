@@ -8,15 +8,6 @@
 @endsection
 
 @section('content')
-@php
-    $employeeCount = $department->employees->count() ?? 0;
-    $expressUsersCount = $department->employees->whereNotNull('express_username')->count() ?? 0;
-    $activeEmployeesCount = $department->employees->where('status', 'active')->count() ?? 0;
-    $inactiveEmployeesCount = $department->employees->where('status', 'inactive')->count() ?? 0;
-    $managersCount = $department->employees->whereIn('role', ['manager', 'hr', 'super_admin', 'it_admin'])->count() ?? 0;
-    $expressEmployees = $department->employees->whereNotNull('express_username');
-@endphp
-
 <!-- Page Header -->
 <div class="row mb-4">
     <div class="col-12">
@@ -59,13 +50,13 @@
                 <h4 class="mb-1">{{ $department->name }}</h4>
                 <div class="d-flex gap-3 flex-wrap">
                     <span><i class="fas fa-code me-1"></i>{{ $department->code }}</span>
-                    <span><i class="fas fa-users me-1"></i>{{ $employeeCount }} พนักงาน</span>
+                    <span><i class="fas fa-users me-1"></i>{{ $department->employees->count() }} พนักงาน</span>
                     @if($department->express_enabled)
-                        <span><i class="fas fa-bolt me-1"></i>{{ $expressUsersCount }} Express Users</span>
+                        <span><i class="fas fa-bolt me-1"></i>{{ $department->expressUsers->count() }} Express Users</span>
                     @endif
                     <span>
                         <i class="fas fa-{{ $department->is_active ? 'check-circle' : 'times-circle' }} me-1"></i>
-                        {{ $department->is_active ? 'ใช้งาน' : 'ปิดใช้งาน' }}
+                        {{ $department->status_display }}
                     </span>
                 </div>
             </div>
@@ -98,10 +89,10 @@
                                     <div class="col-md-6">
                                         <small><strong>สถิติการใช้งาน:</strong></small>
                                         <ul class="small mb-0">
-                                            <li>ผู้ใช้ Express: {{ $expressUsersCount }} คน</li>
+                                            <li>ผู้ใช้ Express: {{ $department->expressUsers->count() }} คน</li>
                                             <li>เปอร์เซ็นต์การใช้งาน: 
-                                                @if($employeeCount > 0)
-                                                    {{ round(($expressUsersCount / $employeeCount) * 100, 2) }}%
+                                                @if($department->employees->count() > 0)
+                                                    {{ round(($department->expressUsers->count() / $department->employees->count()) * 100, 2) }}%
                                                 @else
                                                     0%
                                                 @endif
@@ -119,25 +110,25 @@
                 <div class="row g-3">
                     <div class="col-6">
                         <div class="text-center p-3 bg-success bg-opacity-10 rounded">
-                            <div class="h4 mb-0 text-success">{{ $activeEmployeesCount }}</div>
+                            <div class="h4 mb-0 text-success">{{ $department->activeEmployees->count() }}</div>
                             <small class="text-muted">ใช้งาน</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="text-center p-3 bg-secondary bg-opacity-10 rounded">
-                            <div class="h4 mb-0 text-secondary">{{ $inactiveEmployeesCount }}</div>
+                            <div class="h4 mb-0 text-secondary">{{ $department->employees->where('status', 'inactive')->count() }}</div>
                             <small class="text-muted">ไม่ใช้งาน</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="text-center p-3 bg-info bg-opacity-10 rounded">
-                            <div class="h4 mb-0 text-info">{{ $managersCount }}</div>
+                            <div class="h4 mb-0 text-info">{{ $department->employees->whereIn('role', ['manager', 'hr', 'super_admin', 'it_admin'])->count() }}</div>
                             <small class="text-muted">ผู้จัดการ</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
-                            <div class="h4 mb-0 text-warning">{{ $expressUsersCount }}</div>
+                            <div class="h4 mb-0 text-warning">{{ $department->expressUsers->count() }}</div>
                             <small class="text-muted">Express</small>
                         </div>
                     </div>
@@ -148,13 +139,13 @@
 </div>
 
 <!-- Express Users Overview -->
-@if($department->express_enabled && $expressUsersCount > 0)
+@if($department->express_enabled && $department->expressUsers->count() > 0)
 <div class="card mb-4 border-warning">
     <div class="card-header bg-warning bg-opacity-10">
         <div class="d-flex justify-content-between align-items-center">
             <h6 class="mb-0">
                 <i class="fas fa-bolt text-warning me-2"></i>
-                ผู้ใช้งาน Express ({{ $expressUsersCount }} คน)
+                ผู้ใช้งาน Express ({{ $department->expressUsers->count() }} คน)
             </h6>
             <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#expressUsersCollapse">
                 <i class="fas fa-eye me-1"></i>ดูรายละเอียด
@@ -164,7 +155,7 @@
     <div class="collapse" id="expressUsersCollapse">
         <div class="card-body">
             <div class="row">
-                @foreach($expressEmployees as $user)
+                @foreach($department->expressUsers as $user)
                     <div class="col-md-6 mb-3">
                         <div class="d-flex align-items-center p-2 bg-light rounded">
                             <div class="flex-shrink-0 me-3">
@@ -173,7 +164,7 @@
                                 </div>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="fw-bold">{{ $user->first_name_th }} {{ $user->last_name_th }}</div>
+                                <div class="fw-bold">{{ $user->full_name_th }}</div>
                                 <div class="d-flex gap-2 align-items-center">
                                     <span class="badge bg-secondary">{{ $user->employee_code }}</span>
                                     <span class="badge bg-warning text-dark">{{ $user->express_username }}</span>
@@ -181,7 +172,7 @@
                                         <span class="small text-muted">{{ $user->express_password ? '••••' : 'No Password' }}</span>
                                     @endif
                                 </div>
-                                <small class="text-muted">{{ $user->position ?? 'ไม่ระบุตำแหน่ง' }}</small>
+                                <small class="text-muted">{{ $user->position }}</small>
                             </div>
                         </div>
                     </div>
@@ -252,7 +243,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">พนักงานในแผนก ({{ $employeeCount }} คน)</h6>
+            <h6 class="mb-0">พนักงานในแผนก ({{ $department->employees->count() }} คน)</h6>
             <div class="d-flex gap-2">
                 <div class="input-group" style="width: 300px;">
                     <span class="input-group-text">
@@ -308,23 +299,19 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="fw-bold">{{ $employee->first_name_th }} {{ $employee->last_name_th }}</div>
-                                        <small class="text-muted">{{ $employee->first_name_en }} {{ $employee->last_name_en }}</small>
+                                        <div class="fw-bold">{{ $employee->full_name_th }}</div>
+                                        <small class="text-muted">{{ $employee->full_name_en }}</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div>{{ $employee->position ?? 'ไม่ระบุตำแหน่ง' }}</div>
-                                <small class="text-muted">{{ ucfirst($employee->role) }}</small>
+                                <div>{{ $employee->position }}</div>
+                                <small class="text-muted">{{ $employee->role_display }}</small>
                             </td>
                             <td>
-                                @if($employee->email)
-                                    <a href="mailto:{{ $employee->email }}" class="text-decoration-none">
-                                        {{ $employee->email }}
-                                    </a>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
+                                <a href="mailto:{{ $employee->email }}" class="text-decoration-none">
+                                    {{ $employee->email }}
+                                </a>
                             </td>
                             <td>
                                 @if($employee->phone)
@@ -357,7 +344,7 @@
                             @endif
                             <td>
                                 <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
-                                    {{ $employee->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                                    {{ $employee->status_display }}
                                 </span>
                             </td>
                             <td>
@@ -420,17 +407,17 @@
                     
                     <div class="row mb-4">
                         <div class="col-md-4 text-center">
-                            <div class="h4 text-warning">{{ $employeeCount }}</div>
+                            <div class="h4 text-warning">{{ $department->employees->count() }}</div>
                             <small>พนักงานทั้งหมด</small>
                         </div>
                         <div class="col-md-4 text-center">
-                            <div class="h4 text-success">{{ $expressUsersCount }}</div>
+                            <div class="h4 text-success">{{ $department->expressUsers->count() }}</div>
                             <small>ใช้ Express</small>
                         </div>
                         <div class="col-md-4 text-center">
                             <div class="h4 text-info">
-                                @if($employeeCount > 0)
-                                    {{ round(($expressUsersCount / $employeeCount) * 100, 2) }}%
+                                @if($department->employees->count() > 0)
+                                    {{ round(($department->expressUsers->count() / $department->employees->count()) * 100, 2) }}%
                                 @else
                                     0%
                                 @endif
@@ -483,7 +470,7 @@
                             <select class="form-select" id="employeeToTransfer" multiple size="5">
                                 @foreach($department->employees as $employee)
                                     <option value="{{ $employee->id }}">
-                                        {{ $employee->employee_code }} - {{ $employee->first_name_th }} {{ $employee->last_name_th }}
+                                        {{ $employee->employee_code }} - {{ $employee->full_name_th }}
                                         @if($employee->express_username)
                                             (Express: {{ $employee->express_username }})
                                         @endif
@@ -666,19 +653,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Department Show Ready');
     console.log('📊 Department Stats:', {
         name: '{{ $department->name }}',
-        employees: {{ $employeeCount }},
+        employees: {{ $department->employees->count() }},
         expressEnabled: {{ $department->express_enabled ? 'true' : 'false' }},
-        expressUsers: {{ $expressUsersCount }}
+        expressUsers: {{ $department->expressUsers->count() }}
     });
 });
 
 // Export functions
 function exportEmployees() {
-    const params = new URLSearchParams({
-        department: {{ $department->id }},
-        format: 'excel'
-    });
-    window.location.href = `/employees/export-excel?${params.toString()}`;
+    window.location.href = `/departments/{{ $department->id }}/export-employees`;
 }
 
 function printDepartment() {

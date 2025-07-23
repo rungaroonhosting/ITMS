@@ -32,11 +32,6 @@
 </div>
 
 <!-- Department Info Banner -->
-@php
-    $employeeCount = $department->employees->count() ?? 0;
-    $expressUsersCount = $department->employees->whereNotNull('express_username')->count() ?? 0;
-@endphp
-
 <div class="card mb-4 border-0 shadow-sm {{ $department->express_enabled ? 'bg-gradient-warning' : 'bg-gradient-info' }} text-white">
     <div class="card-body">
         <div class="d-flex align-items-center">
@@ -49,9 +44,9 @@
                 <h4 class="mb-1">{{ $department->name }}</h4>
                 <div class="d-flex gap-3">
                     <span><i class="fas fa-code me-1"></i>{{ $department->code }}</span>
-                    <span><i class="fas fa-users me-1"></i>{{ $employeeCount }} พนักงาน</span>
+                    <span><i class="fas fa-users me-1"></i>{{ $department->employees->count() }} พนักงาน</span>
                     @if($department->express_enabled)
-                        <span><i class="fas fa-bolt me-1"></i>{{ $expressUsersCount }} Express Users</span>
+                        <span><i class="fas fa-bolt me-1"></i>{{ $department->expressUsers->count() }} Express Users</span>
                     @endif
                     <span><i class="fas fa-calendar me-1"></i>สร้างเมื่อ {{ $department->created_at->format('d/m/Y') }}</span>
                 </div>
@@ -68,25 +63,22 @@
 </div>
 
 <!-- Express Users Warning -->
-@if($department->express_enabled && $expressUsersCount > 0)
+@if($department->express_enabled && $department->expressUsers->count() > 0)
 <div class="alert alert-warning" role="alert">
     <div class="d-flex align-items-center">
         <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
         <div>
             <h6 class="mb-1"><strong>ข้อมูลสำคัญ!</strong></h6>
-            <p class="mb-2">แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ <strong>{{ $expressUsersCount }} คน</strong></p>
+            <p class="mb-2">แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ <strong>{{ $department->expressUsers->count() }} คน</strong></p>
             <div class="row">
-                @php
-                    $expressUsers = $department->employees->whereNotNull('express_username')->take(5);
-                @endphp
-                @foreach($expressUsers as $user)
+                @foreach($department->expressUsers->take(5) as $user)
                     <div class="col-md-4 mb-1">
-                        <small>• {{ $user->first_name_th }} {{ $user->last_name_th }} ({{ $user->express_username }})</small>
+                        <small>• {{ $user->full_name_th }} ({{ $user->express_username }})</small>
                     </div>
                 @endforeach
-                @if($expressUsersCount > 5)
+                @if($department->expressUsers->count() > 5)
                     <div class="col-md-4 mb-1">
-                        <small>• และอีก {{ $expressUsersCount - 5 }} คน...</small>
+                        <small>• และอีก {{ $department->expressUsers->count() - 5 }} คน...</small>
                     </div>
                 @endif
             </div>
@@ -219,39 +211,35 @@
                     @enderror
                 </div>
                 
-                <!-- Status - แก้ไขเพิ่ม hidden input -->
+                <!-- Status -->
                 <div class="col-md-6">
                     <label for="is_active" class="form-label">สถานะ</label>
-                    <!-- Hidden input เพื่อให้ส่งค่า 0 เมื่อ checkbox ไม่ได้ tick -->
-                    <input type="hidden" name="is_active" value="0">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
-                               value="1" {{ old('is_active', $department->is_active) ? 'checked' : '' }}>
+                               {{ old('is_active', $department->is_active) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_active">
                             <span id="statusText">{{ $department->is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}</span>
                         </label>
                     </div>
                     <div class="form-text">แผนกที่เปิดใช้งานจะปรากฏในรายการเลือกแผนก</div>
                     
-                    @if($employeeCount > 0 && $department->is_active)
+                    @if($department->employees->count() > 0 && $department->is_active)
                         <div class="alert alert-warning mt-2">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <small>หากปิดใช้งานแผนกนี้ พนักงาน {{ $employeeCount }} คนจะไม่สามารถเข้าถึงฟีเจอร์บางอย่างได้</small>
+                            <small>หากปิดใช้งานแผนกนี้ พนักงาน {{ $department->employees->count() }} คนจะไม่สามารถเข้าถึงฟีเจอร์บางอย่างได้</small>
                         </div>
                     @endif
                 </div>
                 
-                <!-- Express Support - แก้ไขเพิ่ม hidden input -->
+                <!-- Express Support -->
                 <div class="col-md-6">
                     <label for="express_enabled" class="form-label">
                         รองรับ Express 
                         <i class="fas fa-bolt text-warning"></i>
                     </label>
-                    <!-- Hidden input เพื่อให้ส่งค่า 0 เมื่อ checkbox ไม่ได้ tick -->
-                    <input type="hidden" name="express_enabled" value="0">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="express_enabled" name="express_enabled" 
-                               value="1" {{ old('express_enabled', $department->express_enabled) ? 'checked' : '' }}>
+                               {{ old('express_enabled', $department->express_enabled) ? 'checked' : '' }}>
                         <label class="form-check-label" for="express_enabled">
                             <span id="expressText">{{ $department->express_enabled ? 'รองรับ Express' : 'ไม่รองรับ Express' }}</span>
                         </label>
@@ -260,10 +248,10 @@
                         แผนกที่รองรับ Express สามารถสร้าง Username และ Password สำหรับโปรแกรม Express ได้
                     </div>
                     
-                    @if($department->express_enabled && $expressUsersCount > 0)
+                    @if($department->express_enabled && $department->expressUsers->count() > 0)
                         <div class="alert alert-info mt-2">
                             <i class="fas fa-info-circle me-2"></i>
-                            <small>มีพนักงาน {{ $expressUsersCount }} คนที่ใช้งาน Express อยู่</small>
+                            <small>มีพนักงาน {{ $department->expressUsers->count() }} คนที่ใช้งาน Express อยู่</small>
                         </div>
                     @endif
                 </div>
@@ -290,18 +278,15 @@
                 <strong>แผนกที่รองรับ Express</strong> จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน
             </div>
             
-            @if($expressUsersCount > 0)
+            @if($department->expressUsers->count() > 0)
                 <div class="alert alert-success">
                     <i class="fas fa-users me-2"></i>
-                    <strong>พนักงานที่ใช้ Express:</strong> {{ $expressUsersCount }} คน
+                    <strong>พนักงานที่ใช้ Express:</strong> {{ $department->expressUsers->count() }} คน
                     <div class="mt-2">
                         <div class="row">
-                            @php
-                                $expressEmployees = $department->employees->whereNotNull('express_username');
-                            @endphp
-                            @foreach($expressEmployees as $employee)
+                            @foreach($department->expressUsers as $employee)
                                 <div class="col-md-6 mb-1">
-                                    <small>• {{ $employee->first_name_th }} {{ $employee->last_name_th }} ({{ $employee->express_username }})</small>
+                                    <small>• {{ $employee->full_name_th }} ({{ $employee->express_username }})</small>
                                 </div>
                             @endforeach
                         </div>
@@ -327,11 +312,11 @@
                 <div class="col-md-6">
                     <h6><i class="fas fa-chart-bar text-info me-1"></i>สถิติการใช้งาน:</h6>
                     <ul class="list-unstyled">
-                        <li><i class="fas fa-users text-muted me-2"></i>พนักงานทั้งหมด: {{ $employeeCount }} คน</li>
-                        <li><i class="fas fa-bolt text-warning me-2"></i>ผู้ใช้ Express: {{ $expressUsersCount }} คน</li>
+                        <li><i class="fas fa-users text-muted me-2"></i>พนักงานทั้งหมด: {{ $department->employees->count() }} คน</li>
+                        <li><i class="fas fa-bolt text-warning me-2"></i>ผู้ใช้ Express: {{ $department->expressUsers->count() }} คน</li>
                         <li><i class="fas fa-percentage text-muted me-2"></i>เปอร์เซ็นต์การใช้งาน: 
-                            @if($employeeCount > 0)
-                                {{ round(($expressUsersCount / $employeeCount) * 100, 2) }}%
+                            @if($department->employees->count() > 0)
+                                {{ round(($department->expressUsers->count() / $department->employees->count()) * 100, 2) }}%
                             @else
                                 0%
                             @endif
@@ -358,7 +343,7 @@
         <div class="card-body">
             <div class="alert alert-danger" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>ไม่สามารถปิด Express ได้!</strong> แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ {{ $expressUsersCount }} คน
+                <strong>ไม่สามารถปิด Express ได้!</strong> แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ {{ $department->expressUsers->count() }} คน
             </div>
             <p><strong>วิธีการปิด Express:</strong></p>
             <ol>
@@ -434,13 +419,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalData = {
         name: '{{ $department->name }}',
         code: '{{ $department->code }}',
-        description: '{{ $department->description ?? "" }}',
+        description: '{{ $department->description }}',
         is_active: {{ $department->is_active ? 'true' : 'false' }},
         express_enabled: {{ $department->express_enabled ? 'true' : 'false' }}
     };
     
     // Current Express users count
-    const currentExpressUsers = {{ $expressUsersCount }};
+    const currentExpressUsers = {{ $department->expressUsers->count() }};
     
     // Utility Functions
     const utils = {
@@ -459,8 +444,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showNotification: (message, type = 'success') => {
-            const alertClass = type === 'success' ? 'alert-success' : (type === 'error' ? 'alert-danger' : 'alert-info');
-            const iconClass = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
             const alert = document.createElement('div');
             alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
@@ -700,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (isAccounting) {
             utils.showNotification('🔍 ตรวจพบคำสำคัญแผนกบัญชี - แนะนำใช้ Express!', 'success');
-            if (!expressSwitch.checked && currentExpressUsers === 0) {
+            if (!expressSwitch.checked) {
                 if (confirm('ตรวจพบว่าเป็นแผนกบัญชี ต้องการเปิดใช้งาน Express หรือไม่?')) {
                     expressSwitch.checked = true;
                     expressSwitch.dispatchEvent(new Event('change'));
@@ -743,10 +728,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const previewContent = document.getElementById('previewContent');
         if (!previewContent) return;
         
-        // แก้ไขการตรวจสอบ checkbox values
-        const isActiveChecked = statusSwitch.checked;
-        const expressEnabledChecked = expressSwitch.checked;
-        
         let previewHtml = `
             <div class="row">
                 <div class="col-md-8">
@@ -755,17 +736,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><strong>รหัสแผนก:</strong> <span class="badge bg-primary">${data.code || '-'}</span></p>
                     <p><strong>รายละเอียด:</strong> ${data.description || 'ไม่มี'}</p>
                     <p><strong>สถานะ:</strong> 
-                        <span class="badge bg-${isActiveChecked ? 'success' : 'secondary'}">
-                            ${isActiveChecked ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                        <span class="badge bg-${data.is_active ? 'success' : 'secondary'}">
+                            ${data.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                         </span>
                     </p>
                     <p><strong>Express:</strong> 
-                        <span class="badge bg-${expressEnabledChecked ? 'warning' : 'secondary'}">
-                            ${expressEnabledChecked ? 'รองรับ' : 'ไม่รองรับ'}
+                        <span class="badge bg-${data.express_enabled ? 'warning' : 'secondary'}">
+                            ${data.express_enabled ? 'รองรับ' : 'ไม่รองรับ'}
                         </span>
                     </p>
                     
-                    ${expressEnabledChecked ? `
+                    ${data.express_enabled ? `
                         <div class="alert alert-warning">
                             <i class="fas fa-bolt me-2"></i>
                             <strong>รองรับ Express!</strong><br>

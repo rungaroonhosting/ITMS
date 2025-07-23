@@ -43,11 +43,6 @@ class Department extends Model
     ];
 
     /**
-     * Soft delete configuration
-     */
-    protected $dates = ['deleted_at'];
-
-    /**
      * Boot the model.
      */
     protected static function boot()
@@ -73,25 +68,6 @@ class Department extends Model
                 ]);
             }
         });
-
-        // Log การลบ
-        static::deleting(function ($department) {
-            \Log::info('Department being deleted', [
-                'department_id' => $department->id,
-                'name' => $department->name,
-                'employee_count' => $department->employees()->count(),
-                'deleted_by' => auth()->id()
-            ]);
-        });
-
-        // Log การกู้คืน
-        static::restored(function ($department) {
-            \Log::info('Department restored', [
-                'department_id' => $department->id,
-                'name' => $department->name,
-                'restored_by' => auth()->id()
-            ]);
-        });
     }
 
     /**
@@ -107,7 +83,7 @@ class Department extends Model
      */
     public function activeEmployees()
     {
-        return $this->hasMany(Employee::class)->where('status', 'active');
+        return $this->hasMany(Employee::class)->where('is_active', true);
     }
 
     /**
@@ -137,35 +113,11 @@ class Department extends Model
     }
 
     /**
-     * Scope to include soft deleted records
-     */
-    public function scopeWithTrashed($query)
-    {
-        return $query->withTrashed();
-    }
-
-    /**
-     * Scope for only soft deleted records
-     */
-    public function scopeOnlyTrashed($query)
-    {
-        return $query->onlyTrashed();
-    }
-
-    /**
      * Check if department supports Express.
      */
     public function supportsExpress(): bool
     {
         return $this->express_enabled === true;
-    }
-
-    /**
-     * Check if department can be deleted safely
-     */
-    public function canBeDeleted(): bool
-    {
-        return $this->employees()->count() === 0;
     }
 
     /**
@@ -191,18 +143,6 @@ class Department extends Model
     }
 
     /**
-     * Get status display text
-     */
-    public function getStatusDisplayAttribute(): string
-    {
-        if ($this->trashed()) {
-            return 'ถูกลบ';
-        }
-        
-        return $this->is_active ? 'ใช้งาน' : 'ปิดใช้งาน';
-    }
-
-    /**
      * Enable Express support for this department.
      */
     public function enableExpress(): bool
@@ -219,9 +159,7 @@ class Department extends Model
                 ->get();
 
             foreach ($employeesWithoutExpress as $employee) {
-                if (method_exists($employee, 'generateExpressCredentials')) {
-                    $employee->generateExpressCredentials();
-                }
+                $employee->generateExpressCredentials();
             }
 
             \Log::info('Express enabled for department', [
@@ -295,7 +233,7 @@ class Department extends Model
         $generatedCount = 0;
 
         foreach ($employees as $employee) {
-            if (method_exists($employee, 'generateExpressCredentials') && $employee->generateExpressCredentials()) {
+            if ($employee->generateExpressCredentials()) {
                 $generatedCount++;
             }
         }
@@ -311,7 +249,7 @@ class Department extends Model
         $totalEmployees = $this->employees()->count();
         $expressUsers = $this->expressEmployees()->count();
         $activeExpressUsers = $this->employees()
-            ->where('status', 'active')
+            ->where('is_active', true)
             ->whereNotNull('express_username')
             ->count();
 
@@ -338,14 +276,13 @@ class Department extends Model
     {
         $accountingKeywords = [
             'บัญชี', 'การเงิน', 'accounting', 'finance', 'acc', 'fin',
-            'financial', 'accountant', 'treasury', 'audit', 'เงิน'
+            'financial', 'accountant', 'treasury', 'audit'
         ];
 
         $name = strtolower($this->name);
-        $code = strtolower($this->code);
         
         foreach ($accountingKeywords as $keyword) {
-            if (str_contains($name, strtolower($keyword)) || str_contains($code, strtolower($keyword))) {
+            if (str_contains($name, strtolower($keyword))) {
                 return true;
             }
         }
@@ -368,22 +305,14 @@ class Department extends Model
             $name .= ' (ปิดใช้งาน)';
         }
 
-        if ($this->trashed()) {
-            $name .= ' (ถูกลบ)';
-        }
-
         return $name;
     }
 
     /**
-     * Get department status badge HTML.
+     * Get department status badge.
      */
     public function getStatusBadgeAttribute(): string
     {
-        if ($this->trashed()) {
-            return '<span class="badge bg-danger">ถูกลบ</span>';
-        }
-
         if (!$this->is_active) {
             return '<span class="badge bg-secondary">ปิดใช้งาน</span>';
         }
@@ -393,48 +322,6 @@ class Department extends Model
         }
 
         return '<span class="badge bg-success">เปิดใช้งาน</span>';
-    }
-
-    /**
-     * Restore a soft deleted department
-     */
-    public function restoreDepartment(): bool
-    {
-        try {
-            if (!$this->trashed()) {
-                return false;
-            }
-
-            $this->restore();
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Failed to restore department', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Force delete department permanently
-     */
-    public function forceDeleteDepartment(): bool
-    {
-        try {
-            if ($this->employees()->count() > 0) {
-                return false;
-            }
-
-            $this->forceDelete();
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Failed to force delete department', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
     }
 
     /**
@@ -453,39 +340,8 @@ class Department extends Model
             'employee_count' => $this->employees()->count(),
             'express_user_count' => $this->expressEmployees()->count(),
             'express_stats' => $this->express_stats,
-            'can_be_deleted' => $this->canBeDeleted(),
-            'is_deleted' => $this->trashed(),
             'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
-            'deleted_at' => $this->deleted_at?->toISOString()
+            'updated_at' => $this->updated_at->toISOString()
         ];
-    }
-
-    /**
-     * Search departments by name or code
-     */
-    public function scopeSearch($query, $term)
-    {
-        if (empty($term)) {
-            return $query;
-        }
-
-        return $query->where(function ($q) use ($term) {
-            $q->where('name', 'LIKE', "%{$term}%")
-              ->orWhere('code', 'LIKE', "%{$term}%")
-              ->orWhere('description', 'LIKE', "%{$term}%");
-        });
-    }
-
-    /**
-     * Get departments with employee counts
-     */
-    public function scopeWithEmployeeCounts($query)
-    {
-        return $query->withCount([
-            'employees',
-            'activeEmployees',
-            'expressEmployees'
-        ]);
     }
 }

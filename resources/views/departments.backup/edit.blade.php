@@ -32,75 +32,31 @@
 </div>
 
 <!-- Department Info Banner -->
-@php
-    $employeeCount = $department->employees->count() ?? 0;
-    $expressUsersCount = $department->employees->whereNotNull('express_username')->count() ?? 0;
-@endphp
-
-<div class="card mb-4 border-0 shadow-sm {{ $department->express_enabled ? 'bg-gradient-warning' : 'bg-gradient-info' }} text-white">
+<div class="card mb-4 border-0 shadow-sm bg-gradient-info text-white">
     <div class="card-body">
         <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
                 <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                    <i class="fas fa-{{ $department->express_enabled ? 'bolt' : 'building' }} fa-2x text-white"></i>
+                    <i class="fas fa-building fa-2x text-white"></i>
                 </div>
             </div>
             <div class="flex-grow-1 ms-3">
                 <h4 class="mb-1">{{ $department->name }}</h4>
                 <div class="d-flex gap-3">
                     <span><i class="fas fa-code me-1"></i>{{ $department->code }}</span>
-                    <span><i class="fas fa-users me-1"></i>{{ $employeeCount }} พนักงาน</span>
-                    @if($department->express_enabled)
-                        <span><i class="fas fa-bolt me-1"></i>{{ $expressUsersCount }} Express Users</span>
-                    @endif
+                    <span><i class="fas fa-users me-1"></i>{{ $department->employees->count() }} พนักงาน</span>
                     <span><i class="fas fa-calendar me-1"></i>สร้างเมื่อ {{ $department->created_at->format('d/m/Y') }}</span>
                 </div>
             </div>
-            @if($department->express_enabled)
-                <div class="text-end">
-                    <div class="badge bg-white text-warning fs-6 px-3 py-2">
-                        <i class="fas fa-bolt me-1"></i>Express Enabled
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 </div>
-
-<!-- Express Users Warning -->
-@if($department->express_enabled && $expressUsersCount > 0)
-<div class="alert alert-warning" role="alert">
-    <div class="d-flex align-items-center">
-        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-        <div>
-            <h6 class="mb-1"><strong>ข้อมูลสำคัญ!</strong></h6>
-            <p class="mb-2">แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ <strong>{{ $expressUsersCount }} คน</strong></p>
-            <div class="row">
-                @php
-                    $expressUsers = $department->employees->whereNotNull('express_username')->take(5);
-                @endphp
-                @foreach($expressUsers as $user)
-                    <div class="col-md-4 mb-1">
-                        <small>• {{ $user->first_name_th }} {{ $user->last_name_th }} ({{ $user->express_username }})</small>
-                    </div>
-                @endforeach
-                @if($expressUsersCount > 5)
-                    <div class="col-md-4 mb-1">
-                        <small>• และอีก {{ $expressUsersCount - 5 }} คน...</small>
-                    </div>
-                @endif
-            </div>
-            <small class="text-muted">หากปิดการใช้งาน Express จะส่งผลต่อพนักงานเหล่านี้</small>
-        </div>
-    </div>
-</div>
-@endif
 
 <!-- Quick Actions -->
 <div class="card mb-4">
     <div class="card-body">
         <div class="row text-center">
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-info w-100" id="previewBtn">
                     <i class="fas fa-eye me-1"></i>ดูตัวอย่าง
                 </button>
@@ -108,7 +64,7 @@
                     <small class="text-muted">ดูการเปลี่ยนแปลง</small>
                 </div>
             </div>
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-warning w-100" id="resetBtn">
                     <i class="fas fa-undo me-1"></i>รีเซ็ต
                 </button>
@@ -116,20 +72,12 @@
                     <small class="text-muted">กลับไปข้อมูลเดิม</small>
                 </div>
             </div>
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-primary w-100" id="generateCodeBtn">
                     <i class="fas fa-magic me-1"></i>สร้างรหัสใหม่
                 </button>
                 <div class="form-text mt-1">
                     <small class="text-muted">จากชื่อแผนก</small>
-                </div>
-            </div>
-            <div class="col-md-3 mb-2">
-                <button type="button" class="btn btn-outline-success w-100" id="expressDetectBtn">
-                    <i class="fas fa-bolt me-1"></i>ตรวจสอบ Express
-                </button>
-                <div class="form-text mt-1">
-                    <small class="text-muted">ตรวจสอบแผนกบัญชี</small>
                 </div>
             </div>
         </div>
@@ -219,51 +167,22 @@
                     @enderror
                 </div>
                 
-                <!-- Status - แก้ไขเพิ่ม hidden input -->
+                <!-- Status -->
                 <div class="col-md-6">
                     <label for="is_active" class="form-label">สถานะ</label>
-                    <!-- Hidden input เพื่อให้ส่งค่า 0 เมื่อ checkbox ไม่ได้ tick -->
-                    <input type="hidden" name="is_active" value="0">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
-                               value="1" {{ old('is_active', $department->is_active) ? 'checked' : '' }}>
+                               {{ old('is_active', $department->is_active) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_active">
                             <span id="statusText">{{ $department->is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}</span>
                         </label>
                     </div>
                     <div class="form-text">แผนกที่เปิดใช้งานจะปรากฏในรายการเลือกแผนก</div>
                     
-                    @if($employeeCount > 0 && $department->is_active)
+                    @if($department->employees->count() > 0 && $department->is_active)
                         <div class="alert alert-warning mt-2">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <small>หากปิดใช้งานแผนกนี้ พนักงาน {{ $employeeCount }} คนจะไม่สามารถเข้าถึงฟีเจอร์บางอย่างได้</small>
-                        </div>
-                    @endif
-                </div>
-                
-                <!-- Express Support - แก้ไขเพิ่ม hidden input -->
-                <div class="col-md-6">
-                    <label for="express_enabled" class="form-label">
-                        รองรับ Express 
-                        <i class="fas fa-bolt text-warning"></i>
-                    </label>
-                    <!-- Hidden input เพื่อให้ส่งค่า 0 เมื่อ checkbox ไม่ได้ tick -->
-                    <input type="hidden" name="express_enabled" value="0">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="express_enabled" name="express_enabled" 
-                               value="1" {{ old('express_enabled', $department->express_enabled) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="express_enabled">
-                            <span id="expressText">{{ $department->express_enabled ? 'รองรับ Express' : 'ไม่รองรับ Express' }}</span>
-                        </label>
-                    </div>
-                    <div class="form-text" id="expressHelp">
-                        แผนกที่รองรับ Express สามารถสร้าง Username และ Password สำหรับโปรแกรม Express ได้
-                    </div>
-                    
-                    @if($department->express_enabled && $expressUsersCount > 0)
-                        <div class="alert alert-info mt-2">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <small>มีพนักงาน {{ $expressUsersCount }} คนที่ใช้งาน Express อยู่</small>
+                            <small>หากปิดใช้งานแผนกนี้ พนักงาน {{ $department->employees->count() }} คนจะไม่สามารถเข้าถึงฟีเจอร์บางอย่างได้</small>
                         </div>
                     @endif
                 </div>
@@ -272,100 +191,35 @@
     </div>
 
     <!-- Express Support Info -->
-    <div class="card mb-4" id="expressInfo" style="display: {{ $department->express_enabled ? 'block' : 'none' }};">
+    <div class="card mb-4" id="expressInfo" style="display: {{ $department->isAccounting() ? 'block' : 'none' }};">
         <div class="card-header bg-warning bg-opacity-10">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #fff8e1;">
                     <i class="fas fa-bolt text-warning" style="font-size: 18px;"></i>
                 </div>
                 <div>
-                    <h5 class="card-title mb-0">การรองรับโปรแกรม Express</h5>
-                    <small class="text-muted">แผนกนี้สามารถใช้งาน Express ได้</small>
+                    <h5 class="card-title mb-0">รองรับโปรแกรม Express</h5>
+                    <small class="text-muted">แผนกบัญชีสามารถใช้งาน Express ได้</small>
                 </div>
             </div>
         </div>
         <div class="card-body">
             <div class="alert alert-info" role="alert">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>แผนกที่รองรับ Express</strong> จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน
+                <strong>แผนกบัญชี</strong> จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน
             </div>
             
-            @if($expressUsersCount > 0)
+            @if($department->employees->whereNotNull('express_username')->count() > 0)
                 <div class="alert alert-success">
                     <i class="fas fa-users me-2"></i>
-                    <strong>พนักงานที่ใช้ Express:</strong> {{ $expressUsersCount }} คน
-                    <div class="mt-2">
-                        <div class="row">
-                            @php
-                                $expressEmployees = $department->employees->whereNotNull('express_username');
-                            @endphp
-                            @foreach($expressEmployees as $employee)
-                                <div class="col-md-6 mb-1">
-                                    <small>• {{ $employee->first_name_th }} {{ $employee->last_name_th }} ({{ $employee->express_username }})</small>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @else
-                <div class="alert alert-warning">
-                    <i class="fas fa-info-circle me-2"></i>
-                    ยังไม่มีพนักงานที่ใช้งาน Express ในแผนกนี้
+                    <strong>พนักงานที่ใช้ Express:</strong> {{ $department->employees->whereNotNull('express_username')->count() }} คน
+                    <ul class="mt-2 mb-0">
+                        @foreach($department->employees->whereNotNull('express_username') as $employee)
+                            <li>{{ $employee->full_name_th }} ({{ $employee->express_username }})</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <h6><i class="fas fa-check text-success me-1"></i>ฟีเจอร์ที่รองรับ:</h6>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-user text-primary me-2"></i>Express Username (7 ตัวอักษร)</li>
-                        <li><i class="fas fa-lock text-primary me-2"></i>Express Password (4 ตัวอักษร)</li>
-                        <li><i class="fas fa-magic text-primary me-2"></i>สร้างอัตโนมัติ</li>
-                        <li><i class="fas fa-eye text-primary me-2"></i>การมองเห็นตาม Role</li>
-                    </ul>
-                </div>
-                <div class="col-md-6">
-                    <h6><i class="fas fa-chart-bar text-info me-1"></i>สถิติการใช้งาน:</h6>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-users text-muted me-2"></i>พนักงานทั้งหมด: {{ $employeeCount }} คน</li>
-                        <li><i class="fas fa-bolt text-warning me-2"></i>ผู้ใช้ Express: {{ $expressUsersCount }} คน</li>
-                        <li><i class="fas fa-percentage text-muted me-2"></i>เปอร์เซ็นต์การใช้งาน: 
-                            @if($employeeCount > 0)
-                                {{ round(($expressUsersCount / $employeeCount) * 100, 2) }}%
-                            @else
-                                0%
-                            @endif
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Express Disable Warning -->
-    <div class="card mb-4" id="expressDisableWarning" style="display: none;">
-        <div class="card-header bg-danger bg-opacity-10">
-            <div class="d-flex align-items-center">
-                <div class="border border-2 border-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #fdf2f2;">
-                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 18px;"></i>
-                </div>
-                <div>
-                    <h5 class="card-title mb-0 text-danger">คำเตือน: การปิด Express</h5>
-                    <small class="text-muted">กรุณาอ่านข้อมูลด้านล่างก่อนดำเนินการ</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-danger" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>ไม่สามารถปิด Express ได้!</strong> แผนกนี้มีพนักงานที่ใช้งาน Express อยู่ {{ $expressUsersCount }} คน
-            </div>
-            <p><strong>วิธีการปิด Express:</strong></p>
-            <ol>
-                <li>ย้ายพนักงานที่ใช้งาน Express ไปแผนกอื่น หรือ</li>
-                <li>ลบ Express credentials ของพนักงานในแผนกนี้ก่อน</li>
-                <li>จากนั้นจึงปิดการใช้งาน Express ได้</li>
-            </ol>
         </div>
     </div>
 
@@ -428,19 +282,15 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏢 Department Edit Form with Express Support Loaded');
+    console.log('🏢 Department Edit Form Loaded');
     
     // Original data for comparison
     const originalData = {
         name: '{{ $department->name }}',
         code: '{{ $department->code }}',
-        description: '{{ $department->description ?? "" }}',
-        is_active: {{ $department->is_active ? 'true' : 'false' }},
-        express_enabled: {{ $department->express_enabled ? 'true' : 'false' }}
+        description: '{{ $department->description }}',
+        is_active: {{ $department->is_active ? 'true' : 'false' }}
     };
-    
-    // Current Express users count
-    const currentExpressUsers = {{ $expressUsersCount }};
     
     // Utility Functions
     const utils = {
@@ -459,8 +309,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showNotification: (message, type = 'success') => {
-            const alertClass = type === 'success' ? 'alert-success' : (type === 'error' ? 'alert-danger' : 'alert-info');
-            const iconClass = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
             const alert = document.createElement('div');
             alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
@@ -506,10 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeInput = document.getElementById('code');
     const statusSwitch = document.getElementById('is_active');
     const statusText = document.getElementById('statusText');
-    const expressSwitch = document.getElementById('express_enabled');
-    const expressText = document.getElementById('expressText');
     const expressInfo = document.getElementById('expressInfo');
-    const expressDisableWarning = document.getElementById('expressDisableWarning');
     const changesCard = document.getElementById('changesCard');
     const changesContent = document.getElementById('changesContent');
     
@@ -519,8 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: nameInput.value.trim(),
             code: codeInput.value.trim(),
             description: document.getElementById('description').value.trim(),
-            is_active: statusSwitch.checked,
-            express_enabled: expressSwitch.checked
+            is_active: statusSwitch.checked
         };
         
         const changes = [];
@@ -554,14 +400,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 field: 'สถานะ',
                 from: originalData.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน',
                 to: currentData.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'
-            });
-        }
-        
-        if (currentData.express_enabled !== originalData.express_enabled) {
-            changes.push({
-                field: 'Express Support',
-                from: originalData.express_enabled ? 'รองรับ' : 'ไม่รองรับ',
-                to: currentData.express_enabled ? 'รองรับ' : 'ไม่รองรับ'
             });
         }
         
@@ -614,42 +452,20 @@ document.addEventListener('DOMContentLoaded', function() {
         trackChanges();
     });
     
-    // Express switch with validation
-    expressSwitch.addEventListener('change', function() {
-        const isEnabled = this.checked;
-        
-        // Check if trying to disable Express when there are users
-        if (!isEnabled && currentExpressUsers > 0) {
-            // Prevent the change
-            this.checked = true;
-            expressDisableWarning.style.display = 'block';
-            utils.showNotification(`ไม่สามารถปิด Express ได้ เนื่องจากมีพนักงานใช้งาน Express อยู่ ${currentExpressUsers} คน`, 'error');
-            return;
-        } else {
-            expressDisableWarning.style.display = 'none';
-        }
-        
-        expressText.textContent = isEnabled ? 'รองรับ Express' : 'ไม่รองรับ Express';
-        expressInfo.style.display = isEnabled ? 'block' : 'none';
-        
-        if (isEnabled) {
-            utils.showNotification('🎉 เปิดใช้งาน Express แล้ว!', 'success');
-        }
-        
-        trackChanges();
-    });
-    
     // Description changes
     document.getElementById('description').addEventListener('input', trackChanges);
     
     // Check if this is accounting department
     function checkAccountingDepartment(name) {
-        const accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance', 'acc', 'fin'];
-        const isAccounting = accountingKeywords.some(keyword => 
-            name.toLowerCase().includes(keyword.toLowerCase())
-        );
+        const isAccounting = name.includes('บัญชี') || 
+                           name.toLowerCase().includes('account') ||
+                           name.toLowerCase().includes('acc');
         
-        return isAccounting;
+        if (isAccounting) {
+            expressInfo.style.display = 'block';
+        } else {
+            expressInfo.style.display = 'none';
+        }
     }
     
     // Generate code button
@@ -682,33 +498,10 @@ document.addEventListener('DOMContentLoaded', function() {
         codeInput.value = generatedCode;
         codeInput.dataset.manuallyEdited = 'false';
         
+        checkAccountingDepartment(name);
         trackChanges();
         
         utils.showNotification('🎉 สร้างรหัสแผนกสำเร็จ!', 'success');
-    });
-    
-    // Express detection button
-    document.getElementById('expressDetectBtn').addEventListener('click', function() {
-        const name = nameInput.value.trim();
-        if (!name) {
-            utils.showNotification('กรุณากรอกชื่อแผนกก่อน', 'error');
-            nameInput.focus();
-            return;
-        }
-        
-        const isAccounting = checkAccountingDepartment(name);
-        
-        if (isAccounting) {
-            utils.showNotification('🔍 ตรวจพบคำสำคัญแผนกบัญชี - แนะนำใช้ Express!', 'success');
-            if (!expressSwitch.checked && currentExpressUsers === 0) {
-                if (confirm('ตรวจพบว่าเป็นแผนกบัญชี ต้องการเปิดใช้งาน Express หรือไม่?')) {
-                    expressSwitch.checked = true;
-                    expressSwitch.dispatchEvent(new Event('change'));
-                }
-            }
-        } else {
-            utils.showNotification('ℹ️ ไม่ตรวจพบคำสำคัญแผนกบัญชี', 'info');
-        }
     });
     
     // Reset button
@@ -718,13 +511,10 @@ document.addEventListener('DOMContentLoaded', function() {
             codeInput.value = originalData.code;
             document.getElementById('description').value = originalData.description;
             statusSwitch.checked = originalData.is_active;
-            expressSwitch.checked = originalData.express_enabled;
             statusText.textContent = originalData.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
-            expressText.textContent = originalData.express_enabled ? 'รองรับ Express' : 'ไม่รองรับ Express';
-            expressInfo.style.display = originalData.express_enabled ? 'block' : 'none';
-            expressDisableWarning.style.display = 'none';
             
             codeInput.dataset.manuallyEdited = 'false';
+            checkAccountingDepartment(originalData.name);
             trackChanges();
             
             utils.showNotification('🔄 รีเซ็ตข้อมูลเรียบร้อยแล้ว', 'success');
@@ -743,9 +533,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const previewContent = document.getElementById('previewContent');
         if (!previewContent) return;
         
-        // แก้ไขการตรวจสอบ checkbox values
-        const isActiveChecked = statusSwitch.checked;
-        const expressEnabledChecked = expressSwitch.checked;
+        const isAccounting = data.name && (data.name.includes('บัญชี') || 
+                                         data.name.toLowerCase().includes('account'));
         
         let previewHtml = `
             <div class="row">
@@ -755,24 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><strong>รหัสแผนก:</strong> <span class="badge bg-primary">${data.code || '-'}</span></p>
                     <p><strong>รายละเอียด:</strong> ${data.description || 'ไม่มี'}</p>
                     <p><strong>สถานะ:</strong> 
-                        <span class="badge bg-${isActiveChecked ? 'success' : 'secondary'}">
-                            ${isActiveChecked ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                        </span>
-                    </p>
-                    <p><strong>Express:</strong> 
-                        <span class="badge bg-${expressEnabledChecked ? 'warning' : 'secondary'}">
-                            ${expressEnabledChecked ? 'รองรับ' : 'ไม่รองรับ'}
+                        <span class="badge bg-${data.is_active ? 'success' : 'secondary'}">
+                            ${data.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                         </span>
                     </p>
                     
-                    ${expressEnabledChecked ? `
+                    ${isAccounting ? `
                         <div class="alert alert-warning">
                             <i class="fas fa-bolt me-2"></i>
                             <strong>รองรับ Express!</strong><br>
                             <small>แผนกนี้จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติ</small>
-                            <div class="mt-1">
-                                <small>ผู้ใช้ Express ปัจจุบัน: ${currentExpressUsers} คน</small>
-                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -818,13 +599,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initial setup
+    // Initial check for accounting department
     checkAccountingDepartment(originalData.name);
     
     console.log('✅ Department Edit Form Ready');
-    console.log('🔄 Features: Change tracking, Preview, Reset, Auto-generate, Express validation');
-    console.log('⚡ Express Users:', currentExpressUsers);
-    console.log('🔒 Express Protection: Prevents disabling when users exist');
+    console.log('🔄 Features: Change tracking, Preview, Reset, Auto-generate');
+    console.log('⚡ Express Support: Dynamic detection based on name');
 });
 
 // Modal functions

@@ -16,7 +16,7 @@
                 <h1 class="h3 mb-0 text-primary fw-bold">
                     <i class="fas fa-plus me-2"></i>เพิ่มแผนกใหม่
                 </h1>
-                <p class="text-muted mb-0">เพิ่มแผนกงานใหม่เข้าสู่ระบบ พร้อมการตั้งค่า Express</p>
+                <p class="text-muted mb-0">เพิ่มแผนกงานใหม่เข้าสู่ระบบ</p>
             </div>
             <a href="{{ route('departments.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-1"></i>กลับ
@@ -29,7 +29,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <div class="row text-center">
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-primary w-100" id="generateCodeBtn">
                     <i class="fas fa-magic me-1"></i>สร้างรหัสอัตโนมัติ
                 </button>
@@ -37,7 +37,7 @@
                     <small class="text-muted">จากชื่อแผนก</small>
                 </div>
             </div>
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-info w-100" id="previewBtn">
                     <i class="fas fa-eye me-1"></i>ดูตัวอย่าง
                 </button>
@@ -45,20 +45,12 @@
                     <small class="text-muted">ดูก่อนบันทึก</small>
                 </div>
             </div>
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <button type="button" class="btn btn-outline-warning w-100" id="clearAllBtn">
                     <i class="fas fa-trash me-1"></i>ล้างทั้งหมด
                 </button>
                 <div class="form-text mt-1">
                     <small class="text-muted">เริ่มใหม่</small>
-                </div>
-            </div>
-            <div class="col-md-3 mb-2">
-                <button type="button" class="btn btn-outline-success w-100" id="expressDetectBtn">
-                    <i class="fas fa-bolt me-1"></i>ตรวจสอบ Express
-                </button>
-                <div class="form-text mt-1">
-                    <small class="text-muted">ตรวจสอบแผนกบัญชี</small>
                 </div>
             </div>
         </div>
@@ -147,39 +139,17 @@
                     @enderror
                 </div>
                 
-                <!-- Status - แก้ไขให้ default เป็น true เสมอ -->
+                <!-- Status -->
                 <div class="col-md-6">
                     <label for="is_active" class="form-label">สถานะ</label>
-                    <!-- Hidden input ส่งค่า 0 เมื่อไม่ tick -->
-                    <input type="hidden" name="is_active" value="0">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
-                               value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }}>
+                               {{ old('is_active', true) ? 'checked' : '' }}>
                         <label class="form-check-label" for="is_active">
                             <span id="statusText">เปิดใช้งาน</span>
                         </label>
                     </div>
                     <div class="form-text">แผนกที่เปิดใช้งานจะปรากฏในรายการเลือกแผนก</div>
-                </div>
-                
-                <!-- Express Support - แก้ไขให้ default เป็น false เสมอ -->
-                <div class="col-md-6">
-                    <label for="express_enabled" class="form-label">
-                        รองรับ Express 
-                        <i class="fas fa-bolt text-warning"></i>
-                    </label>
-                    <!-- Hidden input ส่งค่า 0 เมื่อไม่ tick -->
-                    <input type="hidden" name="express_enabled" value="0">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="express_enabled" name="express_enabled" 
-                               value="1" {{ old('express_enabled', '0') == '1' ? 'checked' : '' }}>
-                        <label class="form-check-label" for="express_enabled">
-                            <span id="expressText">ไม่รองรับ Express</span>
-                        </label>
-                    </div>
-                    <div class="form-text" id="expressHelp">
-                        แผนกที่รองรับ Express สามารถสร้าง Username และ Password สำหรับโปรแกรม Express ได้
-                    </div>
                 </div>
             </div>
         </div>
@@ -193,15 +163,15 @@
                     <i class="fas fa-bolt text-warning" style="font-size: 18px;"></i>
                 </div>
                 <div>
-                    <h5 class="card-title mb-0">การรองรับโปรแกรม Express</h5>
-                    <small class="text-muted">แผนกนี้จะสามารถใช้งาน Express ได้</small>
+                    <h5 class="card-title mb-0">รองรับโปรแกรม Express</h5>
+                    <small class="text-muted">แผนกบัญชีสามารถใช้งาน Express ได้</small>
                 </div>
             </div>
         </div>
         <div class="card-body">
             <div class="alert alert-info" role="alert">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>แผนกที่รองรับ Express</strong> จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน
+                <strong>แผนกบัญชี</strong> จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน
             </div>
             <div class="row">
                 <div class="col-md-6">
@@ -210,47 +180,16 @@
                         <li><i class="fas fa-user text-primary me-2"></i>Express Username (7 ตัวอักษร)</li>
                         <li><i class="fas fa-lock text-primary me-2"></i>Express Password (4 ตัวอักษร)</li>
                         <li><i class="fas fa-magic text-primary me-2"></i>สร้างอัตโนมัติ</li>
-                        <li><i class="fas fa-eye text-primary me-2"></i>การมองเห็นตาม Role</li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <h6><i class="fas fa-cog text-info me-1"></i>การทำงาน:</h6>
                     <ul class="list-unstyled">
-                        <li><i class="fas fa-arrow-right text-muted me-2"></i>แสดงใน Form เพิ่มพนักงาน</li>
+                        <li><i class="fas fa-arrow-right text-muted me-2"></i>เฉพาะแผนกบัญชี</li>
+                        <li><i class="fas fa-arrow-right text-muted me-2"></i>แสดงในฟอร์มเพิ่มพนักงาน</li>
                         <li><i class="fas fa-arrow-right text-muted me-2"></i>บันทึกในฐานข้อมูล</li>
-                        <li><i class="fas fa-arrow-right text-muted me-2"></i>จัดการผ่าน Role</li>
-                        <li><i class="fas fa-arrow-right text-muted me-2"></i>รายงานและสถิติ</li>
                     </ul>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Express Auto-Detection -->
-    <div class="card mb-4" id="expressAutoDetection" style="display: none;">
-        <div class="card-header bg-success bg-opacity-10">
-            <div class="d-flex align-items-center">
-                <div class="border border-2 border-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f0f9f0;">
-                    <i class="fas fa-robot text-success" style="font-size: 18px;"></i>
-                </div>
-                <div>
-                    <h5 class="card-title mb-0">ตรวจพบแผนกบัญชี</h5>
-                    <small class="text-muted">ระบบแนะนำให้เปิดใช้งาน Express</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-success" role="alert">
-                <i class="fas fa-lightbulb me-2"></i>
-                <strong>ตรวจพบคำสำคัญ!</strong> ชื่อแผนกนี้มีคำที่เกี่ยวข้องกับบัญชีหรือการเงิน ระบบแนะนำให้เปิดใช้งาน Express
-            </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-success" id="enableExpressBtn">
-                    <i class="fas fa-bolt me-1"></i>เปิดใช้งาน Express
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="dismissAutoDetectionBtn">
-                    <i class="fas fa-times me-1"></i>ไม่ใช่แผนกบัญชี
-                </button>
             </div>
         </div>
     </div>
@@ -302,7 +241,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏢 Department Create Form with Express Support Loaded');
+    console.log('🏢 Department Create Form Loaded');
     
     // Utility Functions
     const utils = {
@@ -321,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showNotification: (message, type = 'success') => {
-            const alertClass = type === 'success' ? 'alert-success' : (type === 'error' ? 'alert-danger' : 'alert-info');
-            const iconClass = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
             const alert = document.createElement('div');
             alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
@@ -370,29 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeInput = document.getElementById('code');
     const statusSwitch = document.getElementById('is_active');
     const statusText = document.getElementById('statusText');
-    const expressSwitch = document.getElementById('express_enabled');
-    const expressText = document.getElementById('expressText');
     const expressInfo = document.getElementById('expressInfo');
-    const expressAutoDetection = document.getElementById('expressAutoDetection');
-    
-    // Initialize form state - แก้ให้ Express เป็น false เสมอตอนเริ่มต้น
-    function initializeFormState() {
-        // ตั้งค่า Status switch
-        if (statusSwitch.checked) {
-            statusText.textContent = 'เปิดใช้งาน';
-        } else {
-            statusText.textContent = 'ปิดใช้งาน';
-        }
-        
-        // ตั้งค่า Express switch - บังคับให้เป็น false ตอนเริ่มต้น
-        expressSwitch.checked = false;
-        expressText.textContent = 'ไม่รองรับ Express';
-        expressInfo.style.display = 'none';
-        expressAutoDetection.style.display = 'none';
-    }
-    
-    // เรียกใช้การตั้งค่าเริ่มต้น
-    initializeFormState();
     
     // Auto-generate code from name
     nameInput.addEventListener('input', function() {
@@ -404,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
             codeInput.value = generatedCode;
         }
         
-        // Check for accounting department keywords - เฉพาะเมื่อผู้ใช้พิมพ์เอง
+        // Show Express info for accounting department
         checkAccountingDepartment(name);
     });
     
@@ -419,47 +336,19 @@ document.addEventListener('DOMContentLoaded', function() {
         statusText.textContent = this.checked ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
     });
     
-    // Express switch - แก้ไขให้ทำงานถูกต้อง
-    expressSwitch.addEventListener('change', function() {
-        const isEnabled = this.checked;
-        expressText.textContent = isEnabled ? 'รองรับ Express' : 'ไม่รองรับ Express';
-        expressInfo.style.display = isEnabled ? 'block' : 'none';
-        
-        // ซ่อน auto detection เมื่อเปิด Express แล้ว
-        if (isEnabled) {
-            expressAutoDetection.style.display = 'none';
-            utils.showNotification('🎉 เปิดใช้งาน Express แล้ว!', 'success');
-        }
-    });
-    
-    // Check if this is accounting department - แก้ไขให้ไม่เปิด Express อัตโนมัติ
+    // Check if this is accounting department
     function checkAccountingDepartment(name) {
-        if (!name) return;
+        const isAccounting = name.includes('บัญชี') || 
+                           name.toLowerCase().includes('account') ||
+                           name.toLowerCase().includes('acc');
         
-        const accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance', 'acc', 'fin'];
-        const isAccounting = accountingKeywords.some(keyword => 
-            name.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        // เฉพาะแสดง suggestion แต่ไม่เปิด Express อัตโนมัติ
-        if (isAccounting && !expressSwitch.checked) {
-            expressAutoDetection.style.display = 'block';
+        if (isAccounting) {
+            expressInfo.style.display = 'block';
+            utils.showNotification('🎉 แผนกนี้จะรองรับโปรแกรม Express!', 'success');
         } else {
-            expressAutoDetection.style.display = 'none';
+            expressInfo.style.display = 'none';
         }
     }
-    
-    // Auto-detection buttons
-    document.getElementById('enableExpressBtn').addEventListener('click', function() {
-        expressSwitch.checked = true;
-        expressSwitch.dispatchEvent(new Event('change'));
-        expressAutoDetection.style.display = 'none';
-        utils.showNotification('✨ เปิดใช้งาน Express สำหรับแผนกบัญชีแล้ว!', 'success');
-    });
-    
-    document.getElementById('dismissAutoDetectionBtn').addEventListener('click', function() {
-        expressAutoDetection.style.display = 'none';
-    });
     
     // Generate code button
     document.getElementById('codeGenerateBtn').addEventListener('click', function() {
@@ -490,33 +379,9 @@ document.addEventListener('DOMContentLoaded', function() {
         codeInput.value = generatedCode;
         codeInput.dataset.manuallyEdited = 'false';
         
-        // เฉพาะแสดง suggestion ไม่เปิดอัตโนมัติ
         checkAccountingDepartment(name);
         
         utils.showNotification('🎉 สร้างข้อมูลอัตโนมัติสำเร็จ!', 'success');
-    });
-    
-    // Express detection button
-    document.getElementById('expressDetectBtn').addEventListener('click', function() {
-        const name = nameInput.value.trim();
-        if (!name) {
-            utils.showNotification('กรุณากรอกชื่อแผนกก่อน', 'error');
-            nameInput.focus();
-            return;
-        }
-        
-        const accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance', 'acc', 'fin'];
-        const isAccounting = accountingKeywords.some(keyword => 
-            name.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        if (isAccounting) {
-            expressAutoDetection.style.display = 'block';
-            utils.showNotification('🔍 ตรวจพบคำสำคัญแผนกบัญชี - แนะนำใช้ Express!', 'success');
-        } else {
-            expressAutoDetection.style.display = 'none';
-            utils.showNotification('ℹ️ ไม่ตรวจพบคำสำคัญแผนกบัญชี', 'info');
-        }
     });
     
     // Clear all button
@@ -524,15 +389,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirm('ต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
             document.getElementById('departmentForm').reset();
             codeInput.dataset.manuallyEdited = 'false';
-            
-            // รีเซ็ตให้เป็นค่าเริ่มต้น
-            initializeFormState();
+            statusText.textContent = 'เปิดใช้งาน';
+            expressInfo.style.display = 'none';
             
             utils.showNotification('🗑️ ล้างข้อมูลทั้งหมดแล้ว', 'success');
         }
     });
     
-    // Preview button - แก้ไขให้ตรวจสอบค่าจริง
+    // Preview button
     document.getElementById('previewBtn').addEventListener('click', function() {
         const formData = new FormData(document.getElementById('departmentForm'));
         const data = {};
@@ -540,12 +404,11 @@ document.addEventListener('DOMContentLoaded', function() {
             data[key] = value;
         }
         
-        // แก้ไขการตรวจสอบ checkbox values
-        const isActiveChecked = statusSwitch.checked;
-        const expressEnabledChecked = expressSwitch.checked;
-        
         const previewContent = document.getElementById('previewContent');
         if (!previewContent) return;
+        
+        const isAccounting = data.name && (data.name.includes('บัญชี') || 
+                                         data.name.toLowerCase().includes('account'));
         
         previewContent.innerHTML = `
             <div class="row">
@@ -555,35 +418,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><strong>รหัสแผนก:</strong> <span class="badge bg-primary">${data.code || '-'}</span></p>
                     <p><strong>รายละเอียด:</strong> ${data.description || 'ไม่มี'}</p>
                     <p><strong>สถานะ:</strong> 
-                        <span class="badge bg-${isActiveChecked ? 'success' : 'secondary'}">
-                            ${isActiveChecked ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                        <span class="badge bg-${data.is_active ? 'success' : 'secondary'}">
+                            ${data.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                         </span>
                     </p>
                 </div>
                 <div class="col-md-4">
-                    <h6 class="text-primary">Express Support</h6>
-                    ${expressEnabledChecked ? `
+                    <h6 class="text-primary">ฟีเจอร์พิเศษ</h6>
+                    ${isAccounting ? `
                         <div class="alert alert-warning">
                             <i class="fas fa-bolt me-2"></i>
                             <strong>รองรับ Express!</strong><br>
-                            <small>แผนกนี้จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติเมื่อเพิ่มพนักงาน</small>
+                            <small>แผนกนี้จะมีการสร้าง Username และ Password สำหรับโปรแกรม Express อัตโนมัติ</small>
                         </div>
-                        <h6 class="text-success mt-3">ฟีเจอร์ที่ได้รับ:</h6>
-                        <ul class="small">
-                            <li>Express Username auto-generation</li>
-                            <li>Express Password auto-generation</li>
-                            <li>Role-based visibility</li>
-                            <li>Express reporting</li>
-                        </ul>
                     ` : `
                         <div class="text-muted">
                             <i class="fas fa-info-circle me-2"></i>
-                            แผนกทั่วไป (ไม่รองรับ Express)
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                หากต้องการเปิดใช้งาน Express ภายหลัง สามารถแก้ไขได้ในหน้าจัดการแผนก
-                            </small>
+                            แผนกทั่วไป
                         </div>
                     `}
                 </div>
@@ -607,9 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('✅ Department Create Form Ready');
     console.log('🏢 Features: Auto-generate code, Express support detection, Live preview');
-    console.log('⚡ Express Support: Manual only - no auto-enable');
-    console.log('🤖 Auto-detection keywords: บัญชี, การเงิน, accounting, finance, acc, fin');
-    console.log('🔒 Express Default: Always FALSE unless manually enabled');
+    console.log('⚡ Express Support: Detects "บัญชี", "account", "acc" in department name');
 });
 
 // Modal functions

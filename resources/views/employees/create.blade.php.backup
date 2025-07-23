@@ -16,7 +16,7 @@
                 <h1 class="h3 mb-0 text-primary fw-bold">
                     <i class="fas fa-user-plus me-2"></i>เพิ่มพนักงานใหม่
                 </h1>
-                <p class="text-muted mb-0">กรอกข้อมูลพนักงานใหม่เข้าระบบ (รองรับ Express v2.0 Enhanced)</p>
+                <p class="text-muted mb-0">กรอกข้อมูลพนักงานใหม่เข้าระบบ (รองรับ Express v2.0)</p>
                 <div class="mt-2">
                     <span class="badge bg-info">
                         <i class="fas fa-info-circle me-1"></i>
@@ -28,11 +28,7 @@
                     </span>
                     <span class="badge bg-success">
                         <i class="fas fa-sync me-1"></i>
-                        รหัสผ่าน Email = Login ระบบ (รหัสเดียวกัน)
-                    </span>
-                    <span class="badge bg-primary">
-                        <i class="fas fa-eye me-1"></i>
-                        แสดงรหัสผ่านได้ทั้งหมด
+                        รหัสผ่าน Email = Login ระบบ (Auto Sync)
                     </span>
                 </div>
             </div>
@@ -46,59 +42,37 @@
 <!-- Quick Actions -->
 <div class="card mb-4">
     <div class="card-body">
-        <div class="row text-center g-3">
-            <div class="col-md-3 col-sm-6">
-                <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-primary w-100 flex-fill d-flex align-items-center justify-content-center" id="generateAllBtn" style="min-height: 45px;">
-                        <span class="d-flex align-items-center">
-                            <i class="fas fa-magic me-2"></i>
-                            <span class="d-none d-lg-inline">สร้างทั้งหมดอัตโนมัติ</span>
-                            <span class="d-lg-none">สร้างทั้งหมด</span>
-                        </span>
-                    </button>
-                    <div class="form-text mt-2">
-                        <small class="text-muted">ต้องกรอกชื่อ-นามสกุล EN ก่อน</small>
-                    </div>
+        <div class="row text-center">
+            <div class="col-md-3 mb-2">
+                <button type="button" class="btn btn-outline-primary w-100" id="generateAllBtn">
+                    <i class="fas fa-magic me-1"></i>สร้างทั้งหมดอัตโนมัติ
+                </button>
+                <div class="form-text mt-1">
+                    <small class="text-muted">ต้องกรอกชื่อ-นามสกุล EN ก่อน</small>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-info w-100 flex-fill d-flex align-items-center justify-content-center" id="previewBtn" style="min-height: 45px;">
-                        <span class="d-flex align-items-center">
-                            <i class="fas fa-eye me-2"></i>
-                            <span>ดูตัวอย่าง</span>
-                        </span>
-                    </button>
-                    <div class="form-text mt-2">
-                        <small class="text-muted">ดูก่อนบันทึก</small>
-                    </div>
+            <div class="col-md-3 mb-2">
+                <button type="button" class="btn btn-outline-info w-100" id="previewBtn">
+                    <i class="fas fa-eye me-1"></i>ดูตัวอย่าง
+                </button>
+                <div class="form-text mt-1">
+                    <small class="text-muted">ดูก่อนบันทึก</small>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-warning w-100 flex-fill d-flex align-items-center justify-content-center" id="clearAllBtn" style="min-height: 45px;">
-                        <span class="d-flex align-items-center">
-                            <i class="fas fa-trash me-2"></i>
-                            <span>ล้างทั้งหมด</span>
-                        </span>
-                    </button>
-                    <div class="form-text mt-2">
-                        <small class="text-muted">เริ่มใหม่</small>
-                    </div>
+            <div class="col-md-3 mb-2">
+                <button type="button" class="btn btn-outline-warning w-100" id="clearAllBtn">
+                    <i class="fas fa-trash me-1"></i>ล้างทั้งหมด
+                </button>
+                <div class="form-text mt-1">
+                    <small class="text-muted">เริ่มใหม่</small>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-success w-100 flex-fill d-flex align-items-center justify-content-center" id="generateComputerBtn2" style="min-height: 45px;">
-                        <span class="d-flex align-items-center">
-                            <i class="fas fa-desktop me-2"></i>
-                            <span class="d-none d-lg-inline">สร้างระบบคอมฯ</span>
-                            <span class="d-lg-none">ระบบคอมฯ</span>
-                        </span>
-                    </button>
-                    <div class="form-text mt-2">
-                        <small class="text-muted">Username + Password</small>
-                    </div>
+            <div class="col-md-3 mb-2">
+                <button type="button" class="btn btn-outline-success w-100" id="generateComputerBtn2">
+                    <i class="fas fa-desktop me-1"></i>สร้างระบบคอมฯ
+                </button>
+                <div class="form-text mt-1">
+                    <small class="text-muted">Username + Password</small>
                 </div>
             </div>
         </div>
@@ -126,8 +100,8 @@
     <div class="card mb-4">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-user text-primary" style="font-size: 20px;"></i>
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f8f9fa;">
+                    <i class="fas fa-user text-secondary" style="font-size: 18px;"></i>
                 </div>
                 <div>
                     <h5 class="card-title mb-0">ข้อมูลพื้นฐาน</h5>
@@ -298,8 +272,8 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-success rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-desktop text-success" style="font-size: 20px;"></i>
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f8f9fa;">
+                    <i class="fas fa-desktop text-secondary" style="font-size: 18px;"></i>
                 </div>
                 <div>
                     <h5 class="card-title mb-0">ระบบคอมพิวเตอร์</h5>
@@ -344,36 +318,48 @@
                     @enderror
                 </div>
 
-                <!-- Computer Password (แสดงได้ทั้งหมด) -->
+                <!-- Computer Password -->
                 <div class="col-md-6">
-                    <label for="computer_password" class="form-label">
-                        Password (เปิดคอมพิวเตอร์)
-                        <span class="badge bg-primary ms-2">แสดงได้</span>
-                    </label>
+                    <label for="computer_password" class="form-label">Password (เปิดคอมพิวเตอร์)</label>
                     <div class="input-group">
-                        <input type="text" 
-                               class="form-control @error('computer_password') is-invalid @enderror" 
-                               id="computer_password" 
-                               name="computer_password" 
-                               value="{{ old('computer_password') }}"
-                               placeholder="Random 10 ตัวอักษร">
-                        <button type="button" class="btn btn-outline-primary" data-target="computer_password">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="computer_password">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                            <input type="password" 
+                                   class="form-control @error('computer_password') is-invalid @enderror" 
+                                   id="computer_password" 
+                                   name="computer_password" 
+                                   value="{{ old('computer_password') }}"
+                                   placeholder="Random 10 ตัวอักษร">
+                            <button type="button" class="btn btn-outline-primary" data-target="computer_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-toggle-password="computer_password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        @else
+                            <input type="password" 
+                                   class="form-control bg-light" 
+                                   id="computer_password" 
+                                   name="computer_password" 
+                                   value="{{ old('computer_password') }}"
+                                   placeholder="สร้างอัตโนมัติ"
+                                   readonly>
+                            <button type="button" class="btn btn-outline-primary" data-target="computer_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        @endif
                     </div>
                     <div class="form-text">
-                        รหัสผ่านสำหรับเปิดคอมพิวเตอร์ 
-                        <span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
+                        รหัสผ่านสำหรับเปิดคอมพิวเตอร์
+                        @if(!($userRole === 'super_admin' || $userRole === 'it_admin'))
+                            <span class="text-warning">(มองไม่เห็น - เฉพาะ Admin)</span>
+                        @endif
                     </div>
                     @error('computer_password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <!-- Copier Code (On Demand) -->
+                <!-- Copier Code (ปรับเป็นไม่แสดงก่อน) -->
                 <div class="col-md-6">
                     <label for="copier_code" class="form-label">
                         รหัสเครื่องถ่ายเอกสาร
@@ -405,25 +391,20 @@
         </div>
     </div>
 
-    <!-- ระบบอีเมลและ Login (รวมกัน - รหัสผ่านชุดเดียวกัน) -->
+    <!-- ระบบอีเมล -->
     <div class="card mb-4">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-info rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-envelope text-info" style="font-size: 20px;"></i>
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f8f9fa;">
+                    <i class="fas fa-envelope text-secondary" style="font-size: 18px;"></i>
                 </div>
                 <div>
-                    <h5 class="card-title mb-0">ระบบอีเมลและ Login</h5>
-                    <small class="text-muted">อีเมลและรหัสผ่านสำหรับระบบอีเมลและเข้าสู่ระบบ (รหัสเดียวกัน)</small>
+                    <h5 class="card-title mb-0">ระบบอีเมล</h5>
+                    <small class="text-muted">อีเมลและรหัสผ่านสำหรับระบบอีเมล</small>
                 </div>
             </div>
         </div>
         <div class="card-body">
-            <div class="alert alert-success">
-                <i class="fas fa-sync me-2"></i>
-                <strong>ปรับปรุงแล้ว:</strong> รหัสผ่าน Email และ Login ใช้รหัสเดียวกันอัตโนมัติ (ไม่ต้องจำหลายรหัส) และแสดงให้เห็นได้ทั้งหมด
-            </div>
-            
             <div class="row g-3">
                 <!-- Email -->
                 <div class="col-md-8">
@@ -455,8 +436,8 @@
                         </div>
                         <div class="mt-2">
                             <small class="text-success">
-                                <i class="fas fa-link me-1"></i>
-                                Email นี้จะถูกใช้เป็น Login Email ด้วย (ใช้รหัสผ่านชุดเดียวกัน)
+                                <i class="fas fa-sync me-1"></i>
+                                Email password จะ sync กับ Login password อัตโนมัติ
                             </small>
                         </div>
                     </div>
@@ -465,42 +446,52 @@
                     @enderror
                 </div>
 
-                <!-- Unified Password (Email + Login) -->
+                <!-- Email Password (จะ sync กับ Login password) -->
                 <div class="col-md-4">
-                    <label for="unified_password" class="form-label">
-                        Password (Email + Login) <span class="text-danger">*</span>
-                        <span class="badge bg-success ms-2">Unified</span>
+                    <label for="email_password" class="form-label">
+                        Password อีเมล
+                        <span class="badge bg-success ms-2">Auto Sync</span>
                     </label>
                     <div class="input-group">
-                        <input type="text" 
-                               class="form-control @error('unified_password') is-invalid @enderror" 
-                               id="unified_password" 
-                               name="unified_password" 
-                               value="{{ old('unified_password') }}"
-                               placeholder="Random 10 ตัวอักษร"
-                               required>
-                        <button type="button" class="btn btn-outline-primary" data-target="unified_password">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="unified_password">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                            <input type="password" 
+                                   class="form-control @error('email_password') is-invalid @enderror" 
+                                   id="email_password" 
+                                   name="email_password" 
+                                   value="{{ old('email_password') }}"
+                                   placeholder="รหัสเดียวกับ Login">
+                            <button type="button" class="btn btn-outline-primary" data-target="email_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-toggle-password="email_password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        @else
+                            <input type="password" 
+                                   class="form-control bg-light" 
+                                   id="email_password" 
+                                   name="email_password" 
+                                   value="{{ old('email_password') }}"
+                                   placeholder="รหัสเดียวกับ Login"
+                                   readonly>
+                            <button type="button" class="btn btn-outline-primary" data-target="email_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        @endif
                     </div>
                     <div class="form-text">
-                        <span class="text-success">
-                            <i class="fas fa-check-circle me-1"></i>
-                            รหัสผ่านเดียวสำหรับ Email และ Login ระบบ (แสดงได้ทั้งหมด)
-                        </span>
+                        <small class="text-success">
+                            <i class="fas fa-link me-1"></i>
+                            ใช้รหัสเดียวกับ Login ระบบ
+                        </small>
+                        @if(!($userRole === 'super_admin' || $userRole === 'it_admin'))
+                            <div><span class="text-warning">(มองไม่เห็น - เฉพาะ Admin)</span></div>
+                        @endif
                     </div>
-                    @error('unified_password')
+                    @error('email_password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
-                <!-- Hidden fields for backend compatibility -->
-                <input type="hidden" id="email_password" name="email_password" value="{{ old('email_password') }}">
-                <input type="hidden" id="password" name="password" value="{{ old('password') }}">
-                <input type="hidden" id="login_email" name="login_email" value="{{ old('login_email') }}">
             </div>
         </div>
     </div>
@@ -509,8 +500,8 @@
     <div class="card mb-4">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-warning rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-building text-warning" style="font-size: 20px;"></i>
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f8f9fa;">
+                    <i class="fas fa-building text-secondary" style="font-size: 18px;"></i>
                 </div>
                 <div>
                     <h5 class="card-title mb-0">แผนกและสิทธิ์</h5>
@@ -654,12 +645,12 @@
         </div>
     </div>
 
-    <!-- โปรแกรม Express (Dynamic v2.0 Enhanced) -->
+    <!-- โปรแกรม Express (Dynamic v2.0) - ปรับแต่งใหม่ -->
     <div class="card mb-4" id="expressSection" style="display: none;">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-danger rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-bolt text-danger" style="font-size: 20px;"></i>
+                <div class="border border-2 border-warning rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #fff8e1;">
+                    <i class="fas fa-bolt text-warning" style="font-size: 18px;"></i>
                 </div>
                 <div>
                     <h5 class="card-title mb-0">
@@ -686,8 +677,8 @@
                             <span class="badge bg-info me-1">
                                 <i class="fas fa-lock me-1"></i>Password: 4 ตัวเลข (ไม่ซ้ำ)
                             </span>
-                            <span class="badge bg-primary me-1">
-                                <i class="fas fa-eye me-1"></i>แสดงได้ทั้งหมด
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-shield-alt me-1"></i>Admin Controlled
                             </span>
                         </div>
                     </div>
@@ -695,7 +686,7 @@
             </div>
             
             <div class="row g-3">
-                <!-- Express Username (Enhanced: 1-7 ตัวอักษร) -->
+                <!-- Express Username (ปรับแต่งใหม่: 1-7 ตัวอักษร) -->
                 <div class="col-md-6">
                     <label for="express_username" class="form-label">
                         Username Express (1-7 ตัวอักษร)
@@ -727,38 +718,52 @@
                     @enderror
                 </div>
 
-                <!-- Express Password (Enhanced: 4 ตัวเลขไม่ซ้ำ) -->
+                <!-- Express Password (ปรับแต่งใหม่: 4 ตัวเลขไม่ซ้ำ) -->
                 <div class="col-md-6">
                     <label for="express_password" class="form-label">
                         Password โปรแกรม Express
                         <span class="badge bg-success ms-2">Numbers Only</span>
-                        <span class="badge bg-primary ms-2">แสดงได้</span>
                     </label>
                     <div class="input-group">
-                        <input type="text" 
-                               class="form-control @error('express_password') is-invalid @enderror" 
-                               id="express_password" 
-                               name="express_password" 
-                               value="{{ old('express_password') }}"
-                               placeholder="4 ตัวเลขไม่ซ้ำ" 
-                               maxlength="4"
-                               pattern="[0-9]{4}">
-                        <button type="button" class="btn btn-outline-primary" data-target="express_password">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="express_password">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                            <input type="text" 
+                                   class="form-control @error('express_password') is-invalid @enderror" 
+                                   id="express_password" 
+                                   name="express_password" 
+                                   value="{{ old('express_password') }}"
+                                   placeholder="4 ตัวเลขไม่ซ้ำ" 
+                                   maxlength="4"
+                                   pattern="[0-9]{4}">
+                            <button type="button" class="btn btn-outline-primary" data-target="express_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-toggle-password="express_password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        @else
+                            <input type="text" 
+                                   class="form-control bg-light" 
+                                   id="express_password" 
+                                   name="express_password" 
+                                   value="{{ old('express_password') }}"
+                                   placeholder="สร้างอัตโนมัติ"
+                                   readonly>
+                            <button type="button" class="btn btn-outline-primary" data-target="express_password">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        @endif
                     </div>
                     <div class="form-text">
-                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน (เช่น 1234, 5678) 
-                        <span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
+                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน (เช่น 1234, 5678)
                         <div class="mt-1">
                             <small class="text-info">
                                 <i class="fas fa-calculator me-1"></i>
                                 ตัวอย่าง: 1357, 2468, 1029 (ไม่ซ้ำเลข)
                             </small>
                         </div>
+                        @if(!($userRole === 'super_admin' || $userRole === 'it_admin'))
+                            <div><span class="text-warning">(มองไม่เห็น - เฉพาะ Admin)</span></div>
+                        @endif
                     </div>
                     @error('express_password')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -768,12 +773,12 @@
         </div>
     </div>
 
-    <!-- สิทธิ์พิเศษ -->
+    <!-- สิทธิ์พิเศษ (เพิ่มใหม่) -->
     <div class="card mb-4">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-shield-alt text-secondary" style="font-size: 20px;"></i>
+                <div class="border border-2 border-info rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #e3f2fd;">
+                    <i class="fas fa-shield-alt text-info" style="font-size: 18px;"></i>
                 </div>
                 <div>
                     <h5 class="card-title mb-0">สิทธิ์พิเศษ</h5>
@@ -847,6 +852,96 @@
         </div>
     </div>
 
+    <!-- ระบบ Login (ปรับแต่งใหม่) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: #f8f9fa;">
+                    <i class="fas fa-sign-in-alt text-secondary" style="font-size: 18px;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">ระบบ Login</h5>
+                    <small class="text-muted">ข้อมูลสำหรับเข้าสู่ระบบ IT Management (Auto Sync)</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success">
+                <i class="fas fa-sync me-2"></i>
+                <strong>ปรับปรุงใหม่:</strong> รหัสผ่าน Login จะใช้รหัสเดียวกับ Email อัตโนมัติ (ไม่ต้องจำหลายรหัส)
+            </div>
+            
+            <div class="row g-3">
+                <!-- Login Email (Auto-sync) -->
+                <div class="col-md-6">
+                    <label for="login_email" class="form-label">
+                        Email สำหรับ Login
+                        <span class="badge bg-success ms-2">Auto Sync</span>
+                    </label>
+                    <input type="email" 
+                           class="form-control bg-light" 
+                           id="login_email" 
+                           name="login_email" 
+                           value="{{ old('login_email') }}"
+                           placeholder="จะใช้อีเมลเดียวกันข้างต้น"
+                           readonly>
+                    <div class="form-text text-success">
+                        <i class="fas fa-link me-1"></i>
+                        จะใช้อีเมลเดียวกันกับที่สร้างข้างต้น
+                    </div>
+                </div>
+
+                <!-- System Password (ใช้รหัสเดียวกับ Email) -->
+                <div class="col-md-6">
+                    <label for="password" class="form-label">
+                        Password สำหรับ Login ระบบ <span class="text-danger">*</span>
+                        <span class="badge bg-success ms-2">Same as Email</span>
+                    </label>
+                    <div class="input-group">
+                        @if($userRole === 'super_admin' || $userRole === 'it_admin')
+                            <input type="password" 
+                                   class="form-control @error('password') is-invalid @enderror bg-light" 
+                                   id="password" 
+                                   name="password" 
+                                   value="{{ old('password') }}"
+                                   placeholder="รหัสเดียวกับ Email Password"
+                                   readonly
+                                   required>
+                            <button type="button" class="btn btn-outline-success" id="syncPasswordBtn">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-toggle-password="password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        @else
+                            <input type="hidden" name="password" id="password_hidden">
+                            <input type="password" 
+                                   class="form-control bg-light" 
+                                   id="password_display" 
+                                   placeholder="รหัสเดียวกับ Email"
+                                   readonly>
+                            <button type="button" class="btn btn-outline-success" disabled>
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        @endif
+                    </div>
+                    <div class="form-text">
+                        <div class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>
+                            <strong>ง่ายขึ้น:</strong> ใช้รหัสผ่านเดียวกันกับ Email (ไม่ต้องจำหลายรหัส)
+                        </div>
+                        @if(!($userRole === 'super_admin' || $userRole === 'it_admin'))
+                            <div><span class="text-warning">(มองไม่เห็น - เฉพาะ Admin)</span></div>
+                        @endif
+                    </div>
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Form Actions -->
     <div class="card">
         <div class="card-body">
@@ -872,7 +967,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="previewModalLabel">
-                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (Final Fixed Version)
+                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (Enhanced Version)
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -894,7 +989,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Employee Create Form Loaded - Final Fixed Version Ready');
+    console.log('🚀 Employee Create Form Loaded - Express v2.0 Enhanced Ready');
     
     // Utility Functions
     const utils = {
@@ -931,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return result;
         },
         
-        // Enhanced: สร้างเลข 4 หลักไม่ซ้ำกัน
+        // ✅ ฟังก์ชันใหม่: สร้างเลข 4 หลักไม่ซ้ำกัน
         generateUniqueNumbers: (length = 4) => {
             const digits = [];
             while (digits.length < length) {
@@ -968,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // Enhanced Generator Functions
+    // ✅ Enhanced Generator Functions
     const generators = {
         employeeCode: () => `EMP${utils.generateRandomNumber(3)}`,
         keycardId: () => `KC${utils.generateRandomNumber(6)}`,
@@ -995,16 +1090,17 @@ document.addEventListener('DOMContentLoaded', function() {
         password: () => utils.generateRandomString(10, true),
         copierCode: () => utils.generateRandomNumber(4),
         
-        // Enhanced Express Username: 1-7 ตัวอักษร
+        // ✅ Enhanced Express Username: 1-7 ตัวอักษร (ไม่ต้อง pad)
         expressUsername: () => {
             const firstName = document.getElementById('first_name_en').value.trim().toLowerCase();
             if (firstName.length > 0) {
+                // ใช้จำนวนตัวอักษรที่มี แต่ไม่เกิน 7 ตัว
                 return firstName.length <= 7 ? firstName : firstName.substring(0, 7);
             }
             return utils.generateRandomString(5, false).toLowerCase();
         },
         
-        // Enhanced Express Password: 4 ตัวเลขไม่ซ้ำกัน
+        // ✅ Enhanced Express Password: 4 ตัวเลขไม่ซ้ำกัน
         expressPassword: () => utils.generateUniqueNumbers(4)
     };
     
@@ -1034,50 +1130,56 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = generators.email();
             if (email) {
                 document.getElementById('email').value = email;
-                // Auto-sync with hidden login_email field
                 document.getElementById('login_email').value = email;
                 autoGenerate.showEmailPreview();
                 
-                // Add animation
+                // ✅ Auto-sync password with email
+                autoGenerate.syncPasswords();
+                
+                // Add subtle animation for both fields
                 const emailInput = document.getElementById('email');
-                emailInput.style.background = 'linear-gradient(45deg, #e3f2fd, #f3e5f5)';
-                emailInput.style.transform = 'scale(1.02)';
-                emailInput.style.transition = 'all 0.3s ease';
+                const loginEmailInput = document.getElementById('login_email');
+                
+                [emailInput, loginEmailInput].forEach(input => {
+                    if (input) {
+                        input.style.background = 'linear-gradient(45deg, #e3f2fd, #f3e5f5)';
+                        input.style.transform = 'scale(1.02)';
+                        input.style.transition = 'all 0.3s ease';
+                    }
+                });
                 
                 setTimeout(() => {
-                    emailInput.style.background = '';
-                    emailInput.style.transform = '';
+                    [emailInput, loginEmailInput].forEach(input => {
+                        if (input) {
+                            input.style.background = '';
+                            input.style.transform = '';
+                        }
+                    });
                 }, 1500);
                 
                 console.log('✅ Email generated:', email);
             }
         },
         
-        // NEW: Unified password generation and sync
-        unifiedPassword: () => {
-            const password = generators.password();
-            if (password) {
-                // Set unified password field
-                document.getElementById('unified_password').value = password;
-                
-                // Auto-sync with hidden fields for backend compatibility
-                document.getElementById('email_password').value = password;
-                document.getElementById('password').value = password;
-                
-                // Add animation
-                const passwordInput = document.getElementById('unified_password');
-                passwordInput.style.background = 'linear-gradient(45deg, #e8f5e8, #fff3e0)';
-                passwordInput.style.transform = 'scale(1.02)';
-                passwordInput.style.transition = 'all 0.3s ease';
-                
-                setTimeout(() => {
-                    passwordInput.style.background = '';
-                    passwordInput.style.transform = '';
-                }, 1500);
-                
-                console.log('✅ Unified password generated and synced:', password);
-                return password;
+        // ✅ ฟังก์ชันใหม่: Sync passwords
+        syncPasswords: () => {
+            const emailPassword = document.getElementById('email_password').value || generators.password();
+            
+            // Set email password if empty
+            if (!document.getElementById('email_password').value) {
+                document.getElementById('email_password').value = emailPassword;
             }
+            
+            // Sync with login password
+            const passwordField = document.getElementById('password');
+            const passwordHidden = document.getElementById('password_hidden');
+            const passwordDisplay = document.getElementById('password_display');
+            
+            if (passwordField) passwordField.value = emailPassword;
+            if (passwordHidden) passwordHidden.value = emailPassword;
+            if (passwordDisplay) passwordDisplay.value = emailPassword;
+            
+            console.log('✅ Passwords synced:', emailPassword);
         },
         
         showEmailPreview: () => {
@@ -1140,12 +1242,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     case 'computer_password':
                         value = generators.password();
                         break;
-                    case 'unified_password':
-                        // Use unified password generation
-                        autoGenerate.unifiedPassword();
-                        utils.showNotification('✅ สร้างรหัสผ่านรวม (Email + Login) สำเร็จ!', 'success');
-                        utils.hideLoading(button);
-                        return;
+                    case 'email_password':
+                        value = generators.password();
+                        // ✅ Auto-sync with login password
+                        autoGenerate.syncPasswords();
+                        break;
+                    case 'password':
+                        // ✅ Use same as email password
+                        const emailPass = document.getElementById('email_password').value || generators.password();
+                        if (!document.getElementById('email_password').value) {
+                            document.getElementById('email_password').value = emailPass;
+                        }
+                        value = emailPass;
+                        break;
                     case 'copier_code':
                         value = generators.copierCode();
                         break;
@@ -1161,17 +1270,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     targetElement.value = value;
                     
                     if (target === 'email') {
-                        // Sync with login_email
                         const loginEmail = document.getElementById('login_email');
                         if (loginEmail) loginEmail.value = value;
                         autoGenerate.showEmailPreview();
+                        autoGenerate.syncPasswords();
                     }
                     
                     // Show different messages based on target
                     let message = '';
                     switch (target) {
                         case 'email':
-                            message = `✅ สร้าง Email สำเร็จ: ${value}`;
+                            message = `✅ สร้าง Email + Sync Password สำเร็จ: ${value}`;
                             break;
                         case 'username':
                             message = `✅ สร้าง Username สำเร็จ: ${value}`;
@@ -1190,6 +1299,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             break;
                         case 'copier_code':
                             message = `✅ สร้างรหัสถ่ายเอกสารสำเร็จ: ${value}`;
+                            break;
+                        case 'email_password':
+                            message = `✅ สร้าง Email Password + Sync Login สำเร็จ`;
+                            break;
+                        case 'password':
+                            message = `✅ ใช้รหัสเดียวกับ Email สำเร็จ`;
                             break;
                         default:
                             message = `✅ สร้าง ${target} สำเร็จ: ${value}`;
@@ -1224,7 +1339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         
-        // Department Change Handler - Express v2.0
+        // Updated Department Change Handler - Express v2.0
         handleDepartmentChange: () => {
             const departmentSelect = document.getElementById('department_id');
             const expressSection = document.getElementById('expressSection');
@@ -1335,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event.target.value = value;
         },
         
-        // Handle Special Permission Switches
+        // ✅ Handle Special Permission Switches
         handlePermissionSwitches: () => {
             const vpnSwitch = document.getElementById('vpn_access');
             const printingSwitch = document.getElementById('color_printing');
@@ -1365,7 +1480,7 @@ document.addEventListener('DOMContentLoaded', function() {
             utils.showLoading(button);
             
             try {
-                console.log('🎯 Starting generateAll Final Fixed...');
+                console.log('🎯 Starting generateAll Enhanced...');
                 
                 // Generate basic codes
                 document.getElementById('employee_code').value = generators.employeeCode();
@@ -1384,11 +1499,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Generate passwords
+                // Generate passwords (Computer password แยกต่างหาก)
                 document.getElementById('computer_password').value = generators.password();
                 
-                // NEW: Generate unified password (Email + Login)
-                autoGenerate.unifiedPassword();
+                // ✅ Email password และ Login password ใช้รหัสเดียวกัน
+                const sharedPassword = generators.password();
+                document.getElementById('email_password').value = sharedPassword;
+                document.getElementById('password').value = sharedPassword;
+                
+                // Copier code - ไม่สร้างอัตโนมัติ (On Demand)
+                // document.getElementById('copier_code').value = generators.copierCode();
                 
                 // Express fields (ถ้าแสดงอยู่)
                 const expressSection = document.getElementById('expressSection');
@@ -1397,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('express_password').value = generators.expressPassword();
                 }
                 
-                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (Final Fixed Version)', 'success');
+                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (Enhanced Version)', 'success');
                 
             } catch (error) {
                 console.error('Error in generateAll:', error);
@@ -1427,6 +1547,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     document.getElementById('employee_code').value = generators.employeeCode();
                     document.getElementById('keycard_id').value = generators.keycardId();
+                    // ไม่สร้าง copier code อัตโนมัติ
                 }, 100);
                 
                 utils.showNotification('🗑️ ล้างข้อมูลทั้งหมดแล้ว', 'success');
@@ -1459,15 +1580,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const emailDomain = document.getElementById('email_domain').value;
             
             // Check if Express data exists
+            const hasExpress = data.express_username || data.express_password;
             const expressSection = document.getElementById('expressSection');
             const isExpressVisible = expressSection && expressSection.style.display !== 'none';
             
-            // Get special permissions
+            // Check user role for password visibility
+            const userRole = '{{ $userRole }}';
+            const canSeePasswords = userRole === 'super_admin' || userRole === 'it_admin';
+            
+            // ✅ Get special permissions
             const vpnAccess = document.getElementById('vpn_access').checked;
             const colorPrinting = document.getElementById('color_printing').checked;
-            
-            // Get unified password
-            const unifiedPassword = document.getElementById('unified_password').value;
             
             previewContent.innerHTML = `
                 <div class="row">
@@ -1499,30 +1622,26 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="card-body">
                                 <table class="table table-sm table-borderless">
                                     <tr><td><strong>Username:</strong></td><td><span class="badge bg-primary">${data.username || '-'}</span></td></tr>
-                                    <tr><td><strong>Password คอมพิวเตอร์:</strong></td><td><code class="text-success">${data.computer_password || '-'}</code></td></tr>
-                                    <tr><td><strong>รหัสถ่ายเอกสาร:</strong></td><td>${data.copier_code ? `<span class="badge bg-warning text-dark">${data.copier_code}</span>` : '<span class="text-muted">ยังไม่สร้าง (On Demand)</span>'}</td></tr>
+                                    <tr><td><strong>Password คอมพิวเตอร์:</strong></td><td>${canSeePasswords ? (data.computer_password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>รหัสถ่ายเอกสาร:</strong></td><td>${data.copier_code ? `<span class="badge bg-warning text-dark">${data.copier_code}</span>` : '<span class="text-muted">ยังไม่สร้าง</span>'}</td></tr>
                                 </table>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- ระบบอีเมลและ Login (รวมกัน) -->
+                    <!-- ระบบอีเมล -->
                     <div class="col-md-6 mb-4">
                         <div class="card border-info">
                             <div class="card-header bg-info text-white">
-                                <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>ระบบอีเมลและ Login</h6>
+                                <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>ระบบอีเมล</h6>
                             </div>
                             <div class="card-body">
                                 <table class="table table-sm table-borderless">
                                     <tr><td><strong>อีเมล:</strong></td><td class="fw-bold text-success">${data.email || '-'}</td></tr>
                                     <tr><td><strong>โดเมน:</strong></td><td><span class="badge bg-info">@${emailDomain}</span></td></tr>
-                                    <tr><td><strong>Password รวม:</strong></td><td><code class="text-success">${unifiedPassword || '-'}</code></td></tr>
-                                    <tr><td><strong>การใช้งาน:</strong></td><td><small class="text-success">อีเมล + Login ใช้รหัสเดียวกัน</small></td></tr>
+                                    <tr><td><strong>Password อีเมล:</strong></td><td>${canSeePasswords ? (data.email_password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>Login Email:</strong></td><td class="text-muted">${data.email || '-'} <small>(เหมือนกัน)</small></td></tr>
                                 </table>
-                                <div class="alert alert-success mt-2 mb-0">
-                                    <i class="fas fa-check-circle me-1"></i>
-                                    <small><strong>Fixed:</strong> รหัสผ่านเดียวกันสำหรับ Email และ Login + แสดงได้ทั้งหมด</small>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1547,8 +1666,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${isExpressVisible ? `
                     <!-- โปรแกรม Express v2.0 Enhanced -->
                     <div class="col-md-6 mb-4">
-                        <div class="card border-danger">
-                            <div class="card-header bg-danger text-white">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
                                 <h6 class="mb-0">
                                     <i class="fas fa-bolt me-2"></i>โปรแกรม Express v2.0
                                     <span class="badge bg-dark text-white ms-2">Enhanced</span>
@@ -1557,82 +1676,175 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="card-body">
                                 <table class="table table-sm table-borderless">
                                     <tr><td><strong>Express Username:</strong></td><td><span class="badge bg-warning text-dark">${data.express_username || '-'}</span> <small class="text-success">(${(data.express_username || '').length} ตัว)</small></td></tr>
-                                    <tr><td><strong>Express Password:</strong></td><td><code class="text-success">${data.express_password || '-'}</code> <small class="text-info">(4 ตัวเลขไม่ซ้ำ)</small></td></tr>
+                                    <tr><td><strong>Express Password:</strong></td><td>${canSeePasswords ? (data.express_password || '-') : '<span class="text-warning">••••</span>'} <small class="text-info">(4 ตัวเลขไม่ซ้ำ)</small></td></tr>
                                     <tr><td><strong>ประเภท:</strong></td><td><small class="text-muted">แผนกที่เปิดใช้งาน Express</small></td></tr>
                                 </table>
                                 <div class="alert alert-success mt-2 mb-0">
                                     <i class="fas fa-check-circle me-1"></i>
-                                    <small><strong>Enhanced:</strong> Username 1-7 ตัว, Password 4 ตัวเลขไม่ซ้ำ, แสดงได้ทั้งหมด</small>
+                                    <small><strong>Enhanced:</strong> Username 1-7 ตัว, Password 4 ตัวเลขไม่ซ้ำ</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                     ` : ''}
                     
-                    <!-- สิทธิ์พิเศษ -->
+                    <!-- สิทธิ์พิเศษ (ใหม่) -->
                     <div class="col-md-6 mb-4">
-                        <div class="card border-secondary">
-                            <div class="card-header bg-secondary text-white">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
                                 <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>สิทธิ์พิเศษ</h6>
                             </div>
                             <div class="card-body">
                                 <table class="table table-sm table-borderless">
                                     <tr><td><strong>การใช้งาน VPN:</strong></td><td><span class="badge bg-${vpnAccess ? 'success' : 'secondary'}">${vpnAccess ? 'อนุญาต' : 'ไม่อนุญาต'}</span></td></tr>
-                                    <tr><td><strong>การปริ้นสี:</strong></td><td><span class="badge bg-${colorPrinting ? 'warning text-dark' : 'secondary'}">${colorPrinting ? 'อนุญาต' : 'ไม่อนุญาต'}</span></td></tr>
+                                    <tr><td><strong>การปริ้นสี:</strong></td><td><span class="badge bg-${colorPrinting ? 'warning text-dark' : 'secondary'}">${colorPrinting ? 'อนุญาต' : 'ไม่อนุญาত'}</span></td></tr>
                                     <tr><td><strong>ระดับสิทธิ์:</strong></td><td><small class="text-muted">${(vpnAccess || colorPrinting) ? 'มีสิทธิ์พิเศษ' : 'สิทธิ์พื้นฐาน'}</small></td></tr>
                                 </table>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- ระบบ Login Enhanced-->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-dark">
+                            <div class="card-header bg-dark text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-sign-in-alt me-2"></i>ระบบ Login
+                                    <span class="badge bg-success ms-2">Enhanced</span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Login Email:</strong></td><td class="text-success">${data.email || '-'}</td></tr>
+                                    <tr><td><strong>Password ระบบ:</strong></td><td>${canSeePasswords ? (data.password || '-') : '<span class="text-warning">••••••••</span>'}</td></tr>
+                                    <tr><td><strong>Password Sync:</strong></td><td><span class="badge bg-success">เดียวกับ Email</span></td></tr>
+                                </table>
+                                <div class="alert alert-success mt-2 mb-0">
+                                    <i class="fas fa-link me-1"></i>
+                                    <small><strong>ง่ายขึ้น:</strong> Email Password = Login Password</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- Final Fixed Summary -->
+                <!-- Summary Cards -->
                 <div class="row mt-4">
-                    <div class="col-12">
+                    <!-- Password Summary -->
+                    <div class="col-md-6 mb-3">
                         <div class="card border-success">
                             <div class="card-header bg-success text-white">
                                 <h6 class="mb-0">
-                                    <i class="fas fa-check-circle me-2"></i>สรุปการแก้ไข Final Fixed Version
+                                    <i class="fas fa-key me-2"></i>สรุปรหัสผ่าน (Enhanced)
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-desktop text-primary me-2"></i><strong>Computer:</strong> ${canSeePasswords ? (data.computer_password || 'ยังไม่สร้าง') : '••••••••'} <small class="text-muted">(แยกต่างหาก)</small></li>
+                                    <li><i class="fas fa-envelope text-info me-2"></i><strong>Email:</strong> ${canSeePasswords ? (data.email_password || 'ยังไม่สร้าง') : '••••••••'} <small class="text-success">(Sync กับ Login)</small></li>
+                                    <li><i class="fas fa-sign-in-alt text-dark me-2"></i><strong>Login:</strong> ${canSeePasswords ? (data.password || 'ยังไม่สร้าง') : '••••••••'} <small class="text-success">(เดียวกับ Email)</small></li>
+                                    ${isExpressVisible ? `<li><i class="fas fa-bolt text-warning me-2"></i><strong>Express:</strong> ${canSeePasswords ? (data.express_password || 'ยังไม่สร้าง') : '••••'} <small class="text-info">(4 ตัวเลขไม่ซ้ำ)</small></li>` : ''}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Integration -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-cogs me-2"></i>การเชื่อมต่อระบบ
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="fas fa-check text-success me-2"></i><strong>Email System:</strong> ${data.email ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ'}</li>
+                                    <li><i class="fas fa-check text-success me-2"></i><strong>Computer Network:</strong> ${data.username ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ'}</li>
+                                    <li><i class="fas fa-check text-success me-2"></i><strong>Login System:</strong> ${data.password ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ'}</li>
+                                    ${isExpressVisible ? `<li><i class="fas fa-check text-success me-2"></i><strong>Express System:</strong> ${data.express_username ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ'}</li>` : ''}
+                                    <li><i class="fas fa-${vpnAccess ? 'check text-success' : 'times text-muted'} me-2"></i><strong>VPN Access:</strong> ${vpnAccess ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</li>
+                                    <li><i class="fas fa-${colorPrinting ? 'check text-success' : 'times text-muted'} me-2"></i><strong>Color Printing:</strong> ${colorPrinting ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${isExpressVisible ? `
+                <!-- Express v2.0 Enhanced Summary -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-star me-2"></i>สรุป Express System v2.0 Enhanced
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <h6 class="text-success"><i class="fas fa-resize-arrows-alt me-1"></i> Icon Sizes</h6>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning"><i class="fas fa-bolt me-1"></i> ฟีเจอร์ที่ปรับปรุง</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>ทุก Icon ขนาด 45x45px เท่ากัน</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>min-width: 45px ป้องกันการบีบ</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>bg-light + สี consistent</li>
+                                            <li><i class="fas fa-check text-success me-2"></i><strong>Username:</strong> ใช้ได้ 1-7 ตัวอักษร (ไม่ต้อง pad)</li>
+                                            <li><i class="fas fa-check text-success me-2"></i><strong>Password:</strong> 4 ตัวเลขไม่ซ้ำกัน</li>
+                                            <li><i class="fas fa-check text-success me-2"></i><strong>Dynamic Detection:</strong> แสดงตามแผนกที่เปิดใช้งาน</li>
+                                            <li><i class="fas fa-check text-success me-2"></i><strong>Admin Control:</strong> ควบคุมโดย Admin</li>
                                         </ul>
                                     </div>
-                                    <div class="col-md-4">
-                                        <h6 class="text-info"><i class="fas fa-link me-1"></i> Password Unification</h6>
+                                    <div class="col-md-6">
+                                        <h6 class="text-info"><i class="fas fa-info-circle me-1"></i> รายละเอียดเทคนิค</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>Email และ Login รหัสเดียวกัน</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Unified field + auto-sync</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Hidden fields สำหรับ backend</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <h6 class="text-primary"><i class="fas fa-eye me-1"></i> Password Visibility</h6>
-                                        <ul class="list-unstyled">
-                                            <li><i class="fas fa-check text-success me-2"></i>type="text" ทั้งหมด</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>ไม่มี role check</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>แสดงได้ทุก role</li>
+                                            <li><i class="fas fa-user me-2 text-muted"></i><strong>Username:</strong> ${(data.express_username || '').length} ตัวอักษร จากชื่อ EN</li>
+                                            <li><i class="fas fa-lock me-2 text-muted"></i><strong>Password:</strong> ${data.express_password || 'xxxx'} (4 ตัวเลขไม่ซ้ำ)</li>
+                                            <li><i class="fas fa-database me-2 text-muted"></i><strong>Storage:</strong> Database field ที่ปลอดภัย</li>
+                                            <li><i class="fas fa-shield-alt me-2 text-muted"></i><strong>Security:</strong> Admin-only visibility</li>
                                         </ul>
                                     </div>
                                 </div>
-                                
-                                <hr>
-                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ` : `
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Express v2.0:</strong> ไม่แสดง Express section เนื่องจากแผนกที่เลือกไม่ได้เปิดใช้งาน Express 
+                            หรือยังไม่ได้เลือกแผนก
+                        </div>
+                    </div>
+                </div>
+                `}
+                
+                <!-- Enhanced Features Summary -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-rocket me-2"></i>ฟีเจอร์ที่ปรับปรุงในเวอร์ชันนี้
+                                </h6>
+                            </div>
+                            <div class="card-body">
                                 <div class="row">
-                                    <div class="col-12">
-                                        <h6 class="text-warning"><i class="fas fa-star me-1"></i> ฟีเจอร์เพิ่มเติม</h6>
-                                        <ul class="list-unstyled mb-0">
-                                            <li><i class="fas fa-phone text-success me-2"></i><strong>เบอร์โทร:</strong> อนุญาตซ้ำได้ (ครอบครัว/เพื่อนร่วมงาน)</li>
-                                            <li><i class="fas fa-print text-info me-2"></i><strong>รหัสถ่ายเอกสาร:</strong> On Demand (กดปุ่มเมื่อต้องการ)</li>
-                                            <li><i class="fas fa-bolt text-warning me-2"></i><strong>Express Enhanced:</strong> Username 1-7 ตัว, Password 4 ตัวเลขไม่ซ้ำ</li>
-                                            <li><i class="fas fa-shield-alt text-secondary me-2"></i><strong>สิทธิ์พิเศษ:</strong> VPN + Color Printing switches</li>
+                                    <div class="col-md-6">
+                                        <h6 class="text-success"><i class="fas fa-plus-circle me-1"></i> เพิ่มใหม่</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-phone me-2 text-success"></i>เบอร์โทรอนุญาตซ้ำได้</li>
+                                            <li><i class="fas fa-print me-2 text-success"></i>รหัสถ่ายเอกสาร On Demand</li>
+                                            <li><i class="fas fa-sync me-2 text-success"></i>Password Email = Login (Auto Sync)</li>
+                                            <li><i class="fas fa-shield-alt me-2 text-success"></i>สิทธิ์ VPN + Color Printing</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-warning"><i class="fas fa-wrench me-1"></i> ปรับปรุง</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-bolt me-2 text-warning"></i>Express Username: 1-7 ตัวอักษร</li>
+                                            <li><i class="fas fa-calculator me-2 text-warning"></i>Express Password: 4 ตัวเลขไม่ซ้ำ</li>
+                                            <li><i class="fas fa-eye me-2 text-warning"></i>Password Visibility ตาม Role</li>
+                                            <li><i class="fas fa-toggle-on me-2 text-warning"></i>Enhanced Permission Switches</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1641,13 +1853,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <!-- ข้อความสรุป -->
+                <!-- Password Visibility Notice -->
                 <div class="row mt-3">
                     <div class="col-12">
-                        <div class="alert alert-success">
-                            <i class="fas fa-thumbs-up me-2"></i>
-                            <strong>Final Fixed Version:</strong> แก้ไขครบถ้วนตามที่ร้องขอ - Icon sizes เท่ากัน, Password เป็นรหัสเดียวกัน, แสดงรหัสผ่านได้ทั้งหมด
+                        ${!canSeePasswords ? `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-eye-slash me-2"></i>
+                            <strong>หมายเหตุ:</strong> รหัสผ่านจะแสดงเป็น ••••••••• เนื่องจากสิทธิ์การเข้าถึง (เฉพาะ SuperAdmin และ IT Admin เท่านั้นที่เห็นได้)
                         </div>
+                        ` : `
+                        <div class="alert alert-success">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            <strong>Admin Mode:</strong> คุณสามารถมองเห็นรหัสผ่านทั้งหมดได้ และสามารถดูข้อมูลย้อนหลังได้ในระบบ
+                        </div>
+                        `}
                     </div>
                 </div>
             `;
@@ -1667,7 +1886,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const departmentSelect = document.getElementById('department_id');
         if (departmentSelect) {
             departmentSelect.addEventListener('change', eventHandlers.handleDepartmentChange);
-            console.log('✅ Department change listener attached (Final Fixed Version)');
+            console.log('✅ Department change listener attached (Express v2.0 Enhanced)');
+        } else {
+            console.log('❌ Department select not found');
         }
         
         // Phone format handler
@@ -1719,7 +1940,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Email input sync with login_email
+        // Email input sync with auto password sync
         const emailInput = document.getElementById('email');
         if (emailInput) {
             emailInput.addEventListener('input', (e) => {
@@ -1730,18 +1951,20 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // NEW: Unified password sync handler
-        const unifiedPasswordInput = document.getElementById('unified_password');
-        if (unifiedPasswordInput) {
-            unifiedPasswordInput.addEventListener('input', (e) => {
-                // Auto-sync with hidden fields for backend compatibility
-                const emailPassword = document.getElementById('email_password');
-                const systemPassword = document.getElementById('password');
-                
-                if (emailPassword) emailPassword.value = e.target.value;
-                if (systemPassword) systemPassword.value = e.target.value;
-                
-                console.log('🔄 Unified password synced:', e.target.value);
+        // ✅ Email password sync handler
+        const emailPasswordInput = document.getElementById('email_password');
+        if (emailPasswordInput) {
+            emailPasswordInput.addEventListener('input', (e) => {
+                autoGenerate.syncPasswords();
+            });
+        }
+        
+        // ✅ Sync password button
+        const syncPasswordBtn = document.getElementById('syncPasswordBtn');
+        if (syncPasswordBtn) {
+            syncPasswordBtn.addEventListener('click', () => {
+                autoGenerate.syncPasswords();
+                utils.showNotification('🔄 Sync รหัสผ่าน Email กับ Login สำเร็จ', 'success');
             });
         }
         
@@ -1782,6 +2005,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     document.getElementById('computer_password').value = generators.password();
+                    // ไม่สร้าง copier code อัตโนมัติ (On Demand)
                     
                     utils.showNotification('💻 สร้างข้อมูลระบบคอมพิวเตอร์สำเร็จ!', 'success');
                 } catch (error) {
@@ -1813,6 +2037,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     document.getElementById('computer_password').value = generators.password();
+                    // ไม่สร้าง copier code อัตโนมัติ
                     
                     utils.showNotification('💻 สร้างข้อมูลระบบคอมพิวเตอร์สำเร็จ!', 'success');
                 } catch (error) {
@@ -1853,7 +2078,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Setup permission switches
+        // ✅ Setup permission switches
         eventHandlers.handlePermissionSwitches();
         
         // Form submit handler
@@ -1867,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        console.log('✅ All event listeners attached successfully (Final Fixed Version)');
+        console.log('✅ All event listeners attached successfully (Express v2.0 Enhanced)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
@@ -1875,7 +2100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial setup
     setTimeout(() => {
-        console.log('🔧 Starting initial setup... (Final Fixed Version)');
+        console.log('🔧 Starting initial setup... (Express v2.0 Enhanced)');
         
         try {
             // Auto-generate employee code and keycard if empty
@@ -1892,6 +2117,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('✅ Keycard ID generated');
             }
             
+            // ไม่สร้าง copier code อัตโนมัติ (On Demand)
+            
             // Initialize department change handler
             eventHandlers.handleDepartmentChange();
             
@@ -1902,7 +2129,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventHandlers.handleDepartmentChange();
             }
             
-            console.log('✅ Department handler initialized (Final Fixed Version)');
+            console.log('✅ Department handler initialized (Express v2.0 Enhanced)');
             
             // Initialize email preview
             autoGenerate.showEmailPreview();
@@ -1917,45 +2144,59 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('✅ Permission switches initialized');
             
-            // Debug functions for testing (Final Fixed Version)
-            window.testFinalFixed = function() {
-                console.log('🧪 Testing Final Fixed Features:');
+            // Debug functions for testing (Enhanced)
+            window.testExpress = function() {
+                const expressSection = document.getElementById('expressSection');
+                if (expressSection) {
+                    expressSection.style.display = 'block';
+                    console.log('✅ Express section manually shown');
+                } else {
+                    console.log('❌ Express section not found');
+                }
+            };
+            
+            window.testDepartmentChange = function() {
+                eventHandlers.handleDepartmentChange();
+                console.log('✅ Department change handler manually triggered (Express v2.0 Enhanced)');
+            };
+            
+            window.testGenerateAll = function() {
+                formActions.generateAll();
+                console.log('✅ Generate all manually triggered (Enhanced)');
+            };
+            
+            window.testExpressAPI = function() {
+                const departmentId = document.getElementById('department_id').value;
+                if (departmentId) {
+                    fetch(`/api/departments/is-accounting?department_id=${departmentId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('🔍 Express API Test Result:', data);
+                            alert(`Express Enabled: ${data.is_express_enabled}\nDepartment: ${data.department_name}`);
+                        })
+                        .catch(error => console.error('Express API Test Error:', error));
+                } else {
+                    alert('กรุณาเลือกแผนกก่อน');
+                }
+            };
+            
+            window.testEnhancedFeatures = function() {
+                console.log('🧪 Testing Enhanced Features:');
                 console.log('   1. Express Username:', generators.expressUsername());
                 console.log('   2. Express Password:', generators.expressPassword());
                 console.log('   3. Unique Numbers:', utils.generateUniqueNumbers(4));
-                autoGenerate.unifiedPassword();
-                console.log('   4. Unified Password: Completed');
+                autoGenerate.syncPasswords();
+                console.log('   4. Password Sync: Completed');
             };
             
-            window.testIconConsistency = function() {
-                const icons = document.querySelectorAll('.card-header .rounded-circle');
-                console.log('🎨 Icon Consistency Check:');
-                icons.forEach((icon, index) => {
-                    const styles = window.getComputedStyle(icon);
-                    console.log(`   Icon ${index + 1}: ${styles.width} x ${styles.height} (${styles.minWidth})`);
-                });
-            };
+            console.log('🧪 Enhanced Debug functions available:');
+            console.log('   - testExpress() - แสดง Express section');
+            console.log('   - testDepartmentChange() - ทดสอบการเปลี่ยนแผนก');
+            console.log('   - testGenerateAll() - ทดสอบสร้างข้อมูลทั้งหมด');
+            console.log('   - testExpressAPI() - ทดสอบ Express API');
+            console.log('   - testEnhancedFeatures() - ทดสอบฟีเจอร์ที่ปรับปรุง');
             
-            window.testPasswordSync = function() {
-                const testPassword = 'Test123456';
-                document.getElementById('unified_password').value = testPassword;
-                document.getElementById('unified_password').dispatchEvent(new Event('input'));
-                
-                console.log('🔄 Password Sync Test:');
-                console.log('   Unified:', document.getElementById('unified_password').value);
-                console.log('   Email:', document.getElementById('email_password').value);
-                console.log('   System:', document.getElementById('password').value);
-            };
-            
-            console.log('🧪 Final Fixed Debug functions available:');
-            console.log('   - testFinalFixed() - ทดสอบฟีเจอร์ที่แก้ไข');
-            console.log('   - testIconConsistency() - ตรวจสอบขนาด Icons');
-            console.log('   - testPasswordSync() - ทดสอบ Password sync');
-            
-            console.log('✅ Employee Create Form Ready - Final Fixed Version');
-            console.log('📐 Icon Sizes: ทุก icon ขนาด 45x45px เท่ากัน (min-width: 45px)');
-            console.log('🔗 Password Sync: Email และ Login ใช้รหัสผ่านเดียวกัน (Unified)');
-            console.log('👁️ Password Visibility: แสดงรหัสผ่านได้ทั้งหมด (type="text")');
+            console.log('✅ Employee Create Form Ready - Express System v2.0 Enhanced');
             console.log('📧 Email Format: firstname.lastnameFirstChar@domain');
             console.log('🔄 Available Domains: @bettersystem.co.th, @better-groups.com');
             console.log('👤 Username Format: firstname (lowercase only)');
@@ -1963,13 +2204,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('⚡ Express v2.0 Enhanced:');
             console.log('   • Username: 1-7 ตัวอักษร (ไม่ต้อง pad)');
             console.log('   • Password: 4 ตัวเลขไม่ซ้ำกัน');
-            console.log('   • แสดงได้ทั้งหมด');
-            console.log('📞 Phone: ซ้ำได้ (ครอบครัว/เพื่อนร่วมงาน)');
-            console.log('🛡️ Permissions: VPN + Color Printing switches');
-            console.log('🎨 Icons: User, Desktop, Email, Building, Bolt, Shield (45x45px consistent)');
+            console.log('   • Dynamic detection via API');
+            console.log('🔒 Password Sync: Email = Login (Auto)');
+            console.log('📞 Phone: ซ้ำได้');
+            console.log('🛡️ Permissions: VPN + Color Printing');
+            console.log('🎨 Icons: User, Desktop, Email, Building, Bolt, Shield, Sign-in');
             console.log('🔧 API Endpoint: /api/departments/is-accounting?department_id=X');
             console.log('🎯 Express Detection: Uses express_enabled field from departments table');
-            console.log('🚀 All issues FIXED - Ready for production use!');
+            console.log('🚀 All systems ready for employee registration with Express v2.0 Enhanced!');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -1985,79 +2227,77 @@ function submitForm() {
     }
 }
 
-// Global Final Fixed test functions
-window.FinalFixedTest = {
-    testUnifiedPassword: function() {
-        const password = 'TestPassword123';
-        document.getElementById('unified_password').value = password;
-        document.getElementById('unified_password').dispatchEvent(new Event('input'));
-        
-        console.log('🔄 Unified Password Test Result:');
-        console.log('   Unified Field:', document.getElementById('unified_password').value);
-        console.log('   Email Password:', document.getElementById('email_password').value);
-        console.log('   System Password:', document.getElementById('password').value);
-        console.log('   All synced:', document.getElementById('unified_password').value === document.getElementById('email_password').value && document.getElementById('email_password').value === document.getElementById('password').value);
+// ✅ Global Enhanced test functions
+window.ExpressSystemEnhanced = {
+    testAPI: function(departmentId) {
+        fetch(`/api/departments/is-accounting?department_id=${departmentId || 1}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('🔍 Express API Response:', data);
+                return data;
+            })
+            .catch(error => {
+                console.error('❌ Express API Error:', error);
+                return error;
+            });
     },
     
-    testIconSizes: function() {
-        const icons = document.querySelectorAll('.card-header .rounded-circle');
-        const results = [];
-        
-        icons.forEach((icon, index) => {
-            const styles = window.getComputedStyle(icon);
-            const result = {
-                index: index + 1,
-                width: styles.width,
-                height: styles.height,
-                minWidth: styles.minWidth,
-                consistent: styles.width === '45px' && styles.height === '45px'
-            };
-            results.push(result);
-        });
-        
-        console.log('🎨 Icon Size Test Results:', results);
-        const allConsistent = results.every(r => r.consistent);
-        console.log('✅ All icons consistent:', allConsistent);
-        return results;
+    showExpress: function() {
+        const section = document.getElementById('expressSection');
+        if (section) {
+            section.style.display = 'block';
+            console.log('✅ Express section shown');
+        }
     },
     
-    testPasswordVisibility: function() {
-        const passwordFields = [
-            'computer_password',
-            'unified_password',
-            'express_password'
-        ];
+    hideExpress: function() {
+        const section = document.getElementById('expressSection');
+        if (section) {
+            section.style.display = 'none';
+            console.log('✅ Express section hidden');
+        }
+    },
+    
+    generateCredentials: function() {
+        const firstName = document.getElementById('first_name_en').value || 'john';
+        const username = firstName.length <= 7 ? firstName.toLowerCase() : firstName.substring(0, 7).toLowerCase();
+        const password = Array.from({length: 4}, () => Math.floor(Math.random() * 10)).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4).join('').padEnd(4, '1234'.split('').find(x => !password.includes(x)) || '0');
         
-        const results = passwordFields.map(fieldId => {
-            const field = document.getElementById(fieldId);
-            return {
-                field: fieldId,
-                exists: !!field,
-                type: field ? field.type : 'not found',
-                visible: field ? field.type === 'text' : false
-            };
-        });
-        
-        console.log('👁️ Password Visibility Test Results:', results);
-        const allVisible = results.filter(r => r.exists).every(r => r.visible);
-        console.log('✅ All passwords visible:', allVisible);
-        return results;
+        document.getElementById('express_username').value = username;
+        document.getElementById('express_password').value = password;
+        console.log('✅ Enhanced Express credentials generated:', {username, password});
+    },
+    
+    testUniqueNumbers: function() {
+        const numbers = [];
+        for (let i = 0; i < 10; i++) {
+            const num = Array.from({length: 4}, () => {
+                const digits = [];
+                while (digits.length < 4) {
+                    const digit = Math.floor(Math.random() * 10);
+                    if (!digits.includes(digit)) {
+                        digits.push(digit);
+                    }
+                }
+                return digits.join('');
+            })[0];
+            numbers.push(num);
+        }
+        console.log('🔢 Generated unique 4-digit numbers:', numbers);
+        return numbers;
     },
     
     info: function() {
-        console.log('🚀 Final Fixed Version Test Functions:');
-        console.log('   FinalFixedTest.testUnifiedPassword() - ทดสอบ Password sync');
-        console.log('   FinalFixedTest.testIconSizes() - ทดสอบขนาด Icons');
-        console.log('   FinalFixedTest.testPasswordVisibility() - ทดสอบการแสดง Password');
-        console.log('');
-        console.log('🔧 Fixed Issues Summary:');
-        console.log('   ✅ Icon sizes: ทุก icon 45x45px เท่ากัน');
-        console.log('   ✅ Password unification: Email = Login (รหัสเดียวกัน)');
-        console.log('   ✅ Password visibility: แสดงได้ทั้งหมด (type="text")');
+        console.log('🚀 Express System v2.0 Enhanced Test Functions:');
+        console.log('   ExpressSystemEnhanced.testAPI(departmentId) - ทดสอบ API');
+        console.log('   ExpressSystemEnhanced.showExpress() - แสดง Express section');
+        console.log('   ExpressSystemEnhanced.hideExpress() - ซ่อน Express section');
+        console.log('   ExpressSystemEnhanced.generateCredentials() - สร้าง credentials');
+        console.log('   ExpressSystemEnhanced.testUniqueNumbers() - ทดสอบเลขไม่ซ้ำ');
     }
 };
 
-// Show final fixed info on load
-console.log('📋 พิมพ์ FinalFixedTest.info() เพื่อดูคำสั่งทดสอบ Final Fixed Version');
+// Show enhanced info on load
+console.log('📋 พิมพ์ ExpressSystemEnhanced.info() เพื่อดูคำสั่งทดสอบ Enhanced');
 </script>
 @endpush

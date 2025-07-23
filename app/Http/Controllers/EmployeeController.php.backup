@@ -41,14 +41,14 @@ class EmployeeController extends Controller
         } catch (\Exception $e) {
             // Fallback departments if database is not available
             $departments = collect([
-                (object)['id' => 1, 'name' => 'บัญชี', 'express_enabled' => true],
-                (object)['id' => 2, 'name' => 'IT', 'express_enabled' => false],
-                (object)['id' => 3, 'name' => 'ฝ่ายขาย', 'express_enabled' => false],
-                (object)['id' => 4, 'name' => 'การตลาด', 'express_enabled' => false],
-                (object)['id' => 5, 'name' => 'บุคคล', 'express_enabled' => false],
-                (object)['id' => 6, 'name' => 'ผลิต', 'express_enabled' => false],
-                (object)['id' => 7, 'name' => 'คลังสินค้า', 'express_enabled' => false],
-                (object)['id' => 8, 'name' => 'บริหาร', 'express_enabled' => false],
+                (object)['id' => 1, 'name' => 'บัญชี'],
+                (object)['id' => 2, 'name' => 'IT'],
+                (object)['id' => 3, 'name' => 'ฝ่ายขาย'],
+                (object)['id' => 4, 'name' => 'การตลาด'],
+                (object)['id' => 5, 'name' => 'บุคคล'],
+                (object)['id' => 6, 'name' => 'ผลิต'],
+                (object)['id' => 7, 'name' => 'คลังสินค้า'],
+                (object)['id' => 8, 'name' => 'บริหาร'],
             ]);
             
             return view('employees.create', compact('departments'));
@@ -175,8 +175,8 @@ class EmployeeController extends Controller
                 $validated['copier_code'] = $this->generateCopierCode();
             }
 
-            // ✅ Enhanced Express fields handling - ใช้ express_enabled แทน hardcode
-            if ($this->isDepartmentExpressEnabled($validated['department_id'])) {
+            // Enhanced Express fields handling
+            if ($this->isDepartmentAccounting($validated['department_id'])) {
                 // Auto-generate Express credentials if not provided
                 if (empty($validated['express_username'])) {
                     $validated['express_username'] = $this->generateExpressUsername(
@@ -189,7 +189,7 @@ class EmployeeController extends Controller
                     $validated['express_password'] = $this->generateExpressPassword();
                 }
             } else {
-                // Clear Express fields for non-Express departments
+                // Clear Express fields for non-accounting departments
                 $validated['express_username'] = null;
                 $validated['express_password'] = null;
             }
@@ -309,8 +309,8 @@ class EmployeeController extends Controller
                 unset($validated['password']);
             }
 
-            // ✅ Handle Express fields - ใช้ express_enabled แทน hardcode
-            if ($this->isDepartmentExpressEnabled($validated['department_id'])) {
+            // Handle Express fields
+            if ($this->isDepartmentAccounting($validated['department_id'])) {
                 // Keep existing Express credentials or generate new ones
                 if (empty($validated['express_username'])) {
                     $validated['express_username'] = $this->generateExpressUsername(
@@ -506,33 +506,30 @@ class EmployeeController extends Controller
     }
 
     // =====================================================
-    // EXPRESS METHODS v2.0 🚀
+    // EXPRESS METHODS
     // =====================================================
 
     /**
-     * ✅ ตรวจสอบว่าแผนกนี้เปิดใช้งาน Express หรือไม่ (v2.0)
+     * ตรวจสอบว่าแผนกนี้เป็นแผนกบัญชีหรือไม่
      */
-    private function isDepartmentExpressEnabled($departmentId)
+    private function isDepartmentAccounting($departmentId)
     {
         try {
             $department = Department::find($departmentId);
             if (!$department) return false;
             
-            // ใช้ field express_enabled จากฐานข้อมูล
-            return (bool) $department->express_enabled;
+            $accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance'];
             
+            foreach ($accountingKeywords as $keyword) {
+                if (stripos($department->name, $keyword) !== false) {
+                    return true;
+                }
+            }
+            
+            return false;
         } catch (\Exception $e) {
-            \Log::error('Express eligibility check failed: ' . $e->getMessage());
             return false;
         }
-    }
-
-    /**
-     * 🔄 Backward Compatibility - เรียก method ใหม่
-     */
-    private function isDepartmentAccounting($departmentId)
-    {
-        return $this->isDepartmentExpressEnabled($departmentId);
     }
 
     /**
@@ -662,7 +659,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * ✅ API Endpoint: ตรวจสอบว่าแผนกรองรับ Express หรือไม่ (v2.0)
+     * API Endpoint: ตรวจสอบว่าแผนกรองรับ Express หรือไม่
      */
     public function checkExpressEligibility(Request $request)
     {
@@ -677,18 +674,16 @@ class EmployeeController extends Controller
                 ]);
             }
             
-            // ใช้ method ใหม่ที่ตรวจสอบจาก express_enabled
-            $isEligible = $this->isDepartmentExpressEnabled($departmentId);
+            $isEligible = $this->isDepartmentAccounting($departmentId);
             $department = Department::find($departmentId);
             
             return response()->json([
                 'success' => true,
                 'eligible' => $isEligible,
                 'department_name' => $department ? $department->name : 'ไม่ระบุ',
-                'express_enabled' => $department ? (bool) $department->express_enabled : false,
                 'message' => $isEligible ? 
-                    'แผนกนี้เปิดใช้งาน Express แล้ว' : 
-                    'แผนกนี้ยังไม่เปิดใช้งาน Express'
+                    'แผนกนี้สามารถใช้ Express ได้' : 
+                    'แผนกนี้ไม่รองรับ Express'
             ]);
             
         } catch (\Exception $e) {
@@ -794,7 +789,6 @@ class EmployeeController extends Controller
                     'password' => $canSeePassword ? $employee->express_password : null,
                     'password_hidden' => !$canSeePassword,
                     'department' => $employee->department->name ?? null,
-                    'department_express_enabled' => $employee->department->express_enabled ?? false,
                 ]
             ]);
             
@@ -826,16 +820,16 @@ class EmployeeController extends Controller
             return $user->department_id === $employee->department_id;
         }
         
-        // Express role ดูได้เฉพาะแผนกที่เปิด Express
+        // Express role ดูได้เฉพาะแผนกบัญชี
         if ($user->role === 'express') {
-            return $this->isDepartmentExpressEnabled($employee->department_id);
+            return $this->isDepartmentAccounting($employee->department_id);
         }
         
         return false;
     }
 
     /**
-     * ✅ รายงาน Express Usage (v2.0)
+     * รายงาน Express Usage
      */
     public function getExpressReport()
     {
@@ -851,17 +845,10 @@ class EmployeeController extends Controller
             
             $totalEmployees = Employee::count();
             $expressUsers = Employee::whereNotNull('express_username')->count();
-            $expressEnabledDepartments = Department::where('express_enabled', true)->count();
-            $totalDepartments = Department::count();
-            
-            // Express users by department
-            $expressByDepartment = Employee::whereNotNull('express_username')
-                ->with('department')
-                ->get()
-                ->groupBy('department.name')
-                ->map(function ($employees) {
-                    return $employees->count();
-                });
+            $accountingEmployees = Employee::whereHas('department', function($query) {
+                $query->where('name', 'like', '%บัญชี%')
+                      ->orWhere('name', 'like', '%การเงิน%');
+            })->count();
             
             $expressPercentage = $totalEmployees > 0 ? 
                 round(($expressUsers / $totalEmployees) * 100, 2) : 0;
@@ -871,10 +858,8 @@ class EmployeeController extends Controller
                 'report' => [
                     'total_employees' => $totalEmployees,
                     'express_users' => $expressUsers,
-                    'express_enabled_departments' => $expressEnabledDepartments,
-                    'total_departments' => $totalDepartments,
+                    'accounting_employees' => $accountingEmployees,
                     'express_percentage' => $expressPercentage,
-                    'express_by_department' => $expressByDepartment,
                     'generated_at' => now()->format('Y-m-d H:i:s')
                 ]
             ]);
