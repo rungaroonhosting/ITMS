@@ -88,9 +88,6 @@ class EmployeeRequest extends FormRequest
                 Rule::unique('employees')->ignore($employeeId)->whereNull('deleted_at')
             ],
             
-            // ✅ FIXED: ลบ unique constraint จาก phone - อนุญาตให้ซ้ำได้
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9-+().\s]+$/'],
-            
             // แผนกและสิทธิ์
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'can_print_color' => ['boolean'],
@@ -110,6 +107,7 @@ class EmployeeRequest extends FormRequest
             'position' => ['nullable', 'string', 'max:100'],
             'hire_date' => ['nullable', 'date', 'before_or_equal:today'],
             'salary' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9-+().\s]+$/'],
             'address' => ['nullable', 'string', 'max:500'],
             'emergency_contact' => ['nullable', 'string', 'max:100'],
             'emergency_phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9-+().\s]+$/'],
@@ -160,9 +158,6 @@ class EmployeeRequest extends FormRequest
             'express_code.size' => 'รหัส Express ต้องเป็นตัวเลข 4 หลัก',
             'express_code.regex' => 'รหัส Express ต้องเป็นตัวเลข 4 หลักเท่านั้น',
             
-            // ✅ FIXED: ลบ phone.unique error message
-            'phone.regex' => 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง',
-            
             // แผนกและสิทธิ์
             'department_id.required' => 'กรุณาเลือกแผนก',
             'department_id.exists' => 'แผนกที่เลือกไม่มีอยู่ในระบบ',
@@ -179,6 +174,7 @@ class EmployeeRequest extends FormRequest
             'hire_date.before_or_equal' => 'วันที่เริ่มงานต้องไม่เกินวันปัจจุบัน',
             'salary.numeric' => 'เงินเดือนต้องเป็นตัวเลข',
             'salary.max' => 'เงินเดือนต้องไม่เกิน 999,999.99',
+            'phone.regex' => 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง',
             'emergency_phone.regex' => 'รูปแบบเบอร์ติดต่อฉุกเฉินไม่ถูกต้อง',
         ];
     }
@@ -203,7 +199,6 @@ class EmployeeRequest extends FormRequest
             'email_password' => 'Password อีเมล',
             'express_username' => 'Username Express',
             'express_code' => 'รหัส Express',
-            'phone' => 'เบอร์โทรศัพท์', // ✅ FIXED: ยังคงใช้ได้แต่ไม่ unique
             'department_id' => 'แผนก',
             'can_print_color' => 'สิทธิ์ปริ้นสี',
             'can_use_vpn' => 'สิทธิ์ใช้ VPN',
@@ -213,6 +208,7 @@ class EmployeeRequest extends FormRequest
             'position' => 'ตำแหน่ง',
             'hire_date' => 'วันที่เริ่มงาน',
             'salary' => 'เงินเดือน',
+            'phone' => 'เบอร์โทรศัพท์',
             'address' => 'ที่อยู่',
             'emergency_contact' => 'ผู้ติดต่อฉุกเฉิน',
             'emergency_phone' => 'เบอร์ติดต่อฉุกเฉิน',
@@ -249,7 +245,7 @@ class EmployeeRequest extends FormRequest
             }
         }
 
-        // ✅ FIXED: ทำความสะอาดเบอร์โทร (ไม่ validate unique)
+        // ทำความสะอาดเบอร์โทร
         foreach (['phone', 'emergency_phone'] as $field) {
             if ($this->has($field)) {
                 $cleanData[$field] = preg_replace('/[^0-9-+().\s]/', '', $this->input($field));

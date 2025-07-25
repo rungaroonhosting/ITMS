@@ -12,87 +12,44 @@ class Department extends Model
 
     /**
      * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
-        'code', 
         'description',
-        'is_active',
-        'express_enabled',
-        'express_enabled_at'
+        'manager_id',
+        'express_enabled', // ✅ เพิ่ม field สำหรับ Express v2.0
+        'status',
+        'sort_order',
     ];
 
     /**
      * The attributes that should be cast.
+     *
+     * @var array<string, string>
      */
     protected $casts = [
-        'is_active' => 'boolean',
-        'express_enabled' => 'boolean',
-        'express_enabled_at' => 'datetime',
+        'express_enabled' => 'boolean', // ✅ Cast เป็น boolean
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 
     /**
-     * The attributes that should have default values.
+     * The accessors to append to the model's array form.
+     *
+     * @var array
      */
-    protected $attributes = [
-        'is_active' => true,
-        'express_enabled' => false,
+    protected $appends = [
+        'status_display',
+        'employee_count',
+        'express_users_count',
     ];
 
-    /**
-     * Soft delete configuration
-     */
-    protected $dates = ['deleted_at'];
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        // อัพเดต express_enabled_at เมื่อมีการเปลี่ยนแปลง express_enabled
-        static::updating(function ($department) {
-            if ($department->isDirty('express_enabled')) {
-                $department->express_enabled_at = now();
-            }
-        });
-
-        // Log การเปลี่ยนแปลง
-        static::updated(function ($department) {
-            if ($department->wasChanged('express_enabled')) {
-                \Log::info('Department Express status changed', [
-                    'department_id' => $department->id,
-                    'name' => $department->name,
-                    'express_enabled' => $department->express_enabled,
-                    'changed_at' => $department->express_enabled_at,
-                    'changed_by' => auth()->id()
-                ]);
-            }
-        });
-
-        // Log การลบ
-        static::deleting(function ($department) {
-            \Log::info('Department being deleted', [
-                'department_id' => $department->id,
-                'name' => $department->name,
-                'employee_count' => $department->employees()->count(),
-                'deleted_by' => auth()->id()
-            ]);
-        });
-
-        // Log การกู้คืน
-        static::restored(function ($department) {
-            \Log::info('Department restored', [
-                'department_id' => $department->id,
-                'name' => $department->name,
-                'restored_by' => auth()->id()
-            ]);
-        });
-    }
+    // ===========================================
+    // RELATIONSHIPS
+    // ===========================================
 
     /**
      * Get the employees for the department.
@@ -100,6 +57,14 @@ class Department extends Model
     public function employees()
     {
         return $this->hasMany(Employee::class);
+    }
+
+    /**
+     * Get the manager of the department.
+     */
+    public function manager()
+    {
+        return $this->belongsTo(Employee::class, 'manager_id');
     }
 
     /**
@@ -111,25 +76,71 @@ class Department extends Model
     }
 
     /**
-     * Get employees with Express credentials.
+     * Get employees with Express access.
      */
     public function expressEmployees()
     {
-        return $this->hasMany(Employee::class)
-            ->whereNotNull('express_username')
-            ->whereNotNull('express_password');
+        return $this->hasMany(Employee::class)->whereNotNull('express_username');
+    }
+
+    // ===========================================
+    // ACCESSORS & MUTATORS
+    // ===========================================
+
+    /**
+     * Get the department's status display name.
+     */
+    public function getStatusDisplayAttribute()
+    {
+        return $this->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
     }
 
     /**
-     * Scope for active departments only.
+     * Get the department's employee count.
+     */
+    public function getEmployeeCountAttribute()
+    {
+        return $this->employees()->count();
+    }
+
+    /**
+     * Get the department's Express users count.
+     */
+    public function getExpressUsersCountAttribute()
+    {
+        return $this->expressEmployees()->count();
+    }
+
+    /**
+     * ✅ Get Express status display
+     */
+    public function getExpressStatusDisplayAttribute()
+    {
+        return $this->express_enabled ? 'เปิดใช้งาน Express' : 'ปิดใช้งาน Express';
+    }
+
+    // ===========================================
+    // SCOPES
+    // ===========================================
+
+    /**
+     * Scope a query to only include active departments.
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', 'active');
     }
 
     /**
-     * Scope for Express-enabled departments only.
+     * Scope a query to only include inactive departments.
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
+    /**
+     * ✅ Scope for Express-enabled departments
      */
     public function scopeExpressEnabled($query)
     {
@@ -137,355 +148,345 @@ class Department extends Model
     }
 
     /**
-     * Scope to include soft deleted records
+     * ✅ Scope for Express-disabled departments
      */
-    public function scopeWithTrashed($query)
+    public function scopeExpressDisabled($query)
     {
-        return $query->withTrashed();
+        return $query->where('express_enabled', false);
     }
 
     /**
-     * Scope for only soft deleted records
+     * Scope to order departments by name.
      */
-    public function scopeOnlyTrashed($query)
+    public function scopeOrderByName($query, $direction = 'asc')
     {
-        return $query->onlyTrashed();
+        return $query->orderBy('name', $direction);
     }
 
     /**
-     * Check if department supports Express.
+     * Scope to search departments.
      */
-    public function supportsExpress(): bool
+    public function scopeSearch($query, $search)
     {
-        return $this->express_enabled === true;
+        return $query->where(function($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('description', 'LIKE', "%{$search}%");
+        });
+    }
+
+    // ===========================================
+    // METHODS
+    // ===========================================
+
+    /**
+     * ✅ Check if department has Express enabled
+     */
+    public function hasExpressAccess()
+    {
+        return (bool) $this->express_enabled;
     }
 
     /**
-     * Check if department can be deleted safely
+     * ✅ Enable Express for this department
      */
-    public function canBeDeleted(): bool
+    public function enableExpress()
     {
+        $this->update(['express_enabled' => true]);
+        
+        // Log the change
+        \Log::info("Express enabled for department: {$this->name}");
+        
+        return $this;
+    }
+
+    /**
+     * ✅ Disable Express for this department
+     */
+    public function disableExpress()
+    {
+        $this->update(['express_enabled' => false]);
+        
+        // Clear Express credentials from employees in this department
+        $this->employees()->update([
+            'express_username' => null,
+            'express_password' => null
+        ]);
+        
+        // Log the change
+        \Log::info("Express disabled for department: {$this->name} (cleared {$this->employees()->count()} employee credentials)");
+        
+        return $this;
+    }
+
+    /**
+     * ✅ Toggle Express status
+     */
+    public function toggleExpress()
+    {
+        if ($this->express_enabled) {
+            return $this->disableExpress();
+        } else {
+            return $this->enableExpress();
+        }
+    }
+
+    /**
+     * Get department statistics.
+     */
+    public function getStats()
+    {
+        return [
+            'total_employees' => $this->employees()->count(),
+            'active_employees' => $this->activeEmployees()->count(),
+            'express_users' => $this->expressEmployees()->count(),
+            'express_enabled' => $this->express_enabled,
+            'express_percentage' => $this->employees()->count() > 0 ? 
+                round(($this->expressEmployees()->count() / $this->employees()->count()) * 100, 2) : 0,
+        ];
+    }
+
+    /**
+     * Check if department can be deleted.
+     */
+    public function canDelete()
+    {
+        // Cannot delete if has employees
         return $this->employees()->count() === 0;
     }
 
     /**
-     * Get Express statistics for this department.
+     * Activate department.
      */
-    public function getExpressStatsAttribute()
+    public function activate()
     {
-        if (!$this->express_enabled) {
-            return null;
-        }
+        $this->update(['status' => 'active']);
+        return $this;
+    }
 
-        $totalEmployees = $this->employees()->count();
-        $expressUsers = $this->expressEmployees()->count();
+    /**
+     * Deactivate department.
+     */
+    public function deactivate()
+    {
+        $this->update(['status' => 'inactive']);
+        return $this;
+    }
+
+    /**
+     * Assign manager to department.
+     */
+    public function assignManager($employeeId)
+    {
+        $this->update(['manager_id' => $employeeId]);
+        return $this;
+    }
+
+    /**
+     * Remove manager from department.
+     */
+    public function removeManager()
+    {
+        $this->update(['manager_id' => null]);
+        return $this;
+    }
+
+    // ===========================================
+    // STATIC METHODS
+    // ===========================================
+
+    /**
+     * ✅ Get all Express-enabled departments
+     */
+    public static function getExpressEnabledDepartments()
+    {
+        return static::expressEnabled()->active()->orderByName()->get();
+    }
+
+    /**
+     * ✅ Get Express statistics for all departments
+     */
+    public static function getExpressStats()
+    {
+        $totalDepartments = static::count();
+        $expressEnabled = static::expressEnabled()->count();
+        $totalEmployees = Employee::count();
+        $expressUsers = Employee::whereNotNull('express_username')->count();
 
         return [
+            'total_departments' => $totalDepartments,
+            'express_enabled_departments' => $expressEnabled,
+            'express_disabled_departments' => $totalDepartments - $expressEnabled,
+            'express_department_percentage' => $totalDepartments > 0 ? 
+                round(($expressEnabled / $totalDepartments) * 100, 2) : 0,
             'total_employees' => $totalEmployees,
             'express_users' => $expressUsers,
-            'coverage_percentage' => $totalEmployees > 0 
-                ? round(($expressUsers / $totalEmployees) * 100, 1) 
-                : 0,
-            'missing_count' => $totalEmployees - $expressUsers
+            'express_user_percentage' => $totalEmployees > 0 ? 
+                round(($expressUsers / $totalEmployees) * 100, 2) : 0,
         ];
     }
 
     /**
-     * Get status display text
+     * Get department statuses.
      */
-    public function getStatusDisplayAttribute(): string
-    {
-        if ($this->trashed()) {
-            return 'ถูกลบ';
-        }
-        
-        return $this->is_active ? 'ใช้งาน' : 'ปิดใช้งาน';
-    }
-
-    /**
-     * Enable Express support for this department.
-     */
-    public function enableExpress(): bool
-    {
-        try {
-            $this->update([
-                'express_enabled' => true,
-                'express_enabled_at' => now()
-            ]);
-
-            // สร้าง Express credentials สำหรับพนักงานที่ยังไม่มี
-            $employeesWithoutExpress = $this->employees()
-                ->whereNull('express_username')
-                ->get();
-
-            foreach ($employeesWithoutExpress as $employee) {
-                if (method_exists($employee, 'generateExpressCredentials')) {
-                    $employee->generateExpressCredentials();
-                }
-            }
-
-            \Log::info('Express enabled for department', [
-                'department_id' => $this->id,
-                'generated_credentials' => $employeesWithoutExpress->count()
-            ]);
-
-            return true;
-
-        } catch (\Exception $e) {
-            \Log::error('Failed to enable Express', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return false;
-        }
-    }
-
-    /**
-     * Disable Express support for this department.
-     */
-    public function disableExpress(): bool
-    {
-        try {
-            $clearedCount = $this->employees()
-                ->whereNotNull('express_username')
-                ->count();
-
-            // ล้าง Express credentials ของพนักงานทั้งหมดในแผนก
-            $this->employees()->update([
-                'express_username' => null,
-                'express_password' => null
-            ]);
-
-            $this->update([
-                'express_enabled' => false,
-                'express_enabled_at' => now()
-            ]);
-
-            \Log::info('Express disabled for department', [
-                'department_id' => $this->id,
-                'cleared_credentials' => $clearedCount
-            ]);
-
-            return true;
-
-        } catch (\Exception $e) {
-            \Log::error('Failed to disable Express', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return false;
-        }
-    }
-
-    /**
-     * Generate Express credentials for all employees in this department.
-     */
-    public function generateExpressCredentialsForAll(): int
-    {
-        if (!$this->express_enabled) {
-            return 0;
-        }
-
-        $employees = $this->employees()
-            ->whereNull('express_username')
-            ->get();
-
-        $generatedCount = 0;
-
-        foreach ($employees as $employee) {
-            if (method_exists($employee, 'generateExpressCredentials') && $employee->generateExpressCredentials()) {
-                $generatedCount++;
-            }
-        }
-
-        return $generatedCount;
-    }
-
-    /**
-     * Get Express usage summary.
-     */
-    public function getExpressUsageSummary(): array
-    {
-        $totalEmployees = $this->employees()->count();
-        $expressUsers = $this->expressEmployees()->count();
-        $activeExpressUsers = $this->employees()
-            ->where('status', 'active')
-            ->whereNotNull('express_username')
-            ->count();
-
-        return [
-            'department_name' => $this->name,
-            'department_code' => $this->code,
-            'express_enabled' => $this->express_enabled,
-            'express_enabled_at' => $this->express_enabled_at,
-            'total_employees' => $totalEmployees,
-            'active_employees' => $this->activeEmployees()->count(),
-            'express_users' => $expressUsers,
-            'active_express_users' => $activeExpressUsers,
-            'coverage_all' => $totalEmployees > 0 ? round(($expressUsers / $totalEmployees) * 100, 1) : 0,
-            'coverage_active' => $this->activeEmployees()->count() > 0 
-                ? round(($activeExpressUsers / $this->activeEmployees()->count()) * 100, 1) 
-                : 0
-        ];
-    }
-
-    /**
-     * Auto-detect if this department should have Express based on name.
-     */
-    public function shouldHaveExpress(): bool
-    {
-        $accountingKeywords = [
-            'บัญชี', 'การเงิน', 'accounting', 'finance', 'acc', 'fin',
-            'financial', 'accountant', 'treasury', 'audit', 'เงิน'
-        ];
-
-        $name = strtolower($this->name);
-        $code = strtolower($this->code);
-        
-        foreach ($accountingKeywords as $keyword) {
-            if (str_contains($name, strtolower($keyword)) || str_contains($code, strtolower($keyword))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Format department name with Express indicator.
-     */
-    public function getDisplayNameAttribute(): string
-    {
-        $name = $this->name;
-        
-        if ($this->express_enabled) {
-            $name .= ' ⚡';
-        }
-
-        if (!$this->is_active) {
-            $name .= ' (ปิดใช้งาน)';
-        }
-
-        if ($this->trashed()) {
-            $name .= ' (ถูกลบ)';
-        }
-
-        return $name;
-    }
-
-    /**
-     * Get department status badge HTML.
-     */
-    public function getStatusBadgeAttribute(): string
-    {
-        if ($this->trashed()) {
-            return '<span class="badge bg-danger">ถูกลบ</span>';
-        }
-
-        if (!$this->is_active) {
-            return '<span class="badge bg-secondary">ปิดใช้งาน</span>';
-        }
-
-        if ($this->express_enabled) {
-            return '<span class="badge bg-warning">⚡ Express</span>';
-        }
-
-        return '<span class="badge bg-success">เปิดใช้งาน</span>';
-    }
-
-    /**
-     * Restore a soft deleted department
-     */
-    public function restoreDepartment(): bool
-    {
-        try {
-            if (!$this->trashed()) {
-                return false;
-            }
-
-            $this->restore();
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Failed to restore department', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Force delete department permanently
-     */
-    public function forceDeleteDepartment(): bool
-    {
-        try {
-            if ($this->employees()->count() > 0) {
-                return false;
-            }
-
-            $this->forceDelete();
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Failed to force delete department', [
-                'department_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Convert to array for API responses.
-     */
-    public function toApiArray(): array
+    public static function getStatuses()
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'code' => $this->code,
-            'description' => $this->description,
-            'is_active' => $this->is_active,
-            'express_enabled' => $this->express_enabled,
-            'express_enabled_at' => $this->express_enabled_at?->toISOString(),
-            'employee_count' => $this->employees()->count(),
-            'express_user_count' => $this->expressEmployees()->count(),
-            'express_stats' => $this->express_stats,
-            'can_be_deleted' => $this->canBeDeleted(),
-            'is_deleted' => $this->trashed(),
-            'created_at' => $this->created_at->toISOString(),
-            'updated_at' => $this->updated_at->toISOString(),
-            'deleted_at' => $this->deleted_at?->toISOString()
+            'active' => 'ใช้งาน',
+            'inactive' => 'ไม่ใช้งาน',
         ];
     }
 
     /**
-     * Search departments by name or code
+     * Get validation rules for creating department.
      */
-    public function scopeSearch($query, $term)
+    public static function getCreateRules()
     {
-        if (empty($term)) {
-            return $query;
-        }
+        return [
+            'name' => 'required|string|max:100|unique:departments,name',
+            'description' => 'nullable|string|max:500',
+            'manager_id' => 'nullable|exists:employees,id',
+            'express_enabled' => 'boolean',
+            'status' => 'required|in:active,inactive',
+            'sort_order' => 'nullable|integer|min:0',
+        ];
+    }
 
-        return $query->where(function ($q) use ($term) {
-            $q->where('name', 'LIKE', "%{$term}%")
-              ->orWhere('code', 'LIKE', "%{$term}%")
-              ->orWhere('description', 'LIKE', "%{$term}%");
+    /**
+     * Get validation rules for updating department.
+     */
+    public static function getUpdateRules($id)
+    {
+        return [
+            'name' => "required|string|max:100|unique:departments,name,{$id}",
+            'description' => 'nullable|string|max:500',
+            'manager_id' => 'nullable|exists:employees,id',
+            'express_enabled' => 'boolean',
+            'status' => 'required|in:active,inactive',
+            'sort_order' => 'nullable|integer|min:0',
+        ];
+    }
+
+    // ===========================================
+    // MODEL EVENTS
+    // ===========================================
+
+    /**
+     * Boot method for model events.
+     */
+    protected static function booted()
+    {
+        // When department is deleted, handle employees
+        static::deleting(function ($department) {
+            if ($department->employees()->count() > 0) {
+                throw new \Exception('ไม่สามารถลบแผนกที่มีพนักงานได้');
+            }
+        });
+
+        // When Express is disabled, clear employee credentials
+        static::updating(function ($department) {
+            if ($department->isDirty('express_enabled') && !$department->express_enabled) {
+                $department->employees()->update([
+                    'express_username' => null,
+                    'express_password' => null
+                ]);
+            }
+        });
+
+        // Set default sort order
+        static::creating(function ($department) {
+            if (empty($department->sort_order)) {
+                $department->sort_order = static::max('sort_order') + 1;
+            }
+            
+            // Set default Express status to false
+            if (!isset($department->express_enabled)) {
+                $department->express_enabled = false;
+            }
         });
     }
 
+    // ===========================================
+    // EXPRESS v2.0 SPECIFIC METHODS 🚀
+    // ===========================================
+
     /**
-     * Get departments with employee counts
+     * ✅ Bulk enable Express for multiple departments
      */
-    public function scopeWithEmployeeCounts($query)
+    public static function bulkEnableExpress(array $departmentIds)
     {
-        return $query->withCount([
-            'employees',
-            'activeEmployees',
-            'expressEmployees'
-        ]);
+        $count = static::whereIn('id', $departmentIds)->update(['express_enabled' => true]);
+        
+        \Log::info("Bulk enabled Express for {$count} departments");
+        
+        return $count;
+    }
+
+    /**
+     * ✅ Bulk disable Express for multiple departments
+     */
+    public static function bulkDisableExpress(array $departmentIds)
+    {
+        // Get departments to disable
+        $departments = static::whereIn('id', $departmentIds)->get();
+        
+        // Clear Express credentials from all employees in these departments
+        $employeeCount = 0;
+        foreach ($departments as $department) {
+            $employeeCount += $department->employees()->count();
+            $department->employees()->update([
+                'express_username' => null,
+                'express_password' => null
+            ]);
+        }
+        
+        // Disable Express for departments
+        $count = static::whereIn('id', $departmentIds)->update(['express_enabled' => false]);
+        
+        \Log::info("Bulk disabled Express for {$count} departments, cleared {$employeeCount} employee credentials");
+        
+        return $count;
+    }
+
+    /**
+     * ✅ Get departments that need Express setup
+     */
+    public static function getDepartmentsNeedingExpressSetup()
+    {
+        return static::expressEnabled()
+            ->whereDoesntHave('employees', function($query) {
+                $query->whereNotNull('express_username');
+            })
+            ->get();
+    }
+
+    /**
+     * ✅ Generate Express report for department
+     */
+    public function generateExpressReport()
+    {
+        $employees = $this->employees()->with('department')->get();
+        $expressUsers = $employees->filter(function($employee) {
+            return !empty($employee->express_username);
+        });
+
+        return [
+            'department_id' => $this->id,
+            'department_name' => $this->name,
+            'express_enabled' => $this->express_enabled,
+            'total_employees' => $employees->count(),
+            'express_users' => $expressUsers->count(),
+            'non_express_users' => $employees->count() - $expressUsers->count(),
+            'express_percentage' => $employees->count() > 0 ? 
+                round(($expressUsers->count() / $employees->count()) * 100, 2) : 0,
+            'employees_without_express' => $employees->filter(function($employee) {
+                return empty($employee->express_username);
+            })->values()->toArray(),
+            'manager' => $this->manager ? [
+                'name' => $this->manager->full_name_th,
+                'email' => $this->manager->email,
+                'has_express' => !empty($this->manager->express_username)
+            ] : null,
+            'generated_at' => now()->format('Y-m-d H:i:s')
+        ];
     }
 }

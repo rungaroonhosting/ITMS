@@ -519,7 +519,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก
+    // VALIDATION RULES
     // ===========================================
 
     /**
@@ -534,7 +534,7 @@ class Employee extends Authenticatable
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20', // ✅ ลบ unique ออกแล้ว
+            'phone' => 'required|string|max:20|unique:employees,phone',
             'nickname' => 'nullable|string|max:50',
             'username' => 'required|string|max:100|unique:employees,username',
             'computer_password' => 'nullable|string|min:6',
@@ -563,7 +563,7 @@ class Employee extends Authenticatable
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20', // ✅ ลบ unique ออกแล้ว
+            'phone' => "required|string|max:20|unique:employees,phone,{$id}",
             'nickname' => 'nullable|string|max:50',
             'username' => "required|string|max:100|unique:employees,username,{$id}",
             'computer_password' => 'nullable|string|min:6',
@@ -577,32 +577,6 @@ class Employee extends Authenticatable
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:6',
-        ];
-    }
-
-    /**
-     * ✅ เพิ่ม Static method: เอา phone unique validation ออก
-     */
-    public static function getStatuses()
-    {
-        return [
-            'active' => 'ใช้งาน',
-            'inactive' => 'ไม่ใช้งาน'
-        ];
-    }
-
-    /**
-     * ✅ เพิ่ม Static method: Role list
-     */
-    public static function getRoles()
-    {
-        return [
-            'super_admin' => 'Super Admin',
-            'it_admin' => 'IT Admin',
-            'hr' => 'HR',
-            'manager' => 'Manager',
-            'express' => 'Express',
-            'employee' => 'Employee'
         ];
     }
 

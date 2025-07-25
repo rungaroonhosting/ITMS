@@ -27,8 +27,8 @@
                         Express จะแสดงเฉพาะแผนกที่เปิดใช้งาน
                     </span>
                     <span class="badge bg-success">
-                        <i class="fas fa-phone me-1"></i>
-                        ✅ เบอร์โทรซ้ำได้แล้ว - แก้ไขเรียบร้อย
+                        <i class="fas fa-sync me-1"></i>
+                        รหัสผ่าน Email = Login ระบบ (รหัสเดียวกัน)
                     </span>
                     <span class="badge bg-primary">
                         <i class="fas fa-eye me-1"></i>
@@ -42,28 +42,6 @@
         </div>
     </div>
 </div>
-
-<!-- Success Alert for Phone Fix -->
-@if(!$errors->any())
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>ระบบได้รับการอัปเดต!</h6>
-    <div class="row">
-        <div class="col-md-6">
-            <ul class="mb-0">
-                <li><strong>✅ เบอร์โทรซ้ำได้:</strong> สามารถใช้เบอร์เดียวกันได้หลายคน</li>
-                <li><strong>👨‍👩‍👧‍👦 เหมาะสำหรับ:</strong> ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ</li>
-            </ul>
-        </div>
-        <div class="col-md-6">
-            <ul class="mb-0">
-                <li><strong>🔒 ความปลอดภัย:</strong> Email, Username ยังคง unique</li>
-                <li><strong>⚡ Express v2.0:</strong> ทำงานปกติ ไม่กระทบ</li>
-            </ul>
-        </div>
-    </div>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
 
 <!-- Quick Actions -->
 <div class="card mb-4">
@@ -111,15 +89,15 @@
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-success w-100 flex-fill d-flex align-items-center justify-content-center" id="testPhoneDuplicateBtn" style="min-height: 45px;">
+                    <button type="button" class="btn btn-outline-success w-100 flex-fill d-flex align-items-center justify-content-center" id="generateComputerBtn2" style="min-height: 45px;">
                         <span class="d-flex align-items-center">
-                            <i class="fas fa-phone me-2"></i>
-                            <span class="d-none d-lg-inline">ทดสอบเบอร์ซ้ำ</span>
-                            <span class="d-lg-none">ทดสอบ</span>
+                            <i class="fas fa-desktop me-2"></i>
+                            <span class="d-none d-lg-inline">สร้างระบบคอมฯ</span>
+                            <span class="d-lg-none">ระบบคอมฯ</span>
                         </span>
                     </button>
                     <div class="form-text mt-2">
-                        <small class="text-success">✅ เบอร์ซ้ำได้แล้ว</small>
+                        <small class="text-muted">Username + Password</small>
                     </div>
                 </div>
             </div>
@@ -140,12 +118,6 @@
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
-            <div class="mt-2">
-                <small class="text-info">
-                    <i class="fas fa-info-circle me-1"></i>
-                    <strong>หมายเหตุ:</strong> ถ้าเป็นปัญหาเบอร์โทรซ้ำ ระบบได้แก้ไขแล้ว - ลองบันทึกใหม่
-                </small>
-            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
@@ -288,32 +260,20 @@
                     @enderror
                 </div>
                 
-                <!-- เบอร์โทร (✅ FIXED - อนุญาติซ้ำได้แล้ว) -->
+                <!-- เบอร์โทร (อนุญาติซ้ำได้) -->
                 <div class="col-md-6">
                     <label for="phone" class="form-label">
                         เบอร์โทรศัพท์ <span class="text-danger">*</span>
-                        <span class="badge bg-success ms-2">✅ ซ้ำได้แล้ว</span>
+                        <span class="badge bg-success ms-2">อนุญาติซ้ำได้</span>
                     </label>
                     <input type="tel" class="form-control @error('phone') is-invalid @enderror" 
                            id="phone" name="phone" value="{{ old('phone') }}" 
                            placeholder="08x-xxx-xxxx" required>
                     <div class="form-text">
-                        <div class="alert alert-success p-2 mt-2 mb-0">
-                            <small>
-                                <i class="fas fa-check-circle me-1"></i>
-                                <strong>✅ แก้ไขแล้ว:</strong> สามารถใช้เบอร์โทรที่ซ้ำกันได้
-                            </small>
-                            <br>
-                            <small class="text-muted">
-                                <i class="fas fa-users me-1"></i>
-                                เหมาะสำหรับ: ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ, เบอร์บ้าน
-                            </small>
-                            <br>
-                            <small class="text-info">
-                                <i class="fas fa-shield-alt me-1"></i>
-                                Email และ Username ยังคง unique (ปลอดภัย)
-                            </small>
-                        </div>
+                        <small class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>
+                            สามารถใช้เบอร์โทรที่ซ้ำกันได้ (ครอบครัว/เพื่อนร่วมงาน)
+                        </small>
                     </div>
                     @error('phone')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -912,7 +872,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="previewModalLabel">
-                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (Phone Duplicates Fixed)
+                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (Final Fixed Version)
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -929,100 +889,12 @@
     </div>
 </div>
 
-<!-- Phone Duplicate Test Modal -->
-<div class="modal fade" id="phoneDuplicateModal" tabindex="-1" aria-labelledby="phoneDuplicateModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="phoneDuplicateModalLabel">
-                    <i class="fas fa-phone me-2"></i>ทดสอบการใช้เบอร์โทรซ้ำ ✅
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-success">
-                    <h6><i class="fas fa-check-circle me-2"></i>ฟีเจอร์ใหม่: เบอร์โทรซ้ำได้แล้ว!</h6>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>✅ สิ่งที่แก้ไขแล้ว:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ unique constraint จากฐานข้อมูล</li>
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ validation rule จาก Request</li>
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ validation จาก Controller</li>
-                            <li><i class="fas fa-check text-success me-2"></i>อัปเดต UI แสดงสถานะใหม่</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>🎯 ประโยชน์ที่ได้:</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-users text-info me-2"></i>ครอบครัวใช้เบอร์เดียวกันได้</li>
-                            <li><i class="fas fa-building text-warning me-2"></i>เพื่อนร่วมงานใช้เบอร์ออฟฟิศ</li>
-                            <li><i class="fas fa-home text-success me-2"></i>ใช้เบอร์บ้านร่วมกันได้</li>
-                            <li><i class="fas fa-mobile text-primary me-2"></i>ยืดหยุ่นในการจัดการ</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <hr>
-                
-                <div class="row">
-                    <div class="col-12">
-                        <h6>🔒 ความปลอดภัยที่ยังคงมี:</h6>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>รหัสพนักงาน</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>Username</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>อีเมล</small>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>Express Username</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>ID Keycard</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-success me-1">Duplicate OK</span>
-                                <small>เบอร์โทร ✅</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-3">
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-lightbulb me-2"></i>
-                        <strong>ทดสอบ:</strong> ลองใส่เบอร์โทรที่ซ้ำกันและบันทึก - จะไม่มี error แล้ว!
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
-                    <i class="fas fa-thumbs-up me-1"></i>เข้าใจแล้ว
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Employee Create Form Loaded - Phone Duplicates Fixed Version Ready');
+    console.log('🚀 Employee Create Form Loaded - Final Fixed Version Ready');
     
     // Utility Functions
     const utils = {
@@ -1133,16 +1005,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         // Enhanced Express Password: 4 ตัวเลขไม่ซ้ำกัน
-        expressPassword: () => utils.generateUniqueNumbers(4),
-        
-        // ✅ NEW: Phone number generator (duplicates allowed)
-        phoneNumber: () => {
-            const prefixes = ['08', '09', '06', '02'];
-            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-            const middle = utils.generateRandomNumber(3);
-            const last = utils.generateRandomNumber(4);
-            return `${prefix}${middle}-${last}`;
-        }
+        expressPassword: () => utils.generateUniqueNumbers(4)
     };
     
     // Auto-generation functions
@@ -1214,28 +1077,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log('✅ Unified password generated and synced:', password);
                 return password;
-            }
-        },
-        
-        // ✅ NEW: Phone number generation (duplicates allowed)
-        phoneNumber: () => {
-            const phone = generators.phoneNumber();
-            if (phone) {
-                document.getElementById('phone').value = phone;
-                
-                // Add animation with success color (duplicates allowed)
-                const phoneInput = document.getElementById('phone');
-                phoneInput.style.background = 'linear-gradient(45deg, #d4edda, #d1ecf1)';
-                phoneInput.style.transform = 'scale(1.02)';
-                phoneInput.style.transition = 'all 0.3s ease';
-                
-                setTimeout(() => {
-                    phoneInput.style.background = '';
-                    phoneInput.style.transform = '';
-                }, 1500);
-                
-                console.log('✅ Phone number generated (duplicates allowed):', phone);
-                return phone;
             }
         },
         
@@ -1524,14 +1365,11 @@ document.addEventListener('DOMContentLoaded', function() {
             utils.showLoading(button);
             
             try {
-                console.log('🎯 Starting generateAll Phone Duplicates Fixed...');
+                console.log('🎯 Starting generateAll Final Fixed...');
                 
                 // Generate basic codes
                 document.getElementById('employee_code').value = generators.employeeCode();
                 document.getElementById('keycard_id').value = generators.keycardId();
-                
-                // ✅ Generate phone number (duplicates allowed)
-                autoGenerate.phoneNumber();
                 
                 // Username และ Email generation
                 if (document.getElementById('first_name_en').value) {
@@ -1559,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('express_password').value = generators.expressPassword();
                 }
                 
-                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (เบอร์โทรซ้ำได้แล้ว)', 'success');
+                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (Final Fixed Version)', 'success');
                 
             } catch (error) {
                 console.error('Error in generateAll:', error);
@@ -1645,7 +1483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <tr><td><strong>ID Keycard:</strong></td><td><span class="badge bg-info">${data.keycard_id || '-'}</span></td></tr>
                                     <tr><td><strong>ชื่อ-นามสกุล (ไทย):</strong></td><td class="fw-bold text-primary">${data.first_name_th || '-'} ${data.last_name_th || '-'}</td></tr>
                                     <tr><td><strong>ชื่อ-นามสกุล (อังกฤษ):</strong></td><td class="fw-bold">${data.first_name_en || '-'} ${data.last_name_en || '-'}</td></tr>
-                                    <tr><td><strong>เบอร์โทร:</strong></td><td>${data.phone || '-'} <span class="badge bg-success">✅ ซ้ำได้</span></td></tr>
+                                    <tr><td><strong>เบอร์โทร:</strong></td><td>${data.phone || '-'} <span class="badge bg-success">ซ้ำได้</span></td></tr>
                                     <tr><td><strong>ชื่อเล่น:</strong></td><td>${data.nickname ? `<span class="badge bg-light text-dark">"${data.nickname}"</span>` : '-'}</td></tr>
                                 </table>
                             </div>
@@ -1748,39 +1586,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <!-- Phone Duplicates Fixed Summary -->
+                <!-- Final Fixed Summary -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="card border-success">
                             <div class="card-header bg-success text-white">
                                 <h6 class="mb-0">
-                                    <i class="fas fa-phone me-2"></i>✅ การแก้ไขปัญหาเบอร์โทรซ้ำ - เรียบร้อยแล้ว!
+                                    <i class="fas fa-check-circle me-2"></i>สรุปการแก้ไข Final Fixed Version
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-4">
-                                        <h6 class="text-success"><i class="fas fa-database me-1"></i> Database Level</h6>
+                                        <h6 class="text-success"><i class="fas fa-resize-arrows-alt me-1"></i> Icon Sizes</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-trash text-danger me-2"></i>ลบ unique constraint</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Phone field = string ธรรมดา</li>
-                                            <li><i class="fas fa-check text-success me-2"></i>Migration ทำงานสำเร็จ</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>ทุก Icon ขนาด 45x45px เท่ากัน</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>min-width: 45px ป้องกันการบีบ</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>bg-light + สี consistent</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-4">
-                                        <h6 class="text-info"><i class="fas fa-code me-1"></i> Code Level</h6>
+                                        <h6 class="text-info"><i class="fas fa-link me-1"></i> Password Unification</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-edit text-warning me-2"></i>EmployeeRequest.php แก้ไข</li>
-                                            <li><i class="fas fa-edit text-warning me-2"></i>EmployeeController.php แก้ไข</li>
-                                            <li><i class="fas fa-eye text-primary me-2"></i>UI แสดงสถานะใหม่</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Email และ Login รหัสเดียวกัน</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Unified field + auto-sync</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Hidden fields สำหรับ backend</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-4">
-                                        <h6 class="text-primary"><i class="fas fa-shield-alt me-1"></i> Security</h6>
+                                        <h6 class="text-primary"><i class="fas fa-eye me-1"></i> Password Visibility</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-lock text-danger me-2"></i>Email ยังคง unique</li>
-                                            <li><i class="fas fa-lock text-danger me-2"></i>Username ยังคง unique</li>
-                                            <li><i class="fas fa-unlock text-success me-2"></i>Phone ซ้ำได้แล้ว</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>type="text" ทั้งหมด</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>ไม่มี role check</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>แสดงได้ทุก role</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1789,26 +1627,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 
                                 <div class="row">
                                     <div class="col-12">
-                                        <div class="alert alert-success mb-0">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <h6><i class="fas fa-users me-1"></i> ใครใช้ประโยชน์ได้:</h6>
-                                                    <ul class="mb-0">
-                                                        <li>👨‍👩‍👧‍👦 <strong>ครอบครัว:</strong> ใช้เบอร์เดียวกันได้</li>
-                                                        <li>🏢 <strong>เพื่อนร่วมงาน:</strong> เบอร์ออฟฟิศร่วมกัน</li>
-                                                        <li>🏠 <strong>เบอร์บ้าน:</strong> หลายคนใช้ร่วมกัน</li>
-                                                    </ul>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <h6><i class="fas fa-check-circle me-1"></i> ผลลัพธ์:</h6>
-                                                    <ul class="mb-0">
-                                                        <li>✅ <strong>Error หายไป:</strong> ไม่มี "เบอร์ซ้ำ" แล้ว</li>
-                                                        <li>✅ <strong>ยืดหยุ่น:</strong> จัดการพนักงานง่ายขึ้น</li>
-                                                        <li>✅ <strong>Express ยังทำงาน:</strong> ไม่กระทบระบบเดิม</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <h6 class="text-warning"><i class="fas fa-star me-1"></i> ฟีเจอร์เพิ่มเติม</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li><i class="fas fa-phone text-success me-2"></i><strong>เบอร์โทร:</strong> อนุญาตซ้ำได้ (ครอบครัว/เพื่อนร่วมงาน)</li>
+                                            <li><i class="fas fa-print text-info me-2"></i><strong>รหัสถ่ายเอกสาร:</strong> On Demand (กดปุ่มเมื่อต้องการ)</li>
+                                            <li><i class="fas fa-bolt text-warning me-2"></i><strong>Express Enhanced:</strong> Username 1-7 ตัว, Password 4 ตัวเลขไม่ซ้ำ</li>
+                                            <li><i class="fas fa-shield-alt text-secondary me-2"></i><strong>สิทธิ์พิเศษ:</strong> VPN + Color Printing switches</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -1816,57 +1641,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <!-- Test Results -->
+                <!-- ข้อความสรุป -->
                 <div class="row mt-3">
                     <div class="col-12">
-                        <div class="card border-info">
-                            <div class="card-header bg-info text-white">
-                                <h6 class="mb-0"><i class="fas fa-vial me-2"></i>ผลการทดสอบ</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <i class="fas fa-phone fa-2x text-success mb-2"></i>
-                                            <h6>เบอร์โทร</h6>
-                                            <span class="badge bg-success">ซ้ำได้</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <i class="fas fa-envelope fa-2x text-danger mb-2"></i>
-                                            <h6>อีเมล</h6>
-                                            <span class="badge bg-danger">Unique</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <i class="fas fa-user fa-2x text-danger mb-2"></i>
-                                            <h6>Username</h6>
-                                            <span class="badge bg-danger">Unique</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="text-center">
-                                            <i class="fas fa-bolt fa-2x text-warning mb-2"></i>
-                                            <h6>Express</h6>
-                                            <span class="badge bg-warning text-dark">ทำงานปกติ</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="alert alert-success">
+                            <i class="fas fa-thumbs-up me-2"></i>
+                            <strong>Final Fixed Version:</strong> แก้ไขครบถ้วนตามที่ร้องขอ - Icon sizes เท่ากัน, Password เป็นรหัสเดียวกัน, แสดงรหัสผ่านได้ทั้งหมด
                         </div>
                     </div>
                 </div>
             `;
             
             const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-            modal.show();
-        },
-        
-        // ✅ NEW: Test phone duplicate functionality  
-        showPhoneDuplicateTest: () => {
-            const modal = new bootstrap.Modal(document.getElementById('phoneDuplicateModal'));
             modal.show();
         }
     };
@@ -1881,22 +1667,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const departmentSelect = document.getElementById('department_id');
         if (departmentSelect) {
             departmentSelect.addEventListener('change', eventHandlers.handleDepartmentChange);
-            console.log('✅ Department change listener attached (Phone Duplicates Fixed Version)');
+            console.log('✅ Department change listener attached (Final Fixed Version)');
         }
         
         // Phone format handler
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', eventHandlers.handlePhoneFormat);
-            console.log('✅ Phone format handler attached (duplicates allowed)');
-            
-            // ✅ Add phone duplicate notification on focus
-            phoneInput.addEventListener('focus', function() {
-                if (!phoneInput.dataset.notificationShown) {
-                    utils.showNotification('📞 เบอร์โทรซ้ำได้แล้ว - ระบบได้แก้ไขเรียบร้อย!', 'success');
-                    phoneInput.dataset.notificationShown = 'true';
-                }
-            });
         }
         
         // English validation handlers
@@ -1984,14 +1761,38 @@ document.addEventListener('DOMContentLoaded', function() {
             previewBtn.addEventListener('click', formActions.showPreview);
         }
         
-        // ✅ NEW: Phone duplicate test button
-        const testPhoneDuplicateBtn = document.getElementById('testPhoneDuplicateBtn');
-        if (testPhoneDuplicateBtn) {
-            testPhoneDuplicateBtn.addEventListener('click', formActions.showPhoneDuplicateTest);
-            console.log('✅ Phone duplicate test button attached');
+        // Computer generation buttons
+        const generateComputerBtn2 = document.getElementById('generateComputerBtn2');
+        if (generateComputerBtn2) {
+            generateComputerBtn2.addEventListener('click', async () => {
+                const button = generateComputerBtn2;
+                utils.showLoading(button);
+                
+                try {
+                    if (!document.getElementById('first_name_en').value) {
+                        utils.showNotification('❌ กรุณากรอกชื่อภาษาอังกฤษก่อน', 'error');
+                        return;
+                    }
+                    
+                    autoGenerate.username();
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    if (document.getElementById('last_name_en').value) {
+                        autoGenerate.email();
+                    }
+                    
+                    document.getElementById('computer_password').value = generators.password();
+                    
+                    utils.showNotification('💻 สร้างข้อมูลระบบคอมพิวเตอร์สำเร็จ!', 'success');
+                } catch (error) {
+                    console.error('Error in generateComputer:', error);
+                    utils.showNotification('❌ เกิดข้อผิดพลาดในการสร้างข้อมูล', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
         }
         
-        // Computer generation buttons
         const generateComputerBtn = document.getElementById('generateComputerBtn');
         if (generateComputerBtn) {
             generateComputerBtn.addEventListener('click', async () => {
@@ -2066,7 +1867,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        console.log('✅ All event listeners attached successfully (Phone Duplicates Fixed Version)');
+        console.log('✅ All event listeners attached successfully (Final Fixed Version)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
@@ -2074,7 +1875,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial setup
     setTimeout(() => {
-        console.log('🔧 Starting initial setup... (Phone Duplicates Fixed Version)');
+        console.log('🔧 Starting initial setup... (Final Fixed Version)');
         
         try {
             // Auto-generate employee code and keycard if empty
@@ -2101,7 +1902,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventHandlers.handleDepartmentChange();
             }
             
-            console.log('✅ Department handler initialized (Phone Duplicates Fixed Version)');
+            console.log('✅ Department handler initialized (Final Fixed Version)');
             
             // Initialize email preview
             autoGenerate.showEmailPreview();
@@ -2116,52 +1917,59 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('✅ Permission switches initialized');
             
-            // ✅ Show phone duplicates fix notification
-            setTimeout(() => {
-                utils.showNotification('🎉 ระบบอัปเดต: เบอร์โทรซ้ำได้แล้ว! (แก้ไขปัญหาเรียบร้อย)', 'success');
-            }, 2000);
-            
-            // Debug functions for testing (Phone Duplicates Fixed Version)
-            window.testPhoneDuplicates = function() {
-                console.log('📞 Testing Phone Duplicates Feature:');
-                console.log('   1. Phone Generator:', generators.phoneNumber());
-                console.log('   2. Phone Auto-Generate Test:');
-                autoGenerate.phoneNumber();
-                console.log('   3. Phone field value:', document.getElementById('phone').value);
-                console.log('   4. Duplicates allowed: YES ✅');
+            // Debug functions for testing (Final Fixed Version)
+            window.testFinalFixed = function() {
+                console.log('🧪 Testing Final Fixed Features:');
+                console.log('   1. Express Username:', generators.expressUsername());
+                console.log('   2. Express Password:', generators.expressPassword());
+                console.log('   3. Unique Numbers:', utils.generateUniqueNumbers(4));
+                autoGenerate.unifiedPassword();
+                console.log('   4. Unified Password: Completed');
             };
             
-            window.testPhoneValidation = function() {
-                const testPhone = '087-169-5054';
-                document.getElementById('phone').value = testPhone;
-                console.log('📞 Phone Validation Test:');
-                console.log('   Test phone:', testPhone);
-                console.log('   Should be allowed: YES ✅');
-                console.log('   Try submitting form with duplicate phone - no error expected');
+            window.testIconConsistency = function() {
+                const icons = document.querySelectorAll('.card-header .rounded-circle');
+                console.log('🎨 Icon Consistency Check:');
+                icons.forEach((icon, index) => {
+                    const styles = window.getComputedStyle(icon);
+                    console.log(`   Icon ${index + 1}: ${styles.width} x ${styles.height} (${styles.minWidth})`);
+                });
             };
             
-            window.showPhoneDuplicatesInfo = function() {
-                console.log('📞 Phone Duplicates Fix Information:');
-                console.log('   ✅ Database: unique constraint removed');
-                console.log('   ✅ Request: validation rule removed');
-                console.log('   ✅ Controller: unique check removed');
-                console.log('   ✅ UI: duplicate allowed badge added');
-                console.log('   📱 Use cases: families, shared office phones, home numbers');
-                console.log('   🔒 Security: email, username still unique');
+            window.testPasswordSync = function() {
+                const testPassword = 'Test123456';
+                document.getElementById('unified_password').value = testPassword;
+                document.getElementById('unified_password').dispatchEvent(new Event('input'));
+                
+                console.log('🔄 Password Sync Test:');
+                console.log('   Unified:', document.getElementById('unified_password').value);
+                console.log('   Email:', document.getElementById('email_password').value);
+                console.log('   System:', document.getElementById('password').value);
             };
             
-            console.log('🧪 Phone Duplicates Debug functions available:');
-            console.log('   - testPhoneDuplicates() - ทดสอบฟีเจอร์เบอร์ซ้ำ');
-            console.log('   - testPhoneValidation() - ทดสอบ validation');
-            console.log('   - showPhoneDuplicatesInfo() - ดูข้อมูลการแก้ไข');
+            console.log('🧪 Final Fixed Debug functions available:');
+            console.log('   - testFinalFixed() - ทดสอบฟีเจอร์ที่แก้ไข');
+            console.log('   - testIconConsistency() - ตรวจสอบขนาด Icons');
+            console.log('   - testPasswordSync() - ทดสอบ Password sync');
             
-            console.log('✅ Employee Create Form Ready - Phone Duplicates Fixed Version');
-            console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว (แก้ไขเรียบร้อย)');
-            console.log('🔒 Security: Email, Username, Express Username ยังคง unique');
-            console.log('⚡ Express v2.0: ทำงานปกติ ไม่กระทบจากการแก้ไข');
-            console.log('👨‍👩‍👧‍👦 Benefits: ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ ใช้ร่วมกันได้');
-            console.log('🎯 Test: ลองใส่เบอร์โทรที่ซ้ำกันและบันทึก - จะไม่มี error!');
-            console.log('🚀 Status: PHONE DUPLICATES ALLOWED - PROBLEM FIXED! ✅');
+            console.log('✅ Employee Create Form Ready - Final Fixed Version');
+            console.log('📐 Icon Sizes: ทุก icon ขนาด 45x45px เท่ากัน (min-width: 45px)');
+            console.log('🔗 Password Sync: Email และ Login ใช้รหัสผ่านเดียวกัน (Unified)');
+            console.log('👁️ Password Visibility: แสดงรหัสผ่านได้ทั้งหมด (type="text")');
+            console.log('📧 Email Format: firstname.lastnameFirstChar@domain');
+            console.log('🔄 Available Domains: @bettersystem.co.th, @better-groups.com');
+            console.log('👤 Username Format: firstname (lowercase only)');
+            console.log('💻 Computer: Username + Password + Copier Code (On Demand)');
+            console.log('⚡ Express v2.0 Enhanced:');
+            console.log('   • Username: 1-7 ตัวอักษร (ไม่ต้อง pad)');
+            console.log('   • Password: 4 ตัวเลขไม่ซ้ำกัน');
+            console.log('   • แสดงได้ทั้งหมด');
+            console.log('📞 Phone: ซ้ำได้ (ครอบครัว/เพื่อนร่วมงาน)');
+            console.log('🛡️ Permissions: VPN + Color Printing switches');
+            console.log('🎨 Icons: User, Desktop, Email, Building, Bolt, Shield (45x45px consistent)');
+            console.log('🔧 API Endpoint: /api/departments/is-accounting?department_id=X');
+            console.log('🎯 Express Detection: Uses express_enabled field from departments table');
+            console.log('🚀 All issues FIXED - Ready for production use!');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -2177,69 +1985,79 @@ function submitForm() {
     }
 }
 
-// Global Phone Duplicates test functions
-window.PhoneDuplicatesTest = {
-    testPhoneGeneration: function() {
-        const phone = document.querySelector('#phone');
-        if (phone) {
-            const generators = {
-                phoneNumber: () => {
-                    const prefixes = ['08', '09', '06', '02'];
-                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-                    const middle = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-                    const last = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-                    return `${prefix}${middle}-${last}`;
-                }
+// Global Final Fixed test functions
+window.FinalFixedTest = {
+    testUnifiedPassword: function() {
+        const password = 'TestPassword123';
+        document.getElementById('unified_password').value = password;
+        document.getElementById('unified_password').dispatchEvent(new Event('input'));
+        
+        console.log('🔄 Unified Password Test Result:');
+        console.log('   Unified Field:', document.getElementById('unified_password').value);
+        console.log('   Email Password:', document.getElementById('email_password').value);
+        console.log('   System Password:', document.getElementById('password').value);
+        console.log('   All synced:', document.getElementById('unified_password').value === document.getElementById('email_password').value && document.getElementById('email_password').value === document.getElementById('password').value);
+    },
+    
+    testIconSizes: function() {
+        const icons = document.querySelectorAll('.card-header .rounded-circle');
+        const results = [];
+        
+        icons.forEach((icon, index) => {
+            const styles = window.getComputedStyle(icon);
+            const result = {
+                index: index + 1,
+                width: styles.width,
+                height: styles.height,
+                minWidth: styles.minWidth,
+                consistent: styles.width === '45px' && styles.height === '45px'
             };
-            
-            const newPhone = generators.phoneNumber();
-            phone.value = newPhone;
-            
-            console.log('📞 Phone Generation Test Result:');
-            console.log('   Generated Phone:', newPhone);
-            console.log('   Field Updated:', phone.value);
-            console.log('   Duplicates Allowed:', true);
-        }
+            results.push(result);
+        });
+        
+        console.log('🎨 Icon Size Test Results:', results);
+        const allConsistent = results.every(r => r.consistent);
+        console.log('✅ All icons consistent:', allConsistent);
+        return results;
     },
     
-    testDuplicateScenario: function() {
-        const duplicatePhone = '087-169-5054';
-        const phone = document.querySelector('#phone');
-        if (phone) {
-            phone.value = duplicatePhone;
-            
-            console.log('📞 Duplicate Phone Test:');
-            console.log('   Test Phone:', duplicatePhone);
-            console.log('   Common Use Cases:');
-            console.log('     👨‍👩‍👧‍👦 Family members sharing home phone');
-            console.log('     🏢 Colleagues sharing office phone');
-            console.log('     📱 Multiple employees with same mobile');
-            console.log('   Expected Result: NO ERROR on form submit ✅');
-        }
-    },
-    
-    showFixedFeatures: function() {
-        console.log('✅ Phone Duplicates - Features Fixed:');
-        console.log('   🗄️ Database: Removed unique constraint from phone column');
-        console.log('   📝 Request: Removed unique validation rule');
-        console.log('   🎮 Controller: Removed unique check logic');
-        console.log('   🎨 UI: Added "duplicates allowed" indicators');
-        console.log('   🔒 Security: Other unique fields preserved');
-        console.log('   ⚡ Express: System still works normally');
+    testPasswordVisibility: function() {
+        const passwordFields = [
+            'computer_password',
+            'unified_password',
+            'express_password'
+        ];
+        
+        const results = passwordFields.map(fieldId => {
+            const field = document.getElementById(fieldId);
+            return {
+                field: fieldId,
+                exists: !!field,
+                type: field ? field.type : 'not found',
+                visible: field ? field.type === 'text' : false
+            };
+        });
+        
+        console.log('👁️ Password Visibility Test Results:', results);
+        const allVisible = results.filter(r => r.exists).every(r => r.visible);
+        console.log('✅ All passwords visible:', allVisible);
+        return results;
     },
     
     info: function() {
-        console.log('📞 Phone Duplicates Test Functions:');
-        console.log('   PhoneDuplicatesTest.testPhoneGeneration() - ทดสอบสร้างเบอร์โทร');
-        console.log('   PhoneDuplicatesTest.testDuplicateScenario() - ทดสอบเบอร์ซ้ำ');
-        console.log('   PhoneDuplicatesTest.showFixedFeatures() - ดูฟีเจอร์ที่แก้ไข');
+        console.log('🚀 Final Fixed Version Test Functions:');
+        console.log('   FinalFixedTest.testUnifiedPassword() - ทดสอบ Password sync');
+        console.log('   FinalFixedTest.testIconSizes() - ทดสอบขนาด Icons');
+        console.log('   FinalFixedTest.testPasswordVisibility() - ทดสอบการแสดง Password');
         console.log('');
-        console.log('🎯 Quick Test: Try entering duplicate phone "087-169-5054" and submit');
-        console.log('✅ Expected: No validation error (duplicates now allowed)');
+        console.log('🔧 Fixed Issues Summary:');
+        console.log('   ✅ Icon sizes: ทุก icon 45x45px เท่ากัน');
+        console.log('   ✅ Password unification: Email = Login (รหัสเดียวกัน)');
+        console.log('   ✅ Password visibility: แสดงได้ทั้งหมด (type="text")');
     }
 };
 
-// Show phone duplicates info on load
-console.log('📞 พิมพ์ PhoneDuplicatesTest.info() เพื่อดูคำสั่งทดสอบ Phone Duplicates');
+// Show final fixed info on load
+console.log('📋 พิมพ์ FinalFixedTest.info() เพื่อดูคำสั่งทดสอบ Final Fixed Version');
 </script>
 @endpush
