@@ -107,20 +107,25 @@ Route::middleware('auth')->group(function () {
     // Department CRUD Routes
     Route::resource('departments', DepartmentController::class);
     
-    // Department Special Routes (Admin Only)
+    // Department Special Routes (Admin Only) - Updated Routes
     Route::middleware(['role:super_admin,it_admin'])->group(function () {
+        // Original routes
         Route::post('/departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
             ->name('departments.toggleStatus');
-        Route::post('/departments/{department}/toggle-express', [DepartmentController::class, 'toggleExpress'])
-            ->name('departments.toggleExpress');
         Route::post('/departments/bulk-action', [DepartmentController::class, 'bulkAction'])
             ->name('departments.bulkAction');
         Route::get('/departments/export-excel', [DepartmentController::class, 'exportExcel'])
             ->name('departments.exportExcel');
-        Route::get('/departments/express-statistics', [DepartmentController::class, 'getExpressStatistics'])
-            ->name('departments.expressStatistics');
         Route::get('/departments/{department}/express-users', [DepartmentController::class, 'getExpressUsers'])
             ->name('departments.expressUsers');
+        
+        // Updated Express routes
+        Route::patch('/departments/{department}/toggle-express', [DepartmentController::class, 'toggleExpress'])
+            ->name('departments.toggleExpress');
+        Route::get('/departments/express-statistics', [DepartmentController::class, 'getExpressStats'])
+            ->name('departments.expressStatistics');
+        Route::patch('/departments/bulk/express', [DepartmentController::class, 'bulkUpdateExpress'])
+            ->name('departments.bulkExpress');
     });
     
     /*
@@ -270,7 +275,7 @@ Route::prefix('api')->middleware('auth')->group(function () {
                 'is_accounting' => $department->express_enabled, // For backward compatibility
                 'department_id' => $department->id,
                 'department_name' => $department->name,
-                'express_users_count' => $department->expressUsers()->count()
+                'express_users_count' => $department->employees()->whereNotNull('express_username')->count()
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
@@ -319,7 +324,7 @@ Route::prefix('api')->middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Express Management Routes
+| Express Management Routes v2.0
 |--------------------------------------------------------------------------
 */
 
@@ -385,13 +390,122 @@ Route::prefix('express')->middleware('auth')->name('express.')->group(function (
 
 /*
 |--------------------------------------------------------------------------
+| Express Department Management Routes (New v2.0)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:super_admin,it_admin'])->prefix('departments')->name('departments.')->group(function () {
+    
+    // Toggle Express support for individual department (AJAX)
+    Route::patch('{department}/toggle-express', [DepartmentController::class, 'toggleExpress'])
+        ->name('toggle-express');
+    
+    // Get Express statistics (AJAX)
+    Route::get('express/stats', [DepartmentController::class, 'getExpressStats'])
+        ->name('express.stats');
+    
+    // Bulk update Express support (AJAX)
+    Route::patch('bulk/express', [DepartmentController::class, 'bulkUpdateExpress'])
+        ->name('bulk.express');
+    
+    // Express department report
+    Route::get('express/report', function () {
+        try {
+            $departments = \App\Models\Department::with(['employees' => function($query) {
+                $query->select('id', 'department_id', 'name', 'express_username', 'status');
+            }])->get();
+
+            $reportData = $departments->map(function ($dept) {
+                $totalEmployees = $dept->employees->count();
+                $expressUsers = $dept->employees->whereNotNull('express_username')->count();
+                $activeExpressUsers = $dept->employees->where('status', 'active')->whereNotNull('express_username')->count();
+
+                return [
+                    'department' => $dept,
+                    'total_employees' => $totalEmployees,
+                    'express_users' => $expressUsers,
+                    'active_express_users' => $activeExpressUsers,
+                    'coverage_percentage' => $totalEmployees > 0 ? round(($expressUsers / $totalEmployees) * 100, 1) : 0,
+                    'active_coverage_percentage' => $dept->employees->where('status', 'active')->count() > 0 
+                        ? round(($activeExpressUsers / $dept->employees->where('status', 'active')->count()) * 100, 1) 
+                        : 0
+                ];
+            });
+
+            return view('departments.express-report', compact('reportData'));
+        } catch (\Exception $e) {
+            return redirect()->route('departments.index')->with('error', 'เกิดข้อผิดพลาดในการโหลดรายงาน Express');
+        }
+    })->name('express.report');
+    
+    // Export Express users
+    Route::get('express/export', function () {
+        try {
+            $expressUsers = \App\Models\Employee::whereNotNull('express_username')
+                                                ->with('department')
+                                                ->orderBy('department_id')
+                                                ->orderBy('name')
+                                                ->get();
+            
+            $filename = 'express_users_by_department_' . date('Y-m-d_H-i-s') . '.csv';
+            $headers = array(
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=$filename",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            );
+            
+            $callback = function() use($expressUsers) {
+                $file = fopen('php://output', 'w');
+                
+                // Add BOM for Thai characters
+                fputs($file, "\xEF\xBB\xBF");
+                
+                // Headers
+                fputcsv($file, [
+                    'รหัสพนักงาน', 
+                    'ชื่อ-นามสกุล', 
+                    'แผนก', 
+                    'Express Username', 
+                    'อีเมล', 
+                    'สถานะ',
+                    'วันที่สร้าง Express'
+                ]);
+                
+                foreach ($expressUsers as $user) {
+                    fputcsv($file, [
+                        $user->employee_code ?? '',
+                        $user->first_name_th . ' ' . $user->last_name_th,
+                        $user->department->name ?? '',
+                        $user->express_username,
+                        $user->email ?? '',
+                        $user->status == 'active' ? 'ปกติ' : 'ไม่ใช้งาน',
+                        $user->created_at ? $user->created_at->format('d/m/Y H:i') : ''
+                    ]);
+                }
+                
+                fclose($file);
+            };
+            
+            return response()->stream($callback, 200, $headers);
+            
+        } catch (\Exception $e) {
+            return redirect()->route('departments.index')->with('error', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล Express');
+        }
+    })->name('express.export');
+    
+});
+
+/*
+|--------------------------------------------------------------------------
 | Express Import/Export Routes
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth', 'role:super_admin,it_admin'])->group(function () {
     
-    // Export Express users
+    // Export Express users (legacy route - keep for compatibility)
     Route::get('/export/express-users', function () {
         try {
             $expressUsers = \App\Models\Employee::whereNotNull('express_username')
@@ -450,16 +564,22 @@ Route::middleware(['auth', 'role:super_admin,it_admin,hr'])->group(function () {
                                                       ->where('status', 'active')
                                                       ->count();
             $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
+            $totalDepartments = \App\Models\Department::count();
             
             $expressUsagePercentage = $totalEmployees > 0 ? 
                 round(($totalExpressUsers / $totalEmployees) * 100, 2) : 0;
+                
+            $departmentCoveragePercentage = $totalDepartments > 0 ?
+                round(($expressEnabledDepartments / $totalDepartments) * 100, 2) : 0;
             
             $stats = [
                 'total_employees' => $totalEmployees,
                 'total_express_users' => $totalExpressUsers,
                 'active_express_users' => $activeExpressUsers,
                 'express_enabled_departments' => $expressEnabledDepartments,
+                'total_departments' => $totalDepartments,
                 'express_usage_percentage' => $expressUsagePercentage,
+                'department_coverage_percentage' => $departmentCoveragePercentage,
                 'generated_at' => now()->format('Y-m-d H:i:s')
             ];
             
@@ -475,6 +595,85 @@ Route::middleware(['auth', 'role:super_admin,it_admin,hr'])->group(function () {
             ], 500);
         }
     })->name('statistics.express');
+    
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin Express Management Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:super_admin,it_admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Force enable/disable Express for all departments
+    Route::patch('departments/force-express/{status}', function ($status) {
+        try {
+            $enabled = $status === 'enable';
+            $departments = \App\Models\Department::all();
+            $updatedCount = 0;
+            
+            foreach ($departments as $department) {
+                if ($enabled) {
+                    if ($department->enableExpress()) $updatedCount++;
+                } else {
+                    if ($department->disableExpress()) $updatedCount++;
+                }
+            }
+            
+            $action = $enabled ? 'เปิดใช้งาน' : 'ปิดการใช้งาน';
+            
+            return redirect()->route('departments.index')
+                ->with('success', "{$action} Express สำหรับทุกแผนก ({$updatedCount} แผนก) สำเร็จแล้ว");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('departments.index')
+                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    })->name('departments.force-express');
+    
+    // Reset Express credentials for all users
+    Route::post('departments/reset-express-credentials', function () {
+        try {
+            $departments = \App\Models\Department::where('express_enabled', true)->get();
+            $totalGenerated = 0;
+            
+            foreach ($departments as $department) {
+                $generated = $department->generateExpressCredentialsForAll();
+                $totalGenerated += $generated;
+            }
+            
+            return redirect()->route('departments.index')
+                ->with('success', "สร้าง Express credentials ใหม่สำเร็จ {$totalGenerated} คน");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('departments.index')
+                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    })->name('departments.reset-express-credentials');
+    
+    // Auto-enable Express for accounting departments
+    Route::post('departments/auto-enable-express', function () {
+        try {
+            $accountingDepartments = \App\Models\Department::get()->filter(function ($dept) {
+                return $dept->shouldHaveExpress() && !$dept->express_enabled;
+            });
+            
+            $enabledCount = 0;
+            foreach ($accountingDepartments as $department) {
+                if ($department->enableExpress()) {
+                    $enabledCount++;
+                }
+            }
+            
+            return redirect()->route('departments.index')
+                ->with('success', "เปิดใช้งาน Express สำหรับแผนกบัญชี {$enabledCount} แผนกสำเร็จแล้ว");
+                
+        } catch (\Exception $e) {
+            return redirect()->route('departments.index')
+                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    })->name('departments.auto-enable-express');
     
 });
 
@@ -544,7 +743,7 @@ if (app()->environment('local')) {
                                                          'name' => $dept->name,
                                                          'code' => $dept->code,
                                                          'express_enabled' => $dept->express_enabled,
-                                                         'express_users_count' => $dept->expressUsers()->count()
+                                                         'express_users_count' => $dept->employees()->whereNotNull('express_username')->count()
                                                      ];
                                                  });
             
@@ -560,6 +759,37 @@ if (app()->environment('local')) {
             ], 500);
         }
     })->name('test.express-departments');
+    
+    // Debug Express data
+    Route::get('/debug/express-data', function () {
+        try {
+            $departments = \App\Models\Department::with('employees')->get();
+            
+            $debug = $departments->map(function ($dept) {
+                return [
+                    'id' => $dept->id,
+                    'name' => $dept->name,
+                    'express_enabled' => $dept->express_enabled,
+                    'should_have_express' => $dept->shouldHaveExpress(),
+                    'employee_count' => $dept->employees->count(),
+                    'express_user_count' => $dept->employees->whereNotNull('express_username')->count(),
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'debug_data' => $debug,
+                'database_columns' => \Schema::getColumnListing('departments')
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    })->name('debug.express-data');
     
 }
 

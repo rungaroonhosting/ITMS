@@ -60,7 +60,7 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        // Custom validation rules
+        // ✅ FIXED: Custom validation rules - ลบ unique constraint จาก phone
         $rules = [
             'employee_code' => [
                 'required',
@@ -78,12 +78,8 @@ class EmployeeController extends Controller
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('employees', 'phone')
-            ],
+            // ✅ FIXED: phone ไม่มี unique constraint แล้ว - อนุญาตให้ซ้ำได้
+            'phone' => 'required|string|max:20',
             'nickname' => 'nullable|string|max:50',
             'username' => [
                 'required',
@@ -109,7 +105,7 @@ class EmployeeController extends Controller
             'password' => 'required|string|min:6',
         ];
 
-        // Custom validation messages
+        // ✅ FIXED: Custom validation messages - ลบ phone.unique message
         $messages = [
             'employee_code.required' => 'รหัสพนักงานจำเป็นต้องกรอก',
             'employee_code.unique' => 'รหัสพนักงานนี้มีอยู่แล้วในระบบ',
@@ -120,7 +116,7 @@ class EmployeeController extends Controller
             'first_name_en.required' => 'ชื่อภาษาอังกฤษจำเป็นต้องกรอก',
             'last_name_en.required' => 'นามสกุลภาษาอังกฤษจำเป็นต้องกรอก',
             'phone.required' => 'เบอร์โทรศัพท์จำเป็นต้องกรอก',
-            'phone.unique' => 'เบอร์โทรศัพท์นี้มีอยู่แล้วในระบบ',
+            // ✅ FIXED: ลบ phone.unique message
             'username.required' => 'Username จำเป็นต้องกรอก',
             'username.unique' => 'Username นี้มีอยู่แล้วในระบบ',
             'email.required' => 'อีเมลจำเป็นต้องกรอก',
@@ -202,8 +198,11 @@ class EmployeeController extends Controller
                 \Log::info("Express credentials created for employee: {$employee->employee_code}");
             }
 
+            // ✅ Log phone duplicate allowance
+            \Log::info("Employee created with phone (duplicates allowed): {$validated['phone']}");
+
             return redirect()->route('employees.index')
-                ->with('success', 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว: ' . $employee->first_name_th . ' ' . $employee->last_name_th);
+                ->with('success', 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว: ' . $employee->first_name_th . ' ' . $employee->last_name_th . ' (เบอร์โทร: ' . $validated['phone'] . ' - ซ้ำได้)');
 
         } catch (\Exception $e) {
             \Log::error('Employee creation failed: ' . $e->getMessage());
@@ -247,7 +246,7 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee)
     {
-        // Custom validation rules for update
+        // ✅ FIXED: Custom validation rules for update - ลบ unique constraint จาก phone
         $rules = [
             'employee_code' => [
                 'required',
@@ -265,12 +264,8 @@ class EmployeeController extends Controller
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => [
-                'required',
-                'string',
-                'max:20',
-                Rule::unique('employees', 'phone')->ignore($employee->id)
-            ],
+            // ✅ FIXED: phone ไม่มี unique constraint - อนุญาตให้ซ้ำได้
+            'phone' => 'required|string|max:20',
             'nickname' => 'nullable|string|max:50',
             'username' => [
                 'required',
@@ -329,8 +324,11 @@ class EmployeeController extends Controller
 
             $employee->update($validated);
 
+            // ✅ Log phone duplicate allowance for updates
+            \Log::info("Employee updated with phone (duplicates allowed): {$validated['phone']}");
+
             return redirect()->route('employees.index')
-                ->with('success', 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employee->first_name_th . ' ' . $employee->last_name_th);
+                ->with('success', 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employee->first_name_th . ' ' . $employee->last_name_th . ' (เบอร์โทร: ' . $validated['phone'] . ' - ซ้ำได้)');
 
         } catch (\Exception $e) {
             \Log::error('Employee update failed: ' . $e->getMessage());
@@ -356,7 +354,12 @@ class EmployeeController extends Controller
             }
 
             $employeeName = $employee->first_name_th . ' ' . $employee->last_name_th;
+            $employeePhone = $employee->phone; // ✅ Keep phone for logging
+            
             $employee->delete();
+
+            // ✅ Log deletion with phone info
+            \Log::info("Employee deleted: {$employeeName} (Phone: {$employeePhone} - duplicates were allowed)");
 
             return response()->json([
                 'success' => true,
@@ -395,7 +398,7 @@ class EmployeeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'ส่งข้อมูลเข้าสู่ระบบไปยัง ' . $employee->email . ' เรียบร้อยแล้ว'
+                'message' => 'ส่งข้อมูลเข้าสู่ระบบไปยัง ' . $employee->email . ' เรียบร้อยแล้ว (เบอร์โทร: ' . $employee->phone . ' - ซ้ำได้)'
             ]);
 
         } catch (\Exception $e) {
@@ -441,7 +444,7 @@ class EmployeeController extends Controller
                 'success' => true,
                 'username' => $username,
                 'password' => $password,
-                'message' => 'สร้างข้อมูล Express เรียบร้อยแล้ว'
+                'message' => 'สร้างข้อมูล Express เรียบร้อยแล้ว (เบอร์โทร: ' . $employee->phone . ' - ซ้ำได้)'
             ]);
 
         } catch (\Exception $e) {
@@ -795,6 +798,9 @@ class EmployeeController extends Controller
                     'password_hidden' => !$canSeePassword,
                     'department' => $employee->department->name ?? null,
                     'department_express_enabled' => $employee->department->express_enabled ?? false,
+                    // ✅ Added phone info (duplicates allowed)
+                    'phone' => $employee->phone,
+                    'phone_duplicates_allowed' => true,
                 ]
             ]);
             
@@ -835,7 +841,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * ✅ รายงาน Express Usage (v2.0)
+     * ✅ รายงาน Express Usage (v2.0) - เพิ่มข้อมูล phone duplicates
      */
     public function getExpressReport()
     {
@@ -853,6 +859,15 @@ class EmployeeController extends Controller
             $expressUsers = Employee::whereNotNull('express_username')->count();
             $expressEnabledDepartments = Department::where('express_enabled', true)->count();
             $totalDepartments = Department::count();
+            
+            // ✅ Phone duplicate statistics
+            $phoneStats = [
+                'total_phones' => Employee::whereNotNull('phone')->where('phone', '!=', '')->count(),
+                'unique_phones' => Employee::whereNotNull('phone')->where('phone', '!=', '')->distinct('phone')->count(),
+                'duplicate_phones' => 0,
+            ];
+            
+            $phoneStats['duplicate_phones'] = $phoneStats['total_phones'] - $phoneStats['unique_phones'];
             
             // Express users by department
             $expressByDepartment = Employee::whereNotNull('express_username')
@@ -875,6 +890,8 @@ class EmployeeController extends Controller
                     'total_departments' => $totalDepartments,
                     'express_percentage' => $expressPercentage,
                     'express_by_department' => $expressByDepartment,
+                    'phone_statistics' => $phoneStats, // ✅ Added phone stats
+                    'phone_duplicates_allowed' => true, // ✅ Feature flag
                     'generated_at' => now()->format('Y-m-d H:i:s')
                 ]
             ]);
@@ -986,6 +1003,9 @@ class EmployeeController extends Controller
             }
         }
         
+        // ✅ Add phone duplicate info
+        $data['phone_duplicates_allowed'] = true;
+        
         return $data;
     }
 
@@ -1006,6 +1026,7 @@ class EmployeeController extends Controller
                 unset($employee->computer_password); 
                 unset($employee->email_password);
                 unset($employee->express_password);
+                // ✅ Keep phone (duplicates allowed)
                 return $employee;
             });
         }
@@ -1121,7 +1142,7 @@ class EmployeeController extends Controller
                       ->orWhere('first_name_en', 'LIKE', "%{$search}%")
                       ->orWhere('last_name_en', 'LIKE', "%{$search}%")
                       ->orWhere('email', 'LIKE', "%{$search}%")
-                      ->orWhere('phone', 'LIKE', "%{$search}%");
+                      ->orWhere('phone', 'LIKE', "%{$search}%"); // ✅ Phone search still works
                 });
             }
             
@@ -1143,7 +1164,8 @@ class EmployeeController extends Controller
             
             return response()->json([
                 'success' => true,
-                'employees' => $employees
+                'employees' => $employees,
+                'phone_duplicates_allowed' => true // ✅ Feature flag
             ]);
 
         } catch (\Exception $e) {
@@ -1177,6 +1199,9 @@ class EmployeeController extends Controller
                 'password' => Hash::make($newPassword)
             ]);
 
+            // ✅ Log with phone info
+            \Log::info("Password reset for employee: {$employee->first_name_th} {$employee->last_name_th} (Phone: {$employee->phone} - duplicates allowed)");
+
             return response()->json([
                 'success' => true,
                 'message' => 'รีเซ็ตรหัสผ่านสำเร็จ',
@@ -1189,6 +1214,61 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน'
+            ], 500);
+        }
+    }
+
+    // ✅ NEW: Phone duplicate utilities
+
+    /**
+     * Get phone duplicate statistics
+     */
+    public function getPhoneDuplicateStats()
+    {
+        try {
+            $user = auth()->user();
+            if (!in_array($user->role, ['super_admin', 'it_admin', 'hr'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ดูข้อมูลสำรวจ'
+                ], 403);
+            }
+
+            $phoneGroups = Employee::whereNotNull('phone')
+                ->where('phone', '!=', '')
+                ->get()
+                ->groupBy('phone')
+                ->filter(function ($employees) {
+                    return $employees->count() > 1;
+                });
+
+            $duplicatePhones = $phoneGroups->map(function ($employees, $phone) {
+                return [
+                    'phone' => $phone,
+                    'count' => $employees->count(),
+                    'employees' => $employees->map(function ($emp) {
+                        return [
+                            'id' => $emp->id,
+                            'name' => $emp->first_name_th . ' ' . $emp->last_name_th,
+                            'department' => $emp->department->name ?? 'ไม่ระบุ',
+                            'status' => $emp->status
+                        ];
+                    })
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'duplicate_phones' => $duplicatePhones,
+                'total_duplicate_groups' => $duplicatePhones->count(),
+                'feature_enabled' => true,
+                'message' => 'ระบบอนุญาตให้ใช้เบอร์โทรซ้ำกันได้แล้ว'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
             ], 500);
         }
     }

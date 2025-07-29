@@ -14,11 +14,13 @@ class EmployeeController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * ✅ FIXED: เพิ่ม withoutTrashed() เพื่อไม่แสดง soft deleted records
      */
     public function index()
     {
         try {
-            $employees = Employee::with('department')->orderBy('created_at', 'desc')->get();
+            // ✅ FIX: เพิ่ม withoutTrashed() เพื่อซ่อน soft deleted records
+            $employees = Employee::withoutTrashed()->with('department')->orderBy('created_at', 'desc')->get();
             $departments = Department::all();
             
             return view('employees.index', compact('employees', 'departments'));
@@ -66,26 +68,25 @@ class EmployeeController extends Controller
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('employees', 'employee_code')
+                Rule::unique('employees', 'employee_code')->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'keycard_id' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('employees', 'keycard_id')
+                Rule::unique('employees', 'keycard_id')->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'first_name_th' => 'required|string|max:100',
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            // ✅ FIXED: phone ไม่มี unique constraint แล้ว - อนุญาตให้ซ้ำได้
             'phone' => 'required|string|max:20',
             'nickname' => 'nullable|string|max:50',
             'username' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('employees', 'username')
+                Rule::unique('employees', 'username')->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'computer_password' => 'nullable|string|min:6',
             'copier_code' => 'nullable|string|max:10',
@@ -93,7 +94,7 @@ class EmployeeController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('employees', 'email')
+                Rule::unique('employees', 'email')->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
@@ -105,7 +106,6 @@ class EmployeeController extends Controller
             'password' => 'required|string|min:6',
         ];
 
-        // ✅ FIXED: Custom validation messages - ลบ phone.unique message
         $messages = [
             'employee_code.required' => 'รหัสพนักงานจำเป็นต้องกรอก',
             'employee_code.unique' => 'รหัสพนักงานนี้มีอยู่แล้วในระบบ',
@@ -116,7 +116,6 @@ class EmployeeController extends Controller
             'first_name_en.required' => 'ชื่อภาษาอังกฤษจำเป็นต้องกรอก',
             'last_name_en.required' => 'นามสกุลภาษาอังกฤษจำเป็นต้องกรอก',
             'phone.required' => 'เบอร์โทรศัพท์จำเป็นต้องกรอก',
-            // ✅ FIXED: ลบ phone.unique message
             'username.required' => 'Username จำเป็นต้องกรอก',
             'username.unique' => 'Username นี้มีอยู่แล้วในระบบ',
             'email.required' => 'อีเมลจำเป็นต้องกรอก',
@@ -171,9 +170,8 @@ class EmployeeController extends Controller
                 $validated['copier_code'] = $this->generateCopierCode();
             }
 
-            // ✅ Enhanced Express fields handling - ใช้ express_enabled แทน hardcode
+            // Express fields handling
             if ($this->isDepartmentExpressEnabled($validated['department_id'])) {
-                // Auto-generate Express credentials if not provided
                 if (empty($validated['express_username'])) {
                     $validated['express_username'] = $this->generateExpressUsername(
                         $validated['first_name_en'], 
@@ -185,7 +183,6 @@ class EmployeeController extends Controller
                     $validated['express_password'] = $this->generateExpressPassword();
                 }
             } else {
-                // Clear Express fields for non-Express departments
                 $validated['express_username'] = null;
                 $validated['express_password'] = null;
             }
@@ -193,12 +190,10 @@ class EmployeeController extends Controller
             // Create the employee
             $employee = Employee::create($validated);
 
-            // Log Express credentials creation
             if ($employee->express_username) {
                 \Log::info("Express credentials created for employee: {$employee->employee_code}");
             }
 
-            // ✅ Log phone duplicate allowance
             \Log::info("Employee created with phone (duplicates allowed): {$validated['phone']}");
 
             return redirect()->route('employees.index')
@@ -246,32 +241,31 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee)
     {
-        // ✅ FIXED: Custom validation rules for update - ลบ unique constraint จาก phone
+        // ✅ FIXED: Custom validation rules for update with soft delete consideration
         $rules = [
             'employee_code' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('employees', 'employee_code')->ignore($employee->id)
+                Rule::unique('employees', 'employee_code')->ignore($employee->id)->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'keycard_id' => [
                 'required',
                 'string',
                 'max:20',
-                Rule::unique('employees', 'keycard_id')->ignore($employee->id)
+                Rule::unique('employees', 'keycard_id')->ignore($employee->id)->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'first_name_th' => 'required|string|max:100',
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            // ✅ FIXED: phone ไม่มี unique constraint - อนุญาตให้ซ้ำได้
             'phone' => 'required|string|max:20',
             'nickname' => 'nullable|string|max:50',
             'username' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('employees', 'username')->ignore($employee->id)
+                Rule::unique('employees', 'username')->ignore($employee->id)->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'computer_password' => 'nullable|string|min:6',
             'copier_code' => 'nullable|string|max:10',
@@ -279,7 +273,7 @@ class EmployeeController extends Controller
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('employees', 'email')->ignore($employee->id)
+                Rule::unique('employees', 'email')->ignore($employee->id)->whereNull('deleted_at') // ✅ เพิ่มเงื่อนไข whereNull('deleted_at')
             ],
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
@@ -294,19 +288,15 @@ class EmployeeController extends Controller
         $validated = $request->validate($rules);
 
         try {
-            // Set login_email same as email
             $validated['login_email'] = $validated['email'];
 
-            // Handle password update
             if (!empty($validated['password'])) {
                 $validated['password'] = Hash::make($validated['password']);
             } else {
                 unset($validated['password']);
             }
 
-            // ✅ Handle Express fields - ใช้ express_enabled แทน hardcode
             if ($this->isDepartmentExpressEnabled($validated['department_id'])) {
-                // Keep existing Express credentials or generate new ones
                 if (empty($validated['express_username'])) {
                     $validated['express_username'] = $this->generateExpressUsername(
                         $validated['first_name_en'], 
@@ -324,7 +314,6 @@ class EmployeeController extends Controller
 
             $employee->update($validated);
 
-            // ✅ Log phone duplicate allowance for updates
             \Log::info("Employee updated with phone (duplicates allowed): {$validated['phone']}");
 
             return redirect()->route('employees.index')
@@ -340,7 +329,8 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * ✅ FIXED: Remove the specified resource from storage.
+     * เพิ่มตัวเลือกระหว่าง Soft Delete และ Force Delete
      */
     public function destroy(Employee $employee)
     {
@@ -354,16 +344,16 @@ class EmployeeController extends Controller
             }
 
             $employeeName = $employee->first_name_th . ' ' . $employee->last_name_th;
-            $employeePhone = $employee->phone; // ✅ Keep phone for logging
+            $employeePhone = $employee->phone;
             
+            // ✅ ใช้ Soft Delete (default behavior)
             $employee->delete();
 
-            // ✅ Log deletion with phone info
-            \Log::info("Employee deleted: {$employeeName} (Phone: {$employeePhone} - duplicates were allowed)");
+            \Log::info("Employee soft deleted: {$employeeName} (Phone: {$employeePhone} - duplicates were allowed)");
 
             return response()->json([
                 'success' => true,
-                'message' => 'ลบข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employeeName
+                'message' => 'ลบข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employeeName . ' (ย้ายไปถังขยะ)'
             ]);
 
         } catch (\Exception $e) {
@@ -376,135 +366,188 @@ class EmployeeController extends Controller
         }
     }
 
-    // *** เพิ่ม Methods ใหม่ ***
+    /**
+     * ✅ NEW: Force delete employee (ลบจริงๆ จากฐานข้อมูล)
+     */
+    public function forceDestroy(Employee $employee)
+    {
+        try {
+            // ตรวจสอบสิทธิ์ (เฉพาะ Super Admin)
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ SuperAdmin เท่านั้นที่สามารถลบข้อมูลถาวรได้'
+                ], 403);
+            }
+
+            $employeeName = $employee->first_name_th . ' ' . $employee->last_name_th;
+            $employeePhone = $employee->phone;
+            
+            // ✅ Force Delete (ลบจริงจากฐานข้อมูล)
+            $employee->forceDelete();
+
+            \Log::info("Employee force deleted: {$employeeName} (Phone: {$employeePhone} - permanently removed)");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ลบข้อมูลพนักงานถาวรเรียบร้อยแล้ว: ' . $employeeName
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Employee force deletion failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการลบข้อมูลถาวร'
+            ], 500);
+        }
+    }
 
     /**
-     * ส่งข้อมูล Login ให้พนักงาน
+     * ✅ NEW: แสดงรายการพนักงานที่ถูก soft delete (ถังขยะ)
      */
-    public function sendCredentials(Employee $employee)
+    public function trash()
     {
         try {
             // ตรวจสอบสิทธิ์
-            $user = auth()->user();
-            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ในการดำเนินการ'
-                ], 403);
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
+                return redirect()->route('employees.index')
+                    ->with('error', 'ไม่มีสิทธิ์เข้าถึงถังขยะ');
             }
 
-            // ส่ง Email ข้อมูล Login (จำลอง)
-            // Mail::to($employee->email)->send(new EmployeeCredentialsMail($employee));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'ส่งข้อมูลเข้าสู่ระบบไปยัง ' . $employee->email . ' เรียบร้อยแล้ว (เบอร์โทร: ' . $employee->phone . ' - ซ้ำได้)'
-            ]);
+            $trashedEmployees = Employee::onlyTrashed()->with('department')->orderBy('deleted_at', 'desc')->get();
+            
+            return view('employees.trash', compact('trashedEmployees'));
 
         } catch (\Exception $e) {
-            \Log::error('Send credentials failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
+            return redirect()->route('employees.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการโหลดถังขยะ');
         }
     }
 
     /**
-     * สร้าง Username และ Password อัตโนมัติ
+     * ✅ NEW: กู้คืนพนักงานจากถังขยะ
      */
-    public function generateCredentials(Employee $employee)
+    public function restore($id)
     {
         try {
             // ตรวจสอบสิทธิ์
-            $user = auth()->user();
-            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ในการดำเนินการ'
+                    'message' => 'ไม่มีสิทธิ์กู้คืนข้อมูล'
                 ], 403);
             }
 
-            $englishName = $employee->first_name_en . ' ' . $employee->last_name_en;
-            
-            // สร้าง Username (ชื่อภาษาอังกฤษ 7 ตัวอักษร)
-            $username = $this->generateExpressUsername($employee->first_name_en, $employee->last_name_en);
-            
-            // สร้าง Password (4 ตัวอักษรมีตัวเลข)
-            $password = $this->generateExpressPassword();
-            
-            // อัพเดท Employee
-            $employee->update([
-                'express_username' => $username,
-                'express_password' => $password
-            ]);
+            $employee = Employee::onlyTrashed()->findOrFail($id);
+            $employee->restore();
+
+            \Log::info("Employee restored: {$employee->first_name_th} {$employee->last_name_th}");
 
             return response()->json([
                 'success' => true,
-                'username' => $username,
-                'password' => $password,
-                'message' => 'สร้างข้อมูล Express เรียบร้อยแล้ว (เบอร์โทร: ' . $employee->phone . ' - ซ้ำได้)'
+                'message' => 'กู้คืนพนักงานเรียบร้อยแล้ว: ' . $employee->first_name_th . ' ' . $employee->last_name_th
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Generate credentials failed: ' . $e->getMessage());
+            \Log::error('Employee restoration failed: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+                'message' => 'เกิดข้อผิดพลาดในการกู้คืนข้อมูล'
             ], 500);
         }
     }
 
     /**
-     * ดูตัวอย่างข้อมูลพนักงาน
+     * ✅ NEW: ล้างถังขยะ (ลบทุกคนในถังขยะอย่างถาวร)
      */
-    public function preview(Employee $employee)
+    public function emptyTrash()
     {
         try {
-            // ตรวจสอบสิทธิ์การเข้าถึง
-            if (!$this->canViewEmployee($employee)) {
+            // ตรวจสอบสิทธิ์
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ดูข้อมูลพนักงานนี้'
+                    'message' => 'ไม่มีสิทธิ์ล้างถังขยะ'
                 ], 403);
             }
 
-            $employeeData = $this->getEmployeeData($employee);
-            
+            $trashedCount = Employee::onlyTrashed()->count();
+            Employee::onlyTrashed()->forceDelete();
+
+            \Log::info("Trash emptied: {$trashedCount} employees permanently deleted");
+
             return response()->json([
                 'success' => true,
-                'data' => $employeeData
+                'message' => "ล้างถังขยะเรียบร้อยแล้ว: ลบ {$trashedCount} คนอย่างถาวร"
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Preview failed: ' . $e->getMessage());
+            \Log::error('Empty trash failed: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+                'message' => 'เกิดข้อผิดพลาดในการล้างถังขยะ'
             ], 500);
         }
     }
 
     /**
-     * ส่งออกข้อมูลเป็น PDF
+     * ✅ NEW: Bulk restore employees from trash
      */
-    public function exportPdf()
+    public function bulkRestore(Request $request)
     {
+        $request->validate([
+            'employee_ids' => 'required|array',
+            'employee_ids.*' => 'exists:employees,id'
+        ]);
+
         try {
-            // ใช้ Laravel PDF Package
-            // $employees = $this->getEmployeesForExport();
-            // $pdf = PDF::loadView('employees.export.pdf', compact('employees'));
-            // return $pdf->download('employees.pdf');
+            // ตรวจสอบสิทธิ์
+            if (!auth()->user() || auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์กู้คืนข้อมูล'
+                ], 403);
+            }
+
+            $employeeIds = $request->employee_ids;
+            $restoredEmployees = Employee::onlyTrashed()->whereIn('id', $employeeIds)->get();
             
-            return redirect()->route('employees.index')
-                ->with('info', 'ฟีเจอร์ส่งออก PDF จะพร้อมใช้งานเร็วๆ นี้');
-                
+            if ($restoredEmployees->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบพนักงานในถังขยะที่ต้องการกู้คืน'
+                ], 404);
+            }
+
+            // Restore employees
+            foreach ($restoredEmployees as $employee) {
+                $employee->restore();
+            }
+
+            $count = $restoredEmployees->count();
+            $names = $restoredEmployees->pluck('first_name_th')->take(3)->join(', ');
+            if ($count > 3) {
+                $names .= ' และอีก ' . ($count - 3) . ' คน';
+            }
+
+            \Log::info("Bulk restore completed: {$count} employees restored");
+
+            return response()->json([
+                'success' => true,
+                'message' => "กู้คืนพนักงาน {$count} คนเรียบร้อยแล้ว: {$names}",
+                'restored_count' => $count
+            ]);
+
         } catch (\Exception $e) {
-            return redirect()->route('employees.index')
-                ->with('error', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล');
+            \Log::error('Bulk restore failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการกู้คืนข้อมูล'
+            ], 500);
         }
     }
 
@@ -531,14 +574,6 @@ class EmployeeController extends Controller
     }
 
     /**
-     * 🔄 Backward Compatibility - เรียก method ใหม่
-     */
-    private function isDepartmentAccounting($departmentId)
-    {
-        return $this->isDepartmentExpressEnabled($departmentId);
-    }
-
-    /**
      * ปรับปรุง Express Username Generator
      */
     private function generateExpressUsername($firstName, $lastName)
@@ -554,11 +589,11 @@ class EmployeeController extends Controller
             $username = str_pad($username, 7, 'x'); // Pad with 'x' if too short
         }
         
-        // Check for uniqueness
+        // Check for uniqueness (เฉพาะที่ไม่ได้ถูก soft delete)
         $counter = 1;
         $originalUsername = $username;
         
-        while (Employee::where('express_username', $username)->exists()) {
+        while (Employee::withoutTrashed()->where('express_username', $username)->exists()) {
             if ($counter == 1) {
                 $username = substr($originalUsername, 0, 6) . '1';
             } else {
@@ -601,309 +636,6 @@ class EmployeeController extends Controller
         return implode('', $passwordArray);
     }
 
-    /**
-     * API Endpoint: Generate Express Username
-     */
-    public function generateExpressUsernameApi(Request $request)
-    {
-        try {
-            $firstName = $request->get('first_name', '');
-            $lastName = $request->get('last_name', '');
-            
-            if (empty($firstName) || empty($lastName)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'กรุณากรอกชื่อและนามสกุลภาษาอังกฤษ'
-                ], 400);
-            }
-            
-            $username = $this->generateExpressUsername($firstName, $lastName);
-            
-            return response()->json([
-                'success' => true,
-                'username' => $username,
-                'message' => 'สร้าง Express Username สำเร็จ'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * API Endpoint: Generate Express Password
-     */
-    public function generateExpressPasswordApi(Request $request)
-    {
-        try {
-            // Check permissions
-            $user = auth()->user();
-            if (!in_array($user->role, ['super_admin', 'it_admin'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ดูรหัสผ่าน'
-                ], 403);
-            }
-            
-            $password = $this->generateExpressPassword();
-            
-            return response()->json([
-                'success' => true,
-                'password' => $password,
-                'message' => 'สร้าง Express Password สำเร็จ'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * ✅ API Endpoint: ตรวจสอบว่าแผนกรองรับ Express หรือไม่ (v2.0)
-     */
-    public function checkExpressEligibility(Request $request)
-    {
-        try {
-            $departmentId = $request->get('department_id');
-            
-            if (!$departmentId) {
-                return response()->json([
-                    'success' => false,
-                    'eligible' => false,
-                    'message' => 'กรุณาเลือกแผนก'
-                ]);
-            }
-            
-            // ใช้ method ใหม่ที่ตรวจสอบจาก express_enabled
-            $isEligible = $this->isDepartmentExpressEnabled($departmentId);
-            $department = Department::find($departmentId);
-            
-            return response()->json([
-                'success' => true,
-                'eligible' => $isEligible,
-                'department_name' => $department ? $department->name : 'ไม่ระบุ',
-                'express_enabled' => $department ? (bool) $department->express_enabled : false,
-                'message' => $isEligible ? 
-                    'แผนกนี้เปิดใช้งาน Express แล้ว' : 
-                    'แผนกนี้ยังไม่เปิดใช้งาน Express'
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'eligible' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * API Endpoint: ทดสอบการเชื่อมต่อ Express
-     */
-    public function testExpressConnection(Request $request)
-    {
-        try {
-            $username = $request->get('username');
-            $password = $request->get('password');
-            
-            // Simulate Express connection test
-            // ในความเป็นจริง คุณจะต้องเชื่อมต่อกับระบบ Express จริง
-            
-            if (empty($username) || empty($password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'กรุณากรอก Username และ Password'
-                ], 400);
-            }
-            
-            // Mock test (replace with actual Express API call)
-            $connectionTest = $this->performExpressConnectionTest($username, $password);
-            
-            return response()->json([
-                'success' => $connectionTest['success'],
-                'message' => $connectionTest['message'],
-                'connection_time' => $connectionTest['response_time'] ?? null
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'การทดสอบล้มเหลว: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * ทำการทดสอบการเชื่อมต่อ Express (Mock)
-     */
-    private function performExpressConnectionTest($username, $password)
-    {
-        // Mock implementation - replace with actual Express API integration
-        $startTime = microtime(true);
-        
-        // Simulate network delay
-        usleep(mt_rand(100000, 500000)); // 0.1 to 0.5 seconds
-        
-        $endTime = microtime(true);
-        $responseTime = round(($endTime - $startTime) * 1000, 2); // milliseconds
-        
-        // Mock success based on username/password format
-        $isValidFormat = (strlen($username) === 7 && strlen($password) === 4);
-        
-        if ($isValidFormat) {
-            return [
-                'success' => true,
-                'message' => 'เชื่อมต่อ Express สำเร็จ',
-                'response_time' => $responseTime
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'รูปแบบ Username หรือ Password ไม่ถูกต้อง',
-                'response_time' => $responseTime
-            ];
-        }
-    }
-
-    /**
-     * API Endpoint: ดึงข้อมูล Express ของพนักงาน
-     */
-    public function getExpressCredentials(Employee $employee)
-    {
-        try {
-            // Check permissions
-            $user = auth()->user();
-            
-            if (!$this->canViewExpressCredentials($user, $employee)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ดูข้อมูล Express นี้'
-                ], 403);
-            }
-            
-            $canSeePassword = in_array($user->role, ['super_admin', 'it_admin']);
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'has_express' => !empty($employee->express_username),
-                    'username' => $employee->express_username,
-                    'password' => $canSeePassword ? $employee->express_password : null,
-                    'password_hidden' => !$canSeePassword,
-                    'department' => $employee->department->name ?? null,
-                    'department_express_enabled' => $employee->department->express_enabled ?? false,
-                    // ✅ Added phone info (duplicates allowed)
-                    'phone' => $employee->phone,
-                    'phone_duplicates_allowed' => true,
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * ตรวจสอบสิทธิ์การดูข้อมูล Express
-     */
-    private function canViewExpressCredentials($user, $employee)
-    {
-        // Super Admin และ IT Admin ดูได้ทุกคน
-        if (in_array($user->role, ['super_admin', 'it_admin'])) {
-            return true;
-        }
-        
-        // HR ดูได้ทุกคน
-        if ($user->role === 'hr') {
-            return true;
-        }
-        
-        // Manager ดูได้ในแผนกตัวเองเท่านั้น
-        if ($user->role === 'manager' && isset($user->department_id)) {
-            return $user->department_id === $employee->department_id;
-        }
-        
-        // Express role ดูได้เฉพาะแผนกที่เปิด Express
-        if ($user->role === 'express') {
-            return $this->isDepartmentExpressEnabled($employee->department_id);
-        }
-        
-        return false;
-    }
-
-    /**
-     * ✅ รายงาน Express Usage (v2.0) - เพิ่มข้อมูล phone duplicates
-     */
-    public function getExpressReport()
-    {
-        try {
-            $user = auth()->user();
-            
-            if (!in_array($user->role, ['super_admin', 'it_admin', 'hr'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ดูรายงาน'
-                ], 403);
-            }
-            
-            $totalEmployees = Employee::count();
-            $expressUsers = Employee::whereNotNull('express_username')->count();
-            $expressEnabledDepartments = Department::where('express_enabled', true)->count();
-            $totalDepartments = Department::count();
-            
-            // ✅ Phone duplicate statistics
-            $phoneStats = [
-                'total_phones' => Employee::whereNotNull('phone')->where('phone', '!=', '')->count(),
-                'unique_phones' => Employee::whereNotNull('phone')->where('phone', '!=', '')->distinct('phone')->count(),
-                'duplicate_phones' => 0,
-            ];
-            
-            $phoneStats['duplicate_phones'] = $phoneStats['total_phones'] - $phoneStats['unique_phones'];
-            
-            // Express users by department
-            $expressByDepartment = Employee::whereNotNull('express_username')
-                ->with('department')
-                ->get()
-                ->groupBy('department.name')
-                ->map(function ($employees) {
-                    return $employees->count();
-                });
-            
-            $expressPercentage = $totalEmployees > 0 ? 
-                round(($expressUsers / $totalEmployees) * 100, 2) : 0;
-            
-            return response()->json([
-                'success' => true,
-                'report' => [
-                    'total_employees' => $totalEmployees,
-                    'express_users' => $expressUsers,
-                    'express_enabled_departments' => $expressEnabledDepartments,
-                    'total_departments' => $totalDepartments,
-                    'express_percentage' => $expressPercentage,
-                    'express_by_department' => $expressByDepartment,
-                    'phone_statistics' => $phoneStats, // ✅ Added phone stats
-                    'phone_duplicates_allowed' => true, // ✅ Feature flag
-                    'generated_at' => now()->format('Y-m-d H:i:s')
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
     // =====================================================
     // HELPER METHODS
     // =====================================================
@@ -930,7 +662,7 @@ class EmployeeController extends Controller
     {
         do {
             $code = 'EMP' . str_pad(random_int(1, 999), 3, '0', STR_PAD_LEFT);
-        } while (Employee::where('employee_code', $code)->exists());
+        } while (Employee::withoutTrashed()->where('employee_code', $code)->exists()); // ✅ เพิ่ม withoutTrashed()
         
         return $code;
     }
@@ -942,7 +674,7 @@ class EmployeeController extends Controller
     {
         do {
             $id = 'KC' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-        } while (Employee::where('keycard_id', $id)->exists());
+        } while (Employee::withoutTrashed()->where('keycard_id', $id)->exists()); // ✅ เพิ่ม withoutTrashed()
         
         return $id;
     }
@@ -953,83 +685,6 @@ class EmployeeController extends Controller
     private function generateCopierCode()
     {
         return str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * ตรวจสอบสิทธิ์การดูข้อมูลพนักงาน
-     */
-    private function canViewEmployee($employee)
-    {
-        $user = auth()->user();
-        
-        // SuperAdmin ดูได้หมด
-        if ($user->role === 'super_admin') {
-            return true;
-        }
-        
-        // IT Admin ดูได้หมด
-        if ($user->role === 'it_admin') {
-            return true;
-        }
-        
-        // พนักงานดูข้อมูลตัวเองได้ (ถ้ามี user_id)
-        if (isset($employee->user_id) && $user->id === $employee->user_id) {
-            return true;
-        }
-        
-        // Manager ดูได้
-        if ($user->role === 'manager') {
-            return true;
-        }
-        
-        return false;
-    }
-
-    /**
-     * ดึงข้อมูลพนักงานตาม Role
-     */
-    private function getEmployeeData($employee)
-    {
-        $user = auth()->user();
-        $data = $employee->load('department')->toArray();
-        
-        // ซ่อน Password สำหรับ Role ที่ไม่ใช่ SuperAdmin
-        if ($user->role !== 'super_admin') {
-            unset($data['password']);
-            unset($data['computer_password']);
-            unset($data['email_password']);
-            if ($user->role !== 'it_admin') {
-                unset($data['express_password']);
-            }
-        }
-        
-        // ✅ Add phone duplicate info
-        $data['phone_duplicates_allowed'] = true;
-        
-        return $data;
-    }
-
-    /**
-     * ดึงข้อมูลพนักงานสำหรับส่งออก
-     */
-    private function getEmployeesForExport()
-    {
-        $user = auth()->user();
-        
-        if ($user->role === 'super_admin') {
-            // SuperAdmin เห็นข้อมูลทั้งหมด
-            return Employee::with('department')->get();
-        } else {
-            // Role อื่นไม่เห็น Password
-            return Employee::with('department')->get()->map(function($employee) {
-                unset($employee->password);
-                unset($employee->computer_password); 
-                unset($employee->email_password);
-                unset($employee->express_password);
-                // ✅ Keep phone (duplicates allowed)
-                return $employee;
-            });
-        }
     }
 
     /**
@@ -1052,6 +707,16 @@ class EmployeeController extends Controller
             case 'copier_code':
                 return response()->json(['copier_code' => $this->generateCopierCode()]);
                 
+            case 'username':
+                $firstName = $request->get('first_name_en', '');
+                $lastName = $request->get('last_name_en', '');
+                $username = strtolower($firstName . '.' . $lastName);
+                $email = $username . '@bettersystem.co.th';
+                return response()->json([
+                    'username' => $username,
+                    'email' => $email
+                ]);
+                
             case 'express_username':
                 $firstName = $request->get('first_name_en', '');
                 $lastName = $request->get('last_name_en', '');
@@ -1062,22 +727,6 @@ class EmployeeController extends Controller
             
             default:
                 return response()->json(['error' => 'Invalid type'], 400);
-        }
-    }
-
-    /**
-     * Export employees to Excel
-     */
-    public function exportExcel()
-    {
-        try {
-            // This would require a package like maatwebsite/excel
-            // For now, return a simple response
-            return redirect()->route('employees.index')
-                ->with('info', 'ฟีเจอร์ส่งออก Excel จะพร้อมใช้งานเร็วๆ นี้');
-        } catch (\Exception $e) {
-            return redirect()->route('employees.index')
-                ->with('error', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล');
         }
     }
 
@@ -1099,18 +748,18 @@ class EmployeeController extends Controller
 
             switch ($action) {
                 case 'activate':
-                    Employee::whereIn('id', $employeeIds)->update(['status' => 'active']);
+                    Employee::withoutTrashed()->whereIn('id', $employeeIds)->update(['status' => 'active']); // ✅ เพิ่ม withoutTrashed()
                     $message = "เปิดใช้งานพนักงาน {$count} คนเรียบร้อยแล้ว";
                     break;
                 
                 case 'deactivate':
-                    Employee::whereIn('id', $employeeIds)->update(['status' => 'inactive']);
+                    Employee::withoutTrashed()->whereIn('id', $employeeIds)->update(['status' => 'inactive']); // ✅ เพิ่ม withoutTrashed()
                     $message = "ปิดใช้งานพนักงาน {$count} คนเรียบร้อยแล้ว";
                     break;
                 
                 case 'delete':
-                    Employee::whereIn('id', $employeeIds)->delete();
-                    $message = "ลบข้อมูลพนักงาน {$count} คนเรียบร้อยแล้ว";
+                    Employee::withoutTrashed()->whereIn('id', $employeeIds)->delete(); // ✅ เพิ่ม withoutTrashed() (soft delete)
+                    $message = "ย้ายพนักงาน {$count} คนไปถังขยะเรียบร้อยแล้ว";
                     break;
             }
 
@@ -1127,52 +776,18 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Search employees
+     * Export employees to Excel
      */
-    public function search(Request $request)
+    public function exportExcel()
     {
         try {
-            $query = Employee::with('department');
-            
-            if ($search = $request->get('search')) {
-                $query->where(function($q) use ($search) {
-                    $q->where('employee_code', 'LIKE', "%{$search}%")
-                      ->orWhere('first_name_th', 'LIKE', "%{$search}%")
-                      ->orWhere('last_name_th', 'LIKE', "%{$search}%")
-                      ->orWhere('first_name_en', 'LIKE', "%{$search}%")
-                      ->orWhere('last_name_en', 'LIKE', "%{$search}%")
-                      ->orWhere('email', 'LIKE', "%{$search}%")
-                      ->orWhere('phone', 'LIKE', "%{$search}%"); // ✅ Phone search still works
-                });
-            }
-            
-            if ($department = $request->get('department')) {
-                $query->whereHas('department', function($q) use ($department) {
-                    $q->where('name', $department);
-                });
-            }
-            
-            if ($role = $request->get('role')) {
-                $query->where('role', $role);
-            }
-            
-            if ($status = $request->get('status')) {
-                $query->where('status', $status);
-            }
-            
-            $employees = $query->get();
-            
-            return response()->json([
-                'success' => true,
-                'employees' => $employees,
-                'phone_duplicates_allowed' => true // ✅ Feature flag
-            ]);
-
+            // This would require a package like maatwebsite/excel
+            // For now, return a simple response
+            return redirect()->route('employees.index')
+                ->with('info', 'ฟีเจอร์ส่งออก Excel จะพร้อมใช้งานเร็วๆ นี้');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาดในการค้นหา'
-            ], 500);
+            return redirect()->route('employees.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการส่งออกข้อมูล');
         }
     }
 
@@ -1199,7 +814,6 @@ class EmployeeController extends Controller
                 'password' => Hash::make($newPassword)
             ]);
 
-            // ✅ Log with phone info
             \Log::info("Password reset for employee: {$employee->first_name_th} {$employee->last_name_th} (Phone: {$employee->phone} - duplicates allowed)");
 
             return response()->json([
@@ -1214,61 +828,6 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน'
-            ], 500);
-        }
-    }
-
-    // ✅ NEW: Phone duplicate utilities
-
-    /**
-     * Get phone duplicate statistics
-     */
-    public function getPhoneDuplicateStats()
-    {
-        try {
-            $user = auth()->user();
-            if (!in_array($user->role, ['super_admin', 'it_admin', 'hr'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ไม่มีสิทธิ์ดูข้อมูลสำรวจ'
-                ], 403);
-            }
-
-            $phoneGroups = Employee::whereNotNull('phone')
-                ->where('phone', '!=', '')
-                ->get()
-                ->groupBy('phone')
-                ->filter(function ($employees) {
-                    return $employees->count() > 1;
-                });
-
-            $duplicatePhones = $phoneGroups->map(function ($employees, $phone) {
-                return [
-                    'phone' => $phone,
-                    'count' => $employees->count(),
-                    'employees' => $employees->map(function ($emp) {
-                        return [
-                            'id' => $emp->id,
-                            'name' => $emp->first_name_th . ' ' . $emp->last_name_th,
-                            'department' => $emp->department->name ?? 'ไม่ระบุ',
-                            'status' => $emp->status
-                        ];
-                    })
-                ];
-            })->values();
-
-            return response()->json([
-                'success' => true,
-                'duplicate_phones' => $duplicatePhones,
-                'total_duplicate_groups' => $duplicatePhones->count(),
-                'feature_enabled' => true,
-                'message' => 'ระบบอนุญาตให้ใช้เบอร์โทรซ้ำกันได้แล้ว'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
             ], 500);
         }
     }

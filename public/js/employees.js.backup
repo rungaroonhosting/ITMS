@@ -1,6 +1,6 @@
 /*!
- * ITMS - Employee Management JavaScript v2.1
- * Enhanced functionality for Employee CRUD operations with Soft Delete Support
+ * ITMS - Employee Management JavaScript
+ * Enhanced functionality for Employee CRUD operations
  */
 
 'use strict';
@@ -27,7 +27,7 @@ const EmployeeManager = {
         this.initEventListeners();
         this.initTooltips();
         this.initAutoComplete();
-        console.log('Employee Manager v2.1 initialized successfully with Soft Delete support');
+        console.log('Employee Manager initialized successfully');
     },
 
     // Initialize DataTable if present
@@ -142,8 +142,8 @@ const EmployeeManager = {
 
     // Initialize event listeners
     initEventListeners() {
-        // ✅ UPDATED: Delete buttons with Soft Delete support
-        $(document).on('click', '.delete-btn', this.handleSoftDelete.bind(this));
+        // Delete buttons
+        $(document).on('click', '.delete-btn', this.handleDelete.bind(this));
         
         // Generate buttons
         $(document).on('click', '#generateEmpIdBtn', () => this.generateEmployeeId());
@@ -180,17 +180,6 @@ const EmployeeManager = {
 
         // Keyboard shortcuts
         $(document).on('keydown', this.handleKeyboardShortcuts.bind(this));
-
-        // ✅ NEW: Trash management buttons
-        $(document).on('click', '#viewTrashBtn', () => {
-            window.location.href = '/employees/trash';
-        });
-
-        // Status toggle for Super Admin and IT Admin
-        $(document).on('change', '.status-toggle', this.handleStatusToggle.bind(this));
-
-        // ✅ NEW: Load trash count for dashboard
-        this.loadTrashCount();
     },
 
     // Initialize tooltips
@@ -311,56 +300,34 @@ const EmployeeManager = {
         });
     },
 
-    // ✅ UPDATED: Handle soft delete action
-    handleSoftDelete(event) {
+    // Handle delete action
+    handleDelete(event) {
         const button = event.currentTarget;
         const employeeId = button.getAttribute('data-id');
         const employeeName = button.getAttribute('data-name');
 
         if (!employeeId) return;
 
-        // ✅ Updated message to indicate soft delete
         Swal.fire({
             title: this.config.confirmDeleteTitle,
-            html: `
-                <div class="text-start">
-                    <p>คุณต้องการลบพนักงาน "<strong>${employeeName}</strong>" หรือไม่?</p>
-                    <div class="alert alert-info small mt-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>หมายเหตุ:</strong> ข้อมูลจะถูกย้ายไปยังถังขยะ และสามารถกู้คืนได้ภายหลัง
-                    </div>
-                </div>
-            `,
+            text: `คุณต้องการลบพนักงาน "${employeeName}" หรือไม่?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash me-1"></i>ย้ายไปถังขยะ',
+            confirmButtonText: this.config.deleteButton,
             cancelButtonText: this.config.cancelButton,
-            reverseButtons: true,
-            customClass: {
-                popup: 'swal2-popup-wide'
-            }
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                this.softDeleteEmployee(employeeId, employeeName);
+                this.deleteEmployee(employeeId);
             }
         });
     },
 
-    // ✅ NEW: Soft delete employee via AJAX
-    async softDeleteEmployee(employeeId, employeeName) {
+    // Delete employee via AJAX
+    async deleteEmployee(employeeId) {
         try {
-            // Show loading
-            Swal.fire({
-                title: 'กำลังลบข้อมูล...',
-                html: `กำลังย้าย "${employeeName}" ไปยังถังขยะ`,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
             const response = await fetch(`/employees/${employeeId}`, {
                 method: 'DELETE',
                 headers: {
@@ -374,27 +341,12 @@ const EmployeeManager = {
             if (data.success) {
                 Swal.fire({
                     title: this.config.successTitle,
-                    html: `
-                        <div class="text-start">
-                            <p>${data.message}</p>
-                            <div class="alert alert-success small mt-3">
-                                <i class="fas fa-undo me-2"></i>
-                                ข้อมูลสามารถกู้คืนได้จาก <strong>ถังขยะ</strong>
-                            </div>
-                        </div>
-                    `,
+                    text: data.message,
                     icon: 'success',
-                    timer: 3000,
-                    showConfirmButton: true,
-                    confirmButtonText: 'ตกลง',
-                    showCancelButton: true,
-                    cancelButtonText: 'ดูถังขยะ'
-                }).then((result) => {
-                    if (result.dismiss === Swal.DismissReason.cancel) {
-                        window.location.href = '/employees/trash';
-                    } else {
-                        location.reload();
-                    }
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
                 });
             } else {
                 throw new Error(data.message || 'ไม่สามารถลบข้อมูลได้');
@@ -408,91 +360,14 @@ const EmployeeManager = {
         }
     },
 
-    // ✅ NEW: Handle status toggle
-    async handleStatusToggle(event) {
-        const toggle = event.currentTarget;
-        const employeeId = toggle.dataset.id;
-        const newStatus = toggle.checked ? 'active' : 'inactive';
-        const statusText = newStatus === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
-
-        try {
-            // Temporarily disable toggle
-            toggle.disabled = true;
-
-            const response = await fetch(`/api/employees/${employeeId}/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.config.csrfToken
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Update UI
-                const label = toggle.nextElementSibling;
-                if (label) {
-                    label.textContent = newStatus === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
-                }
-                this.showToast(`${statusText}พนักงานเรียบร้อยแล้ว`, 'success');
-            } else {
-                // Revert toggle state
-                toggle.checked = !toggle.checked;
-                this.showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
-            }
-        } catch (error) {
-            // Revert toggle state
-            toggle.checked = !toggle.checked;
-            this.showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ', 'error');
-        } finally {
-            toggle.disabled = false;
-        }
-    },
-
-    // ✅ NEW: Load trash count for UI updates
-    async loadTrashCount() {
-        try {
-            const response = await fetch('/api/employees/trash-count');
-            const data = await response.json();
-            
-            if (data.success) {
-                this.updateTrashCount(data.count);
-            }
-        } catch (error) {
-            console.error('Failed to load trash count:', error);
-        }
-    },
-
-    // ✅ NEW: Update trash count in UI
-    updateTrashCount(count) {
-        const trashBadges = document.querySelectorAll('.trash-count');
-        trashBadges.forEach(badge => {
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'inline' : 'none';
-        });
-
-        // Update trash button visibility
-        const trashButton = document.getElementById('viewTrashBtn');
-        if (trashButton) {
-            if (count > 0) {
-                trashButton.style.display = 'inline-block';
-                trashButton.querySelector('.badge').textContent = count;
-            } else {
-                trashButton.style.display = 'none';
-            }
-        }
-    },
-
     // Generate employee ID
     async generateEmployeeId() {
         try {
-            const response = await fetch('/api/generate-data?type=employee_code');
+            const response = await fetch('/employees/generate/data?type=employee_id');
             const data = await response.json();
             
-            if (data.employee_code) {
-                $('#employee_code').val(data.employee_code);
+            if (data.employee_id) {
+                $('#employee_id').val(data.employee_id);
                 this.showToast('สร้างรหัสพนักงานแล้ว', 'success');
             }
         } catch (error) {
@@ -502,16 +377,16 @@ const EmployeeManager = {
 
     // Generate username
     async generateUsername() {
-        const firstName = $('#first_name_en').val();
-        const lastName = $('#last_name_en').val();
+        const firstName = $('#first_name').val();
+        const lastName = $('#last_name').val();
         
         if (!firstName || !lastName) {
-            this.showToast('กรุณากรอกชื่อและนามสกุลภาษาอังกฤษก่อน', 'warning');
+            this.showToast('กรุณากรอกชื่อและนามสกุลก่อน', 'warning');
             return;
         }
 
         try {
-            const response = await fetch(`/api/generate-data?type=username&first_name_en=${firstName}&last_name_en=${lastName}`);
+            const response = await fetch(`/employees/generate/data?type=username&first_name=${firstName}&last_name=${lastName}`);
             const data = await response.json();
             
             if (data.username) {
@@ -529,7 +404,7 @@ const EmployeeManager = {
     // Generate password
     async generatePassword() {
         try {
-            const response = await fetch('/api/generate-data?type=password');
+            const response = await fetch('/employees/generate/data?type=password');
             const data = await response.json();
             
             if (data.password) {
@@ -548,30 +423,22 @@ const EmployeeManager = {
 
     // Generate all fields
     async generateAll() {
-        const firstName = $('#first_name_en').val();
-        const lastName = $('#last_name_en').val();
+        const firstName = $('#first_name').val();
+        const lastName = $('#last_name').val();
         
         if (!firstName || !lastName) {
-            this.showToast('กรุณากรอกชื่อและนามสกุลภาษาอังกฤษก่อน', 'warning');
+            this.showToast('กรุณากรอกชื่อและนามสกุลก่อน', 'warning');
             return;
         }
 
         try {
-            // Generate employee code
-            const empCodeResponse = await fetch('/api/generate-data?type=employee_code');
-            const empCodeData = await empCodeResponse.json();
-            if (empCodeData.employee_code) $('#employee_code').val(empCodeData.employee_code);
-
-            // Generate username
-            const usernameResponse = await fetch(`/api/generate-data?type=username&first_name_en=${firstName}&last_name_en=${lastName}`);
-            const usernameData = await usernameResponse.json();
-            if (usernameData.username) $('#username').val(usernameData.username);
-            if (usernameData.email) $('#email').val(usernameData.email);
-
-            // Generate password
-            const passwordResponse = await fetch('/api/generate-data?type=password');
-            const passwordData = await passwordResponse.json();
-            if (passwordData.password) $('#password').val(passwordData.password);
+            const response = await fetch(`/employees/generate/data?type=all&first_name=${firstName}&last_name=${lastName}`);
+            const data = await response.json();
+            
+            if (data.employee_id) $('#employee_id').val(data.employee_id);
+            if (data.username) $('#username').val(data.username);
+            if (data.email) $('#email').val(data.email);
+            if (data.password) $('#password').val(data.password);
             
             this.showToast('สร้างข้อมูลทั้งหมดแล้ว', 'success');
         } catch (error) {
@@ -581,8 +448,8 @@ const EmployeeManager = {
 
     // Auto-generate username when name changes
     autoGenerateUsername() {
-        const firstName = $('#first_name_en').val();
-        const lastName = $('#last_name_en').val();
+        const firstName = $('#first_name').val();
+        const lastName = $('#last_name').val();
         const currentUsername = $('#username').val();
         
         if (firstName && lastName && !currentUsername) {
@@ -705,7 +572,7 @@ const EmployeeManager = {
             if (value) params.append(filter, value);
         });
         
-        const url = '/employees/export-excel' + (params.toString() ? '?' + params.toString() : '');
+        const url = '/employees/export/excel' + (params.toString() ? '?' + params.toString() : '');
         window.location.href = url;
     },
 
@@ -732,12 +599,6 @@ const EmployeeManager = {
             if (createBtn.length) {
                 window.location.href = createBtn.attr('href');
             }
-        }
-
-        // ✅ NEW: Ctrl/Cmd + T to view trash
-        if ((event.ctrlKey || event.metaKey) && event.key === 't') {
-            event.preventDefault();
-            window.location.href = '/employees/trash';
         }
     },
 
@@ -952,23 +813,3 @@ window.addEventListener('error', function(e) {
         EmployeeManager.showToast('เกิดข้อผิดพลาดในระบบ', 'error');
     }
 });
-
-// ✅ NEW: SweetAlert2 custom styles for soft delete
-const customSwalStyles = `
-    <style>
-        .swal2-popup-wide {
-            width: 500px !important;
-        }
-        .swal2-popup .alert {
-            margin: 0;
-            border-radius: 6px;
-        }
-    </style>
-`;
-
-// Add custom styles to head
-if (document.head) {
-    document.head.insertAdjacentHTML('beforeend', customSwalStyles);
-}
-
-console.log('🗑️ Employee Management v2.1 loaded with Soft Delete support');
