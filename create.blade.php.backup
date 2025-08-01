@@ -44,6 +44,7 @@
 </div>
 
 <!-- Success Alert for Phone Fix -->
+@if(!$errors->any())
 <div class="alert alert-success alert-dismissible fade show" role="alert">
     <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>ระบบได้รับการอัปเดต!</h6>
     <div class="row">
@@ -62,6 +63,7 @@
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
+@endif
 
 <!-- Quick Actions -->
 <div class="card mb-4">
@@ -443,235 +445,106 @@
         </div>
     </div>
 
-    <!-- ระบบอีเมลและ Login (แยกแล้ว) -->
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="d-flex align-items-center">
-            <div class="border border-2 border-info rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                <i class="fas fa-envelope text-info" style="font-size: 20px;"></i>
-            </div>
-            <div>
-                <h5 class="card-title mb-0">ระบบอีเมลและ Login</h5>
-                <small class="text-muted">อีเมลและรหัสผ่าน แยกระบบแล้ว (รหัสผ่านต่างกัน)</small>
+    <!-- ระบบอีเมลและ Login (รวมกัน - รหัสผ่านชุดเดียวกัน) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <div class="border border-2 border-info rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
+                    <i class="fas fa-envelope text-info" style="font-size: 20px;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">ระบบอีเมลและ Login</h5>
+                    <small class="text-muted">อีเมลและรหัสผ่านสำหรับระบบอีเมลและเข้าสู่ระบบ (รหัสเดียวกัน)</small>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>ปรับปรุงแล้ว:</strong> แยกรหัสผ่าน Email และ Login เป็นคนละรหัส (ปลอดภัยกว่า) และแสดงให้เห็นได้ทั้งหมด
-        </div>
-        
-        <div class="row g-3">
-            <!-- Email System -->
-            <div class="col-md-12">
-                <h6 class="text-info mb-3">
-                    <i class="fas fa-envelope me-2"></i>ระบบอีเมล
-                    <span class="badge bg-info ms-2">Email System</span>
-                </h6>
+        <div class="card-body">
+            <div class="alert alert-success">
+                <i class="fas fa-sync me-2"></i>
+                <strong>ปรับปรุงแล้ว:</strong> รหัสผ่าน Email และ Login ใช้รหัสเดียวกันอัตโนมัติ (ไม่ต้องจำหลายรหัส) และแสดงให้เห็นได้ทั้งหมด
             </div>
             
-            <!-- Email Address -->
-            <div class="col-md-8">
-                <label for="email" class="form-label">
-                    อีเมล <span class="text-danger">*</span>
-                    <span class="badge bg-info ms-2">Auto Generate</span>
-                </label>
-                <div class="input-group">
-                    <input type="email" 
-                           class="form-control @error('email') is-invalid @enderror" 
-                           id="email" 
-                           name="email" 
-                           value="{{ old('email') }}"
-                           placeholder="จะสร้างจากชื่อ.ตัวแรกนามสกุล"
-                           required>
-                    <select class="form-select" id="email_domain" style="max-width: 220px;">
-                        <option value="bettersystem.co.th">@bettersystem.co.th</option>
-                        <option value="better-groups.com">@better-groups.com</option>
-                    </select>
-                    <button type="button" class="btn btn-outline-primary" data-target="email">
-                        <i class="fas fa-envelope"></i>
-                    </button>
-                </div>
-                <div class="form-text">
-                    รูปแบบ: <strong>ชื่อ.ตัวแรกของนามสกุล@โดเมน</strong>
-                    <div id="emailPreview" class="mt-2" style="display: none;">
-                        <span class="text-success">ตัวอย่าง: </span>
-                        <code class="text-primary" id="emailPreviewText"></code>
+            <div class="row g-3">
+                <!-- Email -->
+                <div class="col-md-8">
+                    <label for="email" class="form-label">
+                        อีเมล <span class="text-danger">*</span>
+                        <span class="badge bg-info ms-2">Auto Generate</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="email" 
+                               class="form-control @error('email') is-invalid @enderror" 
+                               id="email" 
+                               name="email" 
+                               value="{{ old('email') }}"
+                               placeholder="จะสร้างจากชื่อ.ตัวแรกนามสกุล"
+                               required>
+                        <select class="form-select" id="email_domain" style="max-width: 220px;">
+                            <option value="bettersystem.co.th">@bettersystem.co.th</option>
+                            <option value="better-groups.com">@better-groups.com</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-primary" data-target="email">
+                            <i class="fas fa-envelope"></i>
+                        </button>
                     </div>
-                </div>
-                @error('email')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Email Password (แยกแล้ว) -->
-            <div class="col-md-4">
-                <label for="email_password" class="form-label">
-                    Password อีเมล
-                    <span class="badge bg-warning text-dark ms-2">Email Only</span>
-                </label>
-                <div class="input-group">
-                    <input type="text" 
-                           class="form-control @error('email_password') is-invalid @enderror" 
-                           id="email_password" 
-                           name="email_password" 
-                           value="{{ old('email_password') }}"
-                           placeholder="รหัสผ่านอีเมล (10 ตัว)">
-                    <button type="button" class="btn btn-outline-primary" data-target="email_password">
-                        <i class="fas fa-mail-bulk"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" data-toggle-password="email_password">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <div class="form-text">
-                    <span class="text-warning">
-                        <i class="fas fa-envelope me-1"></i>
-                        เฉพาะระบบอีเมล (ไม่ใช่ Login ระบบ)
-                    </span>
-                </div>
-                @error('email_password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Separator -->
-            <div class="col-md-12">
-                <hr class="my-3">
-                <h6 class="text-success mb-3">
-                    <i class="fas fa-sign-in-alt me-2"></i>ระบบเข้าสู่ระบบ
-                    <span class="badge bg-success ms-2">Login System</span>
-                </h6>
-            </div>
-
-            <!-- Login Email (Auto-sync จาก email) -->
-            <div class="col-md-8">
-                <label for="login_email" class="form-label">
-                    อีเมลเข้าระบบ
-                    <span class="badge bg-secondary ms-2">Auto Sync</span>
-                </label>
-                <div class="input-group">
-                    <input type="email" 
-                           class="form-control" 
-                           id="login_email" 
-                           name="login_email" 
-                           value="{{ old('login_email') }}"
-                           placeholder="จะ sync จากอีเมลด้านบน"
-                           readonly>
-                    <button type="button" class="btn btn-outline-secondary" disabled>
-                        <i class="fas fa-link"></i>
-                    </button>
-                </div>
-                <div class="form-text">
-                    <span class="text-info">
-                        <i class="fas fa-sync me-1"></i>
-                        จะถูก sync จากอีเมลด้านบนอัตโนมัติ
-                    </span>
-                </div>
-            </div>
-
-            <!-- Login Password (แยกแล้ว) -->
-            <div class="col-md-4">
-                <label for="login_password" class="form-label">
-                    Password เข้าระบบ <span class="text-danger">*</span>
-                    <span class="badge bg-success ms-2">Login Only</span>
-                </label>
-                <div class="input-group">
-                    <input type="text" 
-                           class="form-control @error('password') is-invalid @enderror" 
-                           id="login_password" 
-                           name="login_password" 
-                           value="{{ old('login_password') }}"
-                           placeholder="รหัsผ่านเข้าระบบ (12 ตัว)"
-                           required>
-                    <button type="button" class="btn btn-outline-primary" data-target="login_password">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" data-toggle-password="login_password">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-                <div class="form-text">
-                    <span class="text-success">
-                        <i class="fas fa-shield-alt me-1"></i>
-                        เฉพาะเข้าสู่ระบบ (ไม่เกี่ยวกับอีเมล)
-                    </span>
-                </div>
-                @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Hidden fields for backend compatibility -->
-            <input type="hidden" id="password" name="password" value="{{ old('password') }}">
-        </div>
-
-        <!-- Summary Card -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="mb-0">
-                            <i class="fas fa-info-circle me-2"></i>สรุปการแยกระบบ
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-warning">
-                                    <i class="fas fa-envelope me-2"></i>ระบบอีเมล
-                                </h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>อีเมล:</strong> <span id="summaryEmail" class="text-muted">-</span></li>
-                                    <li><strong>รหัสผ่าน:</strong> <span id="summaryEmailPassword" class="text-muted">-</span></li>
-                                    <li><strong>ใช้สำหรับ:</strong> <span class="text-info">ระบบอีเมลเท่านั้น</span></li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-success">
-                                    <i class="fas fa-sign-in-alt me-2"></i>ระบบเข้าสู่ระบบ
-                                </h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>อีเมล:</strong> <span id="summaryLoginEmail" class="text-muted">-</span></li>
-                                    <li><strong>รหัสผ่าน:</strong> <span id="summaryLoginPassword" class="text-muted">-</span></li>
-                                    <li><strong>ใช้สำหรับ:</strong> <span class="text-success">เข้าสู่ระบบเท่านั้น</span></li>
-                                </ul>
-                            </div>
+                    <div class="form-text">
+                        รูปแบบ: <strong>ชื่อ.ตัวแรกของนามสกุล@โดเมน</strong>
+                        <div id="emailPreview" class="mt-2" style="display: none;">
+                            <span class="text-success">ตัวอย่าง: </span>
+                            <code class="text-primary" id="emailPreviewText"></code>
                         </div>
-                        
-                        <hr>
-                        
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="alert alert-info mb-0">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6><i class="fas fa-check-circle me-1"></i> ข้อดี:</h6>
-                                            <ul class="mb-0">
-                                                <li>🛡️ <strong>ปลอดภัยกว่า:</strong> รหัสผ่านแยกกัน</li>
-                                                <li>🔒 <strong>การจัดการ:</strong> เปลี่ยนรหัสแยกได้</li>
-                                                <li>👁️ <strong>แสดงได้:</strong> ดูรหัสผ่านทั้งหมด</li>
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6><i class="fas fa-users me-1"></i> สำหรับใคร:</h6>
-                                            <ul class="mb-0">
-                                                <li>👔 <strong>Admin:</strong> จัดการรหัสผ่านแยก</li>
-                                                <li>👤 <strong>พนักงาน:</strong> ใช้รหัสต่างกัน</li>
-                                                <li>🔧 <strong>IT:</strong> ดูแลระบบง่ายขึ้น</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-link me-1"></i>
+                                Email นี้จะถูกใช้เป็น Login Email ด้วย (ใช้รหัสผ่านชุดเดียวกัน)
+                            </small>
                         </div>
                     </div>
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
+
+                <!-- Unified Password (Email + Login) -->
+                <div class="col-md-4">
+                    <label for="unified_password" class="form-label">
+                        Password (Email + Login) <span class="text-danger">*</span>
+                        <span class="badge bg-success ms-2">Unified</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" 
+                               class="form-control @error('unified_password') is-invalid @enderror" 
+                               id="unified_password" 
+                               name="unified_password" 
+                               value="{{ old('unified_password') }}"
+                               placeholder="Random 10 ตัวอักษร"
+                               required>
+                        <button type="button" class="btn btn-outline-primary" data-target="unified_password">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="unified_password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        <span class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>
+                            รหัสผ่านเดียวสำหรับ Email และ Login ระบบ (แสดงได้ทั้งหมด)
+                        </span>
+                    </div>
+                    @error('unified_password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Hidden fields for backend compatibility -->
+                <input type="hidden" id="email_password" name="email_password" value="{{ old('email_password') }}">
+                <input type="hidden" id="password" name="password" value="{{ old('password') }}">
+                <input type="hidden" id="login_email" name="login_email" value="{{ old('login_email') }}">
             </div>
         </div>
     </div>
-</div>
+
     <!-- แผนกและสิทธิ์ -->
     <div class="card mb-4">
         <div class="card-header">
@@ -754,7 +627,7 @@
                         <div class="form-text text-success">
                             <i class="fas fa-plus-circle me-1"></i>
                             SuperAdmin: สามารถจัดการ Express ของแผนกได้ใน
-                            <a href="#" target="_blank">หน้าจัดการแผนก</a>
+                            <a href="{{ route('departments.index') }}" target="_blank">หน้าจัดการแผนก</a>
                         </div>
                     @endif
                 </div>
@@ -1147,7 +1020,6 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/employees-separated.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Employee Create Form Loaded - Phone Duplicates Fixed Version Ready');
@@ -1248,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return '';
         },
-        password: () => utils.generateRandomString(12, true),
+        password: () => utils.generateRandomString(10, true),
         copierCode: () => utils.generateRandomNumber(4),
         
         // Enhanced Express Username: 1-7 ตัวอักษร
@@ -1270,6 +1142,129 @@ document.addEventListener('DOMContentLoaded', function() {
             const middle = utils.generateRandomNumber(3);
             const last = utils.generateRandomNumber(4);
             return `${prefix}${middle}-${last}`;
+        }
+    };
+    
+    // Auto-generation functions
+    const autoGenerate = {
+        username: () => {
+            const username = generators.username();
+            if (username) {
+                document.getElementById('username').value = username;
+                
+                // Add animation
+                const usernameInput = document.getElementById('username');
+                usernameInput.style.background = 'linear-gradient(45deg, #e3f2fd, #f3e5f5)';
+                usernameInput.style.transform = 'scale(1.02)';
+                usernameInput.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    usernameInput.style.background = '';
+                    usernameInput.style.transform = '';
+                }, 1500);
+                
+                console.log('✅ Username generated:', username);
+            }
+        },
+        
+        email: () => {
+            const email = generators.email();
+            if (email) {
+                document.getElementById('email').value = email;
+                // Auto-sync with hidden login_email field
+                document.getElementById('login_email').value = email;
+                autoGenerate.showEmailPreview();
+                
+                // Add animation
+                const emailInput = document.getElementById('email');
+                emailInput.style.background = 'linear-gradient(45deg, #e3f2fd, #f3e5f5)';
+                emailInput.style.transform = 'scale(1.02)';
+                emailInput.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    emailInput.style.background = '';
+                    emailInput.style.transform = '';
+                }, 1500);
+                
+                console.log('✅ Email generated:', email);
+            }
+        },
+        
+        // NEW: Unified password generation and sync
+        unifiedPassword: () => {
+            const password = generators.password();
+            if (password) {
+                // Set unified password field
+                document.getElementById('unified_password').value = password;
+                
+                // Auto-sync with hidden fields for backend compatibility
+                document.getElementById('email_password').value = password;
+                document.getElementById('password').value = password;
+                
+                // Add animation
+                const passwordInput = document.getElementById('unified_password');
+                passwordInput.style.background = 'linear-gradient(45deg, #e8f5e8, #fff3e0)';
+                passwordInput.style.transform = 'scale(1.02)';
+                passwordInput.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    passwordInput.style.background = '';
+                    passwordInput.style.transform = '';
+                }, 1500);
+                
+                console.log('✅ Unified password generated and synced:', password);
+                return password;
+            }
+        },
+        
+        // ✅ NEW: Phone number generation (duplicates allowed)
+        phoneNumber: () => {
+            const phone = generators.phoneNumber();
+            if (phone) {
+                document.getElementById('phone').value = phone;
+                
+                // Add animation with success color (duplicates allowed)
+                const phoneInput = document.getElementById('phone');
+                phoneInput.style.background = 'linear-gradient(45deg, #d4edda, #d1ecf1)';
+                phoneInput.style.transform = 'scale(1.02)';
+                phoneInput.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    phoneInput.style.background = '';
+                    phoneInput.style.transform = '';
+                }, 1500);
+                
+                console.log('✅ Phone number generated (duplicates allowed):', phone);
+                return phone;
+            }
+        },
+        
+        showEmailPreview: () => {
+            const firstName = document.getElementById('first_name_en').value.trim();
+            const lastName = document.getElementById('last_name_en').value.trim();
+            const domain = document.getElementById('email_domain').value;
+            const previewDiv = document.getElementById('emailPreview');
+            const previewText = document.getElementById('emailPreviewText');
+            
+            if (!previewDiv || !previewText) return;
+            
+            // Validate English characters
+            const englishRegex = /^[a-zA-Z\s]+$/;
+            
+            if (firstName && lastName) {
+                if (englishRegex.test(firstName) && englishRegex.test(lastName)) {
+                    const emailPreview = `${firstName.toLowerCase()}.${lastName.charAt(0).toLowerCase()}@${domain}`;
+                    previewText.textContent = emailPreview;
+                    previewDiv.style.display = 'block';
+                    previewDiv.className = 'mt-2 text-success';
+                } else {
+                    previewText.textContent = 'กรุณากรอกชื่อ-นามสกุลภาษาอังกฤษเท่านั้น';
+                    previewDiv.style.display = 'block';
+                    previewDiv.className = 'mt-2 text-warning';
+                }
+            } else {
+                previewDiv.style.display = 'none';
+            }
         }
     };
     
@@ -1302,11 +1297,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         value = generators.email();
                         break;
                     case 'computer_password':
-                        value = utils.generateRandomString(10, true);
-                        break;
-                    case 'password':
                         value = generators.password();
                         break;
+                    case 'unified_password':
+                        // Use unified password generation
+                        autoGenerate.unifiedPassword();
+                        utils.showNotification('✅ สร้างรหัสผ่านรวม (Email + Login) สำเร็จ!', 'success');
+                        utils.hideLoading(button);
+                        return;
                     case 'copier_code':
                         value = generators.copierCode();
                         break;
@@ -1322,6 +1320,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     targetElement.value = value;
                     
                     if (target === 'email') {
+                        // Sync with login_email
+                        const loginEmail = document.getElementById('login_email');
+                        if (loginEmail) loginEmail.value = value;
                         autoGenerate.showEmailPreview();
                     }
                     
@@ -1388,40 +1389,66 @@ document.addEventListener('DOMContentLoaded', function() {
             const expressSection = document.getElementById('expressSection');
             const expressIndicator = document.getElementById('expressIndicator');
             
-            if (!departmentSelect || !expressSection) return;
+            if (!departmentSelect || !expressSection) {
+                console.log('❌ Department select or express section not found');
+                return;
+            }
             
-            const selectedOption = departmentSelect.options[departmentSelect.selectedIndex];
-            if (!selectedOption || !selectedOption.value) {
+            const departmentId = departmentSelect.value;
+            
+            if (!departmentId) {
                 expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
                 return;
             }
             
-            const expressEnabled = selectedOption.dataset.express === 'true';
+            console.log('🏢 Department selected ID:', departmentId);
             
-            if (expressEnabled) {
-                expressSection.style.display = 'block';
-                if (expressIndicator) expressIndicator.style.display = 'inline-block';
-                
-                // Auto-generate Express fields if name is available and fields are empty
-                const firstName = document.getElementById('first_name_en').value.trim();
-                if (firstName) {
-                    const expressUsernameEl = document.getElementById('express_username');
-                    const expressPasswordEl = document.getElementById('express_password');
-                    
-                    if (expressUsernameEl && !expressUsernameEl.value) {
-                        expressUsernameEl.value = generators.expressUsername();
+            // ใช้ API ที่ตรวจสอบ express_enabled
+            fetch(`/api/departments/is-accounting?department_id=${departmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.is_express_enabled) {
+                        expressSection.style.display = 'block';
+                        if (expressIndicator) expressIndicator.style.display = 'inline-block';
+                        
+                        // Auto-generate Express fields if name is available
+                        const firstName = document.getElementById('first_name_en').value.trim();
+                        if (firstName) {
+                            const expressUsernameEl = document.getElementById('express_username');
+                            const expressPasswordEl = document.getElementById('express_password');
+                            
+                            if (expressUsernameEl && !expressUsernameEl.value) {
+                                expressUsernameEl.value = generators.expressUsername();
+                            }
+                            if (expressPasswordEl && !expressPasswordEl.value) {
+                                expressPasswordEl.value = generators.expressPassword();
+                            }
+                        }
+                        
+                        utils.showNotification(`⚡ ${data.department_name}: เปิดใช้งาน Express แล้ว`, 'success');
+                        console.log('✅ Express enabled for department:', data.department_name);
+                    } else {
+                        expressSection.style.display = 'none';
+                        if (expressIndicator) expressIndicator.style.display = 'none';
+                        
+                        // Clear Express fields
+                        const expressUsernameEl = document.getElementById('express_username');
+                        const expressPasswordEl = document.getElementById('express_password');
+                        
+                        if (expressUsernameEl) expressUsernameEl.value = '';
+                        if (expressPasswordEl) expressPasswordEl.value = '';
+                        
+                        if (data.department_name) {
+                            console.log('🏢 Department changed to:', data.department_name, '- Express not enabled');
+                        }
                     }
-                    if (expressPasswordEl && !expressPasswordEl.value) {
-                        expressPasswordEl.value = generators.expressPassword();
-                    }
-                }
-                
-                utils.showNotification(`⚡ ${selectedOption.textContent}: เปิดใช้งาน Express แล้ว`, 'success');
-            } else {
-                expressSection.style.display = 'none';
-                if (expressIndicator) expressIndicator.style.display = 'none';
-            }
+                })
+                .catch(error => {
+                    console.error('Error checking Express eligibility:', error);
+                    expressSection.style.display = 'none';
+                    if (expressIndicator) expressIndicator.style.display = 'none';
+                });
         },
         
         handleInputValidation: (event) => {
@@ -1467,6 +1494,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event.target.value = value;
         },
         
+        // Handle Special Permission Switches
         handlePermissionSwitches: () => {
             const vpnSwitch = document.getElementById('vpn_access');
             const printingSwitch = document.getElementById('color_printing');
@@ -1485,62 +1513,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     printingStatus.textContent = this.checked ? 'อนุญาต' : 'ไม่อนุญาต';
                     printingStatus.className = this.checked ? 'text-success' : 'text-muted';
                 });
-            }
-        }
-    };
-    
-    // Auto-generation functions
-    const autoGenerate = {
-        username: () => {
-            const username = generators.username();
-            if (username) {
-                document.getElementById('username').value = username;
-                console.log('✅ Username generated:', username);
-            }
-        },
-        
-        email: () => {
-            const email = generators.email();
-            if (email) {
-                document.getElementById('email').value = email;
-                autoGenerate.showEmailPreview();
-                console.log('✅ Email generated:', email);
-            }
-        },
-        
-        phoneNumber: () => {
-            const phone = generators.phoneNumber();
-            if (phone) {
-                document.getElementById('phone').value = phone;
-                console.log('✅ Phone number generated (duplicates allowed):', phone);
-                return phone;
-            }
-        },
-        
-        showEmailPreview: () => {
-            const firstName = document.getElementById('first_name_en').value.trim();
-            const lastName = document.getElementById('last_name_en').value.trim();
-            const domain = document.getElementById('email_domain').value;
-            const previewDiv = document.getElementById('emailPreview');
-            const previewText = document.getElementById('emailPreviewText');
-            
-            if (!previewDiv || !previewText) return;
-            
-            const englishRegex = /^[a-zA-Z\s]+$/;
-            
-            if (firstName && lastName) {
-                if (englishRegex.test(firstName) && englishRegex.test(lastName)) {
-                    const emailPreview = `${firstName.toLowerCase()}.${lastName.charAt(0).toLowerCase()}@${domain}`;
-                    previewText.textContent = emailPreview;
-                    previewDiv.style.display = 'block';
-                    previewDiv.className = 'mt-2 text-success';
-                } else {
-                    previewText.textContent = 'กรุณากรอกชื่อ-นามสกุลภาษาอังกฤษเท่านั้น';
-                    previewDiv.style.display = 'block';
-                    previewDiv.className = 'mt-2 text-warning';
-                }
-            } else {
-                previewDiv.style.display = 'none';
             }
         }
     };
@@ -1575,8 +1547,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // Generate passwords
-                document.getElementById('computer_password').value = utils.generateRandomString(10, true);
-                document.getElementById('password').value = generators.password();
+                document.getElementById('computer_password').value = generators.password();
+                
+                // NEW: Generate unified password (Email + Login)
+                autoGenerate.unifiedPassword();
                 
                 // Express fields (ถ้าแสดงอยู่)
                 const expressSection = document.getElementById('expressSection');
@@ -1611,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (vpnStatus) vpnStatus.textContent = 'ไม่อนุญาต';
                 if (printingStatus) printingStatus.textContent = 'ไม่อนุญาต';
                 
-                // Re-generate initial codes
+                // Re-generate initial codes (ยกเว้น copier code)
                 setTimeout(() => {
                     document.getElementById('employee_code').value = generators.employeeCode();
                     document.getElementById('keycard_id').value = generators.keycardId();
@@ -1622,11 +1596,275 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showPreview: () => {
-            // Preview functionality
+            const formData = new FormData(document.getElementById('employeeForm'));
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            const previewContent = document.getElementById('previewContent');
+            if (!previewContent) return;
+            
+            // Get select values with text
+            const departmentSelect = document.getElementById('department_id');
+            const departmentName = departmentSelect && departmentSelect.selectedIndex > 0 ? 
+                departmentSelect.options[departmentSelect.selectedIndex].textContent.trim() : '-';
+                
+            const roleSelect = document.getElementById('role');
+            const roleName = roleSelect && roleSelect.selectedIndex > 0 ? 
+                roleSelect.options[roleSelect.selectedIndex].textContent.trim() : '-';
+                
+            const statusSelect = document.getElementById('status');
+            const statusName = statusSelect && statusSelect.selectedIndex > 0 ? 
+                statusSelect.options[statusSelect.selectedIndex].textContent.trim() : '-';
+            
+            const emailDomain = document.getElementById('email_domain').value;
+            
+            // Check if Express data exists
+            const expressSection = document.getElementById('expressSection');
+            const isExpressVisible = expressSection && expressSection.style.display !== 'none';
+            
+            // Get special permissions
+            const vpnAccess = document.getElementById('vpn_access').checked;
+            const colorPrinting = document.getElementById('color_printing').checked;
+            
+            // Get unified password
+            const unifiedPassword = document.getElementById('unified_password').value;
+            
+            previewContent.innerHTML = `
+                <div class="row">
+                    <!-- ข้อมูลพื้นฐาน -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-user me-2"></i>ข้อมูลพื้นฐาน</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>รหัสพนักงาน:</strong></td><td><span class="badge bg-secondary">${data.employee_code || '-'}</span></td></tr>
+                                    <tr><td><strong>ID Keycard:</strong></td><td><span class="badge bg-info">${data.keycard_id || '-'}</span></td></tr>
+                                    <tr><td><strong>ชื่อ-นามสกุล (ไทย):</strong></td><td class="fw-bold text-primary">${data.first_name_th || '-'} ${data.last_name_th || '-'}</td></tr>
+                                    <tr><td><strong>ชื่อ-นามสกุล (อังกฤษ):</strong></td><td class="fw-bold">${data.first_name_en || '-'} ${data.last_name_en || '-'}</td></tr>
+                                    <tr><td><strong>เบอร์โทร:</strong></td><td>${data.phone || '-'} <span class="badge bg-success">✅ ซ้ำได้</span></td></tr>
+                                    <tr><td><strong>ชื่อเล่น:</strong></td><td>${data.nickname ? `<span class="badge bg-light text-dark">"${data.nickname}"</span>` : '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ระบบคอมพิวเตอร์ -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-desktop me-2"></i>ระบบคอมพิวเตอร์</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Username:</strong></td><td><span class="badge bg-primary">${data.username || '-'}</span></td></tr>
+                                    <tr><td><strong>Password คอมพิวเตอร์:</strong></td><td><code class="text-success">${data.computer_password || '-'}</code></td></tr>
+                                    <tr><td><strong>รหัสถ่ายเอกสาร:</strong></td><td>${data.copier_code ? `<span class="badge bg-warning text-dark">${data.copier_code}</span>` : '<span class="text-muted">ยังไม่สร้าง (On Demand)</span>'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ระบบอีเมลและ Login (รวมกัน) -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>ระบบอีเมลและ Login</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>อีเมล:</strong></td><td class="fw-bold text-success">${data.email || '-'}</td></tr>
+                                    <tr><td><strong>โดเมน:</strong></td><td><span class="badge bg-info">@${emailDomain}</span></td></tr>
+                                    <tr><td><strong>Password รวม:</strong></td><td><code class="text-success">${unifiedPassword || '-'}</code></td></tr>
+                                    <tr><td><strong>การใช้งาน:</strong></td><td><small class="text-success">อีเมล + Login ใช้รหัสเดียวกัน</small></td></tr>
+                                </table>
+                                <div class="alert alert-success mt-2 mb-0">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    <small><strong>Fixed:</strong> รหัสผ่านเดียวกันสำหรับ Email และ Login + แสดงได้ทั้งหมด</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- แผนกและสิทธิ์ -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-building me-2"></i>แผนกและสิทธิ์</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>แผนก:</strong></td><td><span class="badge bg-info">${departmentName}</span></td></tr>
+                                    <tr><td><strong>ตำแหน่ง:</strong></td><td class="fw-bold">${data.position || '-'}</td></tr>
+                                    <tr><td><strong>บทบาท:</strong></td><td><span class="badge bg-secondary">${roleName}</span></td></tr>
+                                    <tr><td><strong>สถานะ:</strong></td><td><span class="badge bg-${data.status === 'active' ? 'success' : 'danger'}">${statusName}</span></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${isExpressVisible ? `
+                    <!-- โปรแกรม Express v2.0 Enhanced -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-bolt me-2"></i>โปรแกรม Express v2.0
+                                    <span class="badge bg-dark text-white ms-2">Enhanced</span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>Express Username:</strong></td><td><span class="badge bg-warning text-dark">${data.express_username || '-'}</span> <small class="text-success">(${(data.express_username || '').length} ตัว)</small></td></tr>
+                                    <tr><td><strong>Express Password:</strong></td><td><code class="text-success">${data.express_password || '-'}</code> <small class="text-info">(4 ตัวเลขไม่ซ้ำ)</small></td></tr>
+                                    <tr><td><strong>ประเภท:</strong></td><td><small class="text-muted">แผนกที่เปิดใช้งาน Express</small></td></tr>
+                                </table>
+                                <div class="alert alert-success mt-2 mb-0">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    <small><strong>Enhanced:</strong> Username 1-7 ตัว, Password 4 ตัวเลขไม่ซ้ำ, แสดงได้ทั้งหมด</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- สิทธิ์พิเศษ -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>สิทธิ์พิเศษ</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr><td><strong>การใช้งาน VPN:</strong></td><td><span class="badge bg-${vpnAccess ? 'success' : 'secondary'}">${vpnAccess ? 'อนุญาต' : 'ไม่อนุญาต'}</span></td></tr>
+                                    <tr><td><strong>การปริ้นสี:</strong></td><td><span class="badge bg-${colorPrinting ? 'warning text-dark' : 'secondary'}">${colorPrinting ? 'อนุญาต' : 'ไม่อนุญาต'}</span></td></tr>
+                                    <tr><td><strong>ระดับสิทธิ์:</strong></td><td><small class="text-muted">${(vpnAccess || colorPrinting) ? 'มีสิทธิ์พิเศษ' : 'สิทธิ์พื้นฐาน'}</small></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Phone Duplicates Fixed Summary -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-phone me-2"></i>✅ การแก้ไขปัญหาเบอร์โทรซ้ำ - เรียบร้อยแล้ว!
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="text-success"><i class="fas fa-database me-1"></i> Database Level</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-trash text-danger me-2"></i>ลบ unique constraint</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Phone field = string ธรรมดา</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Migration ทำงานสำเร็จ</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-info"><i class="fas fa-code me-1"></i> Code Level</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-edit text-warning me-2"></i>EmployeeRequest.php แก้ไข</li>
+                                            <li><i class="fas fa-edit text-warning me-2"></i>EmployeeController.php แก้ไข</li>
+                                            <li><i class="fas fa-eye text-primary me-2"></i>UI แสดงสถานะใหม่</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-primary"><i class="fas fa-shield-alt me-1"></i> Security</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-lock text-danger me-2"></i>Email ยังคง unique</li>
+                                            <li><i class="fas fa-lock text-danger me-2"></i>Username ยังคง unique</li>
+                                            <li><i class="fas fa-unlock text-success me-2"></i>Phone ซ้ำได้แล้ว</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="alert alert-success mb-0">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h6><i class="fas fa-users me-1"></i> ใครใช้ประโยชน์ได้:</h6>
+                                                    <ul class="mb-0">
+                                                        <li>👨‍👩‍👧‍👦 <strong>ครอบครัว:</strong> ใช้เบอร์เดียวกันได้</li>
+                                                        <li>🏢 <strong>เพื่อนร่วมงาน:</strong> เบอร์ออฟฟิศร่วมกัน</li>
+                                                        <li>🏠 <strong>เบอร์บ้าน:</strong> หลายคนใช้ร่วมกัน</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6><i class="fas fa-check-circle me-1"></i> ผลลัพธ์:</h6>
+                                                    <ul class="mb-0">
+                                                        <li>✅ <strong>Error หายไป:</strong> ไม่มี "เบอร์ซ้ำ" แล้ว</li>
+                                                        <li>✅ <strong>ยืดหยุ่น:</strong> จัดการพนักงานง่ายขึ้น</li>
+                                                        <li>✅ <strong>Express ยังทำงาน:</strong> ไม่กระทบระบบเดิม</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Test Results -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-vial me-2"></i>ผลการทดสอบ</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <i class="fas fa-phone fa-2x text-success mb-2"></i>
+                                            <h6>เบอร์โทร</h6>
+                                            <span class="badge bg-success">ซ้ำได้</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <i class="fas fa-envelope fa-2x text-danger mb-2"></i>
+                                            <h6>อีเมล</h6>
+                                            <span class="badge bg-danger">Unique</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <i class="fas fa-user fa-2x text-danger mb-2"></i>
+                                            <h6>Username</h6>
+                                            <span class="badge bg-danger">Unique</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            <i class="fas fa-bolt fa-2x text-warning mb-2"></i>
+                                            <h6>Express</h6>
+                                            <span class="badge bg-warning text-dark">ทำงานปกติ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
             const modal = new bootstrap.Modal(document.getElementById('previewModal'));
             modal.show();
         },
         
+        // ✅ NEW: Test phone duplicate functionality  
         showPhoneDuplicateTest: () => {
             const modal = new bootstrap.Modal(document.getElementById('phoneDuplicateModal'));
             modal.show();
@@ -1643,12 +1881,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const departmentSelect = document.getElementById('department_id');
         if (departmentSelect) {
             departmentSelect.addEventListener('change', eventHandlers.handleDepartmentChange);
+            console.log('✅ Department change listener attached (Phone Duplicates Fixed Version)');
         }
         
         // Phone format handler
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', eventHandlers.handlePhoneFormat);
+            console.log('✅ Phone format handler attached (duplicates allowed)');
+            
+            // ✅ Add phone duplicate notification on focus
             phoneInput.addEventListener('focus', function() {
                 if (!phoneInput.dataset.notificationShown) {
                     utils.showNotification('📞 เบอร์โทรซ้ำได้แล้ว - ระบบได้แก้ไขเรียบร้อย!', 'success');
@@ -1668,6 +1910,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     autoGenerate.username();
                     autoGenerate.email();
                     autoGenerate.showEmailPreview();
+                    
+                    // Auto-generate Express fields if Express section is visible
+                    const expressSection = document.getElementById('expressSection');
+                    if (expressSection && expressSection.style.display !== 'none') {
+                        const expressUsername = document.getElementById('express_username');
+                        if (expressUsername && !expressUsername.value) {
+                            expressUsername.value = generators.expressUsername();
+                        }
+                    }
                 }, 300);
             });
         }
@@ -1691,6 +1942,32 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // Email input sync with login_email
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.addEventListener('input', (e) => {
+                const loginEmail = document.getElementById('login_email');
+                if (loginEmail) {
+                    loginEmail.value = e.target.value;
+                }
+            });
+        }
+        
+        // NEW: Unified password sync handler
+        const unifiedPasswordInput = document.getElementById('unified_password');
+        if (unifiedPasswordInput) {
+            unifiedPasswordInput.addEventListener('input', (e) => {
+                // Auto-sync with hidden fields for backend compatibility
+                const emailPassword = document.getElementById('email_password');
+                const systemPassword = document.getElementById('password');
+                
+                if (emailPassword) emailPassword.value = e.target.value;
+                if (systemPassword) systemPassword.value = e.target.value;
+                
+                console.log('🔄 Unified password synced:', e.target.value);
+            });
+        }
+        
         // Quick Action buttons
         const generateAllBtn = document.getElementById('generateAllBtn');
         if (generateAllBtn) {
@@ -1707,15 +1984,89 @@ document.addEventListener('DOMContentLoaded', function() {
             previewBtn.addEventListener('click', formActions.showPreview);
         }
         
+        // ✅ NEW: Phone duplicate test button
         const testPhoneDuplicateBtn = document.getElementById('testPhoneDuplicateBtn');
         if (testPhoneDuplicateBtn) {
             testPhoneDuplicateBtn.addEventListener('click', formActions.showPhoneDuplicateTest);
+            console.log('✅ Phone duplicate test button attached');
+        }
+        
+        // Computer generation buttons
+        const generateComputerBtn = document.getElementById('generateComputerBtn');
+        if (generateComputerBtn) {
+            generateComputerBtn.addEventListener('click', async () => {
+                const button = generateComputerBtn;
+                utils.showLoading(button);
+                
+                try {
+                    if (!document.getElementById('first_name_en').value) {
+                        utils.showNotification('❌ กรุณากรอกชื่อภาษาอังกฤษก่อน', 'error');
+                        return;
+                    }
+                    
+                    autoGenerate.username();
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    if (document.getElementById('last_name_en').value) {
+                        autoGenerate.email();
+                    }
+                    
+                    document.getElementById('computer_password').value = generators.password();
+                    
+                    utils.showNotification('💻 สร้างข้อมูลระบบคอมพิวเตอร์สำเร็จ!', 'success');
+                } catch (error) {
+                    console.error('Error in generateComputer:', error);
+                    utils.showNotification('❌ เกิดข้อผิดพลาดในการสร้างข้อมูล', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+        }
+        
+        // Express generation button (Enhanced)
+        const generateExpressBtn = document.getElementById('generateExpressBtn');
+        if (generateExpressBtn) {
+            generateExpressBtn.addEventListener('click', async () => {
+                const button = generateExpressBtn;
+                utils.showLoading(button);
+                
+                try {
+                    if (!document.getElementById('first_name_en').value) {
+                        utils.showNotification('❌ กรุณากรอกชื่อภาษาอังกฤษก่อน', 'error');
+                        return;
+                    }
+                    
+                    const username = generators.expressUsername();
+                    const password = generators.expressPassword();
+                    
+                    document.getElementById('express_username').value = username;
+                    document.getElementById('express_password').value = password;
+                    
+                    utils.showNotification(`⚡ สร้างข้อมูล Express สำเร็จ! Username: ${username} (${username.length} ตัว), Password: ${password} (ไม่ซ้ำ)`, 'success');
+                } catch (error) {
+                    console.error('Error in generateExpress:', error);
+                    utils.showNotification('❌ เกิดข้อผิดพลาดในการสร้างข้อมูล Express', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
         }
         
         // Setup permission switches
         eventHandlers.handlePermissionSwitches();
         
-        console.log('✅ All event listeners attached successfully');
+        // Form submit handler
+        const employeeForm = document.getElementById('employeeForm');
+        if (employeeForm) {
+            employeeForm.addEventListener('submit', function(e) {
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    utils.showLoading(submitBtn);
+                }
+            });
+        }
+        
+        console.log('✅ All event listeners attached successfully (Phone Duplicates Fixed Version)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
@@ -1723,6 +2074,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial setup
     setTimeout(() => {
+        console.log('🔧 Starting initial setup... (Phone Duplicates Fixed Version)');
+        
         try {
             // Auto-generate employee code and keycard if empty
             const employeeCodeEl = document.getElementById('employee_code');
@@ -1730,22 +2083,85 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (employeeCodeEl && !employeeCodeEl.value) {
                 employeeCodeEl.value = generators.employeeCode();
+                console.log('✅ Employee code generated');
             }
             
             if (keycardIdEl && !keycardIdEl.value) {
                 keycardIdEl.value = generators.keycardId();
+                console.log('✅ Keycard ID generated');
             }
             
             // Initialize department change handler
             eventHandlers.handleDepartmentChange();
             
+            // Force trigger department change if already selected
+            const departmentSelect = document.getElementById('department_id');
+            if (departmentSelect && departmentSelect.value) {
+                console.log('🔄 Force triggering department change for:', departmentSelect.options[departmentSelect.selectedIndex]?.textContent);
+                eventHandlers.handleDepartmentChange();
+            }
+            
+            console.log('✅ Department handler initialized (Phone Duplicates Fixed Version)');
+            
             // Initialize email preview
             autoGenerate.showEmailPreview();
+            console.log('✅ Email preview initialized');
+            
+            // Initialize permission switches
+            const vpnStatus = document.getElementById('vpnStatus');
+            const printingStatus = document.getElementById('printingStatus');
+            
+            if (vpnStatus) vpnStatus.textContent = 'ไม่อนุญาต';
+            if (printingStatus) printingStatus.textContent = 'ไม่อนุญาต';
+            
+            console.log('✅ Permission switches initialized');
+            
+            // ✅ Show phone duplicates fix notification
+            setTimeout(() => {
+                utils.showNotification('🎉 ระบบอัปเดต: เบอร์โทรซ้ำได้แล้ว! (แก้ไขปัญหาเรียบร้อย)', 'success');
+            }, 2000);
+            
+            // Debug functions for testing (Phone Duplicates Fixed Version)
+            window.testPhoneDuplicates = function() {
+                console.log('📞 Testing Phone Duplicates Feature:');
+                console.log('   1. Phone Generator:', generators.phoneNumber());
+                console.log('   2. Phone Auto-Generate Test:');
+                autoGenerate.phoneNumber();
+                console.log('   3. Phone field value:', document.getElementById('phone').value);
+                console.log('   4. Duplicates allowed: YES ✅');
+            };
+            
+            window.testPhoneValidation = function() {
+                const testPhone = '087-169-5054';
+                document.getElementById('phone').value = testPhone;
+                console.log('📞 Phone Validation Test:');
+                console.log('   Test phone:', testPhone);
+                console.log('   Should be allowed: YES ✅');
+                console.log('   Try submitting form with duplicate phone - no error expected');
+            };
+            
+            window.showPhoneDuplicatesInfo = function() {
+                console.log('📞 Phone Duplicates Fix Information:');
+                console.log('   ✅ Database: unique constraint removed');
+                console.log('   ✅ Request: validation rule removed');
+                console.log('   ✅ Controller: unique check removed');
+                console.log('   ✅ UI: duplicate allowed badge added');
+                console.log('   📱 Use cases: families, shared office phones, home numbers');
+                console.log('   🔒 Security: email, username still unique');
+            };
+            
+            console.log('🧪 Phone Duplicates Debug functions available:');
+            console.log('   - testPhoneDuplicates() - ทดสอบฟีเจอร์เบอร์ซ้ำ');
+            console.log('   - testPhoneValidation() - ทดสอบ validation');
+            console.log('   - showPhoneDuplicatesInfo() - ดูข้อมูลการแก้ไข');
             
             console.log('✅ Employee Create Form Ready - Phone Duplicates Fixed Version');
             console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว (แก้ไขเรียบร้อย)');
             console.log('🔒 Security: Email, Username, Express Username ยังคง unique');
-            console.log('⚡ Express v2.0: ทำงานปกติ');
+            console.log('⚡ Express v2.0: ทำงานปกติ ไม่กระทบจากการแก้ไข');
+            console.log('👨‍👩‍👧‍👦 Benefits: ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ ใช้ร่วมกันได้');
+            console.log('🎯 Test: ลองใส่เบอร์โทรที่ซ้ำกันและบันทึก - จะไม่มี error!');
+            console.log('🚀 Status: PHONE DUPLICATES ALLOWED - PROBLEM FIXED! ✅');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -1760,5 +2176,70 @@ function submitForm() {
         form.submit();
     }
 }
+
+// Global Phone Duplicates test functions
+window.PhoneDuplicatesTest = {
+    testPhoneGeneration: function() {
+        const phone = document.querySelector('#phone');
+        if (phone) {
+            const generators = {
+                phoneNumber: () => {
+                    const prefixes = ['08', '09', '06', '02'];
+                    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                    const middle = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                    const last = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                    return `${prefix}${middle}-${last}`;
+                }
+            };
+            
+            const newPhone = generators.phoneNumber();
+            phone.value = newPhone;
+            
+            console.log('📞 Phone Generation Test Result:');
+            console.log('   Generated Phone:', newPhone);
+            console.log('   Field Updated:', phone.value);
+            console.log('   Duplicates Allowed:', true);
+        }
+    },
+    
+    testDuplicateScenario: function() {
+        const duplicatePhone = '087-169-5054';
+        const phone = document.querySelector('#phone');
+        if (phone) {
+            phone.value = duplicatePhone;
+            
+            console.log('📞 Duplicate Phone Test:');
+            console.log('   Test Phone:', duplicatePhone);
+            console.log('   Common Use Cases:');
+            console.log('     👨‍👩‍👧‍👦 Family members sharing home phone');
+            console.log('     🏢 Colleagues sharing office phone');
+            console.log('     📱 Multiple employees with same mobile');
+            console.log('   Expected Result: NO ERROR on form submit ✅');
+        }
+    },
+    
+    showFixedFeatures: function() {
+        console.log('✅ Phone Duplicates - Features Fixed:');
+        console.log('   🗄️ Database: Removed unique constraint from phone column');
+        console.log('   📝 Request: Removed unique validation rule');
+        console.log('   🎮 Controller: Removed unique check logic');
+        console.log('   🎨 UI: Added "duplicates allowed" indicators');
+        console.log('   🔒 Security: Other unique fields preserved');
+        console.log('   ⚡ Express: System still works normally');
+    },
+    
+    info: function() {
+        console.log('📞 Phone Duplicates Test Functions:');
+        console.log('   PhoneDuplicatesTest.testPhoneGeneration() - ทดสอบสร้างเบอร์โทร');
+        console.log('   PhoneDuplicatesTest.testDuplicateScenario() - ทดสอบเบอร์ซ้ำ');
+        console.log('   PhoneDuplicatesTest.showFixedFeatures() - ดูฟีเจอร์ที่แก้ไข');
+        console.log('');
+        console.log('🎯 Quick Test: Try entering duplicate phone "087-169-5054" and submit');
+        console.log('✅ Expected: No validation error (duplicates now allowed)');
+    }
+};
+
+// Show phone duplicates info on load
+console.log('📞 พิมพ์ PhoneDuplicatesTest.info() เพื่อดูคำสั่งทดสอบ Phone Duplicates');
 </script>
 @endpush

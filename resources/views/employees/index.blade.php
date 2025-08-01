@@ -20,19 +20,19 @@
             <div class="d-flex gap-2">
                 @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
                     <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulkActionModal">
-                        <i class="fas fa-tasks me-1"></i>จัดการหลายรายการ
+                        <i class="fas fa-tasks me-1"></i><span class="d-none d-md-inline">จัดการหลายรายการ</span>
                     </button>
                 @endif
-                <!-- ✅ NEW: Trash Button -->
+                <!-- ✅ Trash Button -->
                 @if(auth()->user()->role === 'super_admin')
                     <a href="{{ route('employees.trash') }}" class="btn btn-outline-danger" id="viewTrashBtn">
-                        <i class="fas fa-trash me-1"></i>ถังขยะ
+                        <i class="fas fa-trash me-1"></i><span class="d-none d-md-inline">ถังขยะ</span>
                         <span class="badge bg-danger ms-1 trash-count" style="display: none;">0</span>
                     </a>
                 @endif
                 @if(auth()->user()->role !== 'employee')
                     <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงาน
+                        <i class="fas fa-user-plus me-1"></i><span class="d-none d-sm-inline">เพิ่มพนักงาน</span>
                     </a>
                 @endif
             </div>
@@ -42,69 +42,69 @@
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-users text-primary fa-2x"></i>
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 p-md-3">
+                            <i class="fas fa-users text-primary fa-lg fa-md-2x"></i>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
+                    <div class="flex-grow-1 ms-2 ms-md-3">
                         <div class="text-muted small">พนักงานทั้งหมด</div>
-                        <div class="h4 mb-0 fw-bold">{{ $employees->count() }}</div>
+                        <div class="h5 h4-md mb-0 fw-bold">{{ $employees->count() }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-user-check text-success fa-2x"></i>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-2 p-md-3">
+                            <i class="fas fa-user-check text-success fa-lg fa-md-2x"></i>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
+                    <div class="flex-grow-1 ms-2 ms-md-3">
                         <div class="text-muted small">ใช้งาน</div>
-                        <div class="h4 mb-0 fw-bold text-success">{{ $employees->where('status', 'active')->count() }}</div>
+                        <div class="h5 h4-md mb-0 fw-bold text-success">{{ $employees->where('status', 'active')->count() }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-bolt text-warning fa-2x"></i>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-2 p-md-3">
+                            <i class="fas fa-bolt text-warning fa-lg fa-md-2x"></i>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
+                    <div class="flex-grow-1 ms-2 ms-md-3">
                         <div class="text-muted small">Express</div>
-                        <div class="h4 mb-0 fw-bold text-warning">{{ $employees->whereNotNull('express_username')->count() }}</div>
+                        <div class="h5 h4-md mb-0 fw-bold text-warning">{{ $employees->whereNotNull('express_username')->count() }}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-building text-info fa-2x"></i>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-2 p-md-3">
+                            <i class="fas fa-building text-info fa-lg fa-md-2x"></i>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-3">
+                    <div class="flex-grow-1 ms-2 ms-md-3">
                         <div class="text-muted small">แผนก</div>
-                        <div class="h4 mb-0 fw-bold text-info">{{ $departments->count() }}</div>
+                        <div class="h5 h4-md mb-0 fw-bold text-info">{{ $departments->count() }}</div>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="fas fa-search"></i>
@@ -124,7 +124,7 @@
                     <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาพนักงาน...">
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <select class="form-select" id="departmentFilter">
                     <option value="">แผนกทั้งหมด</option>
                     @foreach($departments as $department)
@@ -132,7 +132,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <select class="form-select" id="roleFilter">
                     <option value="">Role ทั้งหมด</option>
                     <option value="super_admin">Super Admin</option>
@@ -143,192 +143,285 @@
                     <option value="employee">Employee</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <select class="form-select" id="statusFilter">
                     <option value="">สถานะทั้งหมด</option>
                     <option value="active">ใช้งาน</option>
                     <option value="inactive">ไม่ใช้งาน</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-2">
                 <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
-                    <i class="fas fa-times me-1"></i>ล้างตัวกรอง
+                    <i class="fas fa-times me-1"></i><span class="d-none d-sm-inline">ล้างตัวกรอง</span>
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Employees Table -->
+<!-- ✅ ข้อ 1: แก้ไข Responsive Table - ไม่มี horizontal scrollbar -->
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center">
             <h6 class="mb-0">รายการพนักงาน</h6>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                <button type="button" class="btn btn-sm btn-outline-primary d-none d-md-inline-block" onclick="window.print()">
                     <i class="fas fa-print me-1"></i>พิมพ์
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-success" id="exportBtn">
-                    <i class="fas fa-file-excel me-1"></i>ส่งออก
+                    <i class="fas fa-file-excel me-1"></i><span class="d-none d-sm-inline">ส่งออก</span>
                 </button>
             </div>
         </div>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="employeesTable">
-                <thead class="table-light">
-                    <tr>
-                        @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                            <th width="50">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="selectAll">
-                                </div>
-                            </th>
-                        @endif
-                        <th>รหัส</th>
-                        <th>ชื่อ-นามสกุล</th>
-                        <th>แผนก</th>
-                        <th>ตำแหน่ง</th>
-                        <th>อีเมล</th>
-                        <th>Express</th>
-                        <th>สถานะ</th>
-                        <th width="120">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($employees as $employee)
-                        <tr data-status="{{ $employee->status }}" 
-                            data-department="{{ $employee->department_id }}" 
-                            data-role="{{ $employee->role }}"
-                            data-id="{{ $employee->id }}">
+        <!-- ✅ Desktop Table View -->
+        <div class="d-none d-lg-block">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="employeesTable">
+                    <thead class="table-light">
+                        <tr>
                             @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                <td>
+                                <th width="50">
                                     <div class="form-check">
-                                        <input class="form-check-input employee-checkbox" type="checkbox" value="{{ $employee->id }}">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
                                     </div>
-                                </td>
+                                </th>
                             @endif
-                            <td>
-                                <span class="badge bg-secondary">{{ $employee->employee_code }}</span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="fas fa-user text-muted"></i>
+                            <th width="100">รหัส</th>
+                            <th>ชื่อ-นามสกุล</th>
+                            <th width="150">แผนก</th>
+                            <th width="120">ตำแหน่ง</th>
+                            <th width="200">อีเมล</th>
+                            <th width="100">Express</th>
+                            <th width="100">สถานะ</th>
+                            <th width="120">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($employees as $employee)
+                            <tr data-status="{{ $employee->status }}" 
+                                data-department="{{ $employee->department_id }}" 
+                                data-role="{{ $employee->role }}"
+                                data-id="{{ $employee->id }}">
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input employee-checkbox" type="checkbox" value="{{ $employee->id }}">
+                                        </div>
+                                    </td>
+                                @endif
+                                <td>
+                                    <span class="badge bg-secondary">{{ $employee->employee_code }}</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-user text-muted"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ $employee->full_name_th }}</div>
+                                            <small class="text-muted">{{ $employee->full_name_en }}</small>
+                                            @if($employee->nickname)
+                                                <div><small class="badge bg-light text-dark">"{{ $employee->nickname }}"</small></div>
+                                            @endif
                                         </div>
                                     </div>
-                                    <div>
-                                        <div class="fw-bold">{{ $employee->full_name_th }}</div>
-                                        <small class="text-muted">{{ $employee->full_name_en }}</small>
-                                        @if($employee->nickname)
-                                            <div><small class="badge bg-light text-dark">"{{ $employee->nickname }}"</small></div>
+                                </td>
+                                <td>
+                                    @if($employee->department)
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-info me-2">{{ $employee->department->code ?? 'N/A' }}</span>
+                                            <span class="small">{{ $employee->department->name }}</span>
+                                        </div>
+                                    @else
+                                        <span class="text-muted">ไม่ระบุ</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="small">{{ $employee->position }}</div>
+                                    <small class="badge bg-{{ $employee->role === 'super_admin' ? 'danger' : ($employee->role === 'it_admin' ? 'warning' : 'secondary') }}">
+                                        {{ $employee->role_display }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <a href="mailto:{{ $employee->email }}" class="text-decoration-none small">
+                                        {{ $employee->email }}
+                                    </a>
+                                    @if($employee->phone)
+                                        <div><small class="text-muted">{{ $employee->phone }}</small></div>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($employee->express_username)
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input status-toggle" type="checkbox" 
+                                                   data-id="{{ $employee->id }}" 
+                                                   {{ $employee->status === 'active' ? 'checked' : '' }}>
+                                            <label class="form-check-label small">
+                                                {{ $employee->status_display }}
+                                            </label>
+                                        </div>
+                                    @else
+                                        <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
+                                            {{ $employee->status_display }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        @if(auth()->user()->id === $employee->id || auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
+                                            <a href="{{ route('employees.show', $employee) }}" 
+                                               class="btn btn-sm btn-outline-info" 
+                                               data-bs-toggle="tooltip" title="ดูรายละเอียด">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        @endif
+                                        
+                                        @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
+                                            (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
+                                            (auth()->user()->role === 'express' && $employee->department && $employee->department->express_enabled))
+                                            <a href="{{ route('employees.edit', $employee) }}" 
+                                               class="btn btn-sm btn-outline-warning" 
+                                               data-bs-toggle="tooltip" title="แก้ไข">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endif
+                                        
+                                        @if(auth()->user()->role === 'super_admin')
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger delete-btn" 
+                                                    data-id="{{ $employee->id }}" 
+                                                    data-name="{{ $employee->full_name_th }}"
+                                                    data-bs-toggle="tooltip" title="ลบ">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @endif
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                @if($employee->department)
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge bg-info me-2">{{ $employee->department->code }}</span>
-                                        <span>{{ $employee->department->name }}</span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '9' : '8' }}" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fas fa-users fa-3x mb-3"></i>
+                                        <p>ไม่มีข้อมูลพนักงาน</p>
+                                        @if(auth()->user()->role !== 'employee')
+                                            <a href="{{ route('employees.create') }}" class="btn btn-primary">
+                                                <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานคนแรก
+                                            </a>
+                                        @endif
                                     </div>
-                                @else
-                                    <span class="text-muted">ไม่ระบุ</span>
-                                @endif
-                            </td>
-                            <td>
-                                <div>{{ $employee->position }}</div>
-                                <small class="badge bg-{{ $employee->role === 'super_admin' ? 'danger' : ($employee->role === 'it_admin' ? 'warning' : 'secondary') }}">
-                                    {{ $employee->role_display }}
-                                </small>
-                            </td>
-                            <td>
-                                <a href="mailto:{{ $employee->email }}" class="text-decoration-none">
-                                    {{ $employee->email }}
-                                </a>
-                                @if($employee->phone)
-                                    <div><small class="text-muted">{{ $employee->phone }}</small></div>
-                                @endif
-                            </td>
-                            <td>
-                                @if($employee->express_username)
-                                    <span class="badge bg-warning text-dark">
-                                        <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
-                                    </span>
-                                    @if(auth()->user()->role === 'super_admin' && $employee->express_password)
-                                        <div><small class="text-muted">{{ $employee->express_password }}</small></div>
-                                    @endif
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input status-toggle" type="checkbox" 
-                                               data-id="{{ $employee->id }}" 
-                                               {{ $employee->status === 'active' ? 'checked' : '' }}>
-                                        <label class="form-check-label small">
-                                            {{ $employee->status_display }}
-                                        </label>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ✅ Mobile/Tablet Card View -->
+        <div class="d-lg-none" id="mobileEmployeeList">
+            @forelse($employees as $employee)
+                <div class="border-bottom p-3 employee-mobile-card" 
+                     data-status="{{ $employee->status }}" 
+                     data-department="{{ $employee->department_id }}" 
+                     data-role="{{ $employee->role }}"
+                     data-id="{{ $employee->id }}">
+                    <div class="row align-items-center">
+                        <!-- Employee Info -->
+                        <div class="col-8">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                        <i class="fas fa-user text-muted"></i>
                                     </div>
-                                @else
-                                    <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
-                                        {{ $employee->status_display }}
-                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ $employee->full_name_th }}</div>
+                                    <small class="text-muted d-block">{{ $employee->full_name_en }}</small>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        <span class="badge bg-secondary small">{{ $employee->employee_code }}</span>
+                                        @if($employee->department)
+                                            <span class="badge bg-info small">{{ $employee->department->code ?? 'N/A' }}</span>
+                                        @endif
+                                        @if($employee->express_username)
+                                            <span class="badge bg-warning text-dark small">
+                                                <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        <i class="fas fa-envelope me-1"></i>{{ $employee->email }}
+                                    </div>
+                                    @if($employee->phone)
+                                        <div class="small text-muted">
+                                            <i class="fas fa-phone me-1"></i>{{ $employee->phone }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Actions -->
+                        <div class="col-4 text-end">
+                            <div class="mb-2">
+                                <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }} small">
+                                    {{ $employee->status_display }}
+                                </span>
+                            </div>
+                            <div class="btn-group btn-group-sm" role="group">
+                                @if(auth()->user()->id === $employee->id || auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
+                                    <a href="{{ route('employees.show', $employee) }}" 
+                                       class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                 @endif
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    @if(auth()->user()->id === $employee->id || auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                        <a href="{{ route('employees.show', $employee) }}" 
-                                           class="btn btn-sm btn-outline-info" 
-                                           data-bs-toggle="tooltip" title="ดูรายละเอียด">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    @endif
-                                    
-                                    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
-                                        (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
-                                        (auth()->user()->role === 'express' && $employee->department && ($employee->department->name === 'บัญชี' || $employee->department->isAccounting())))
-                                        <a href="{{ route('employees.edit', $employee) }}" 
-                                           class="btn btn-sm btn-outline-warning" 
-                                           data-bs-toggle="tooltip" title="แก้ไข">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    @endif
-                                    
-                                    @if(auth()->user()->role === 'super_admin')
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-danger delete-btn" 
-                                                data-id="{{ $employee->id }}" 
-                                                data-name="{{ $employee->full_name_th }}"
-                                                data-bs-toggle="tooltip" title="ลบ">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '9' : '8' }}" class="text-center py-4">
-                                <div class="text-muted">
-                                    <i class="fas fa-users fa-3x mb-3"></i>
-                                    <p>ไม่มีข้อมูลพนักงาน</p>
-                                    @if(auth()->user()->role !== 'employee')
-                                        <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                                            <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานคนแรก
-                                        </a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
+                                    (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
+                                    (auth()->user()->role === 'express' && $employee->department && $employee->department->express_enabled))
+                                    <a href="{{ route('employees.edit', $employee) }}" 
+                                       class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                @endif
+                                
+                                @if(auth()->user()->role === 'super_admin')
+                                    <button type="button" 
+                                            class="btn btn-outline-danger btn-sm delete-btn" 
+                                            data-id="{{ $employee->id }}" 
+                                            data-name="{{ $employee->full_name_th }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-5">
+                    <div class="text-muted">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <p>ไม่มีข้อมูลพนักงาน</p>
+                        @if(auth()->user()->role !== 'employee')
+                            <a href="{{ route('employees.create') }}" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานคนแรก
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endforelse
         </div>
     </div>
 </div>
@@ -371,6 +464,13 @@
 </div>
 @endif
 
+<!-- Mobile Filter Toggle -->
+<div class="d-lg-none position-fixed bottom-0 start-50 translate-middle-x mb-3">
+    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mobileFilters">
+        <i class="fas fa-filter me-1"></i>ตัวกรอง
+    </button>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -391,30 +491,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const roleFilter = document.getElementById('roleFilter');
     const statusFilter = document.getElementById('statusFilter');
     const table = document.getElementById('employeesTable');
+    const mobileList = document.getElementById('mobileEmployeeList');
     
     function filterTable() {
         const searchTerm = searchInput.value.toLowerCase();
         const departmentTerm = departmentFilter.value;
         const roleTerm = roleFilter.value;
         const statusTerm = statusFilter.value;
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
         
-        for (let row of rows) {
-            if (row.querySelector('td')) {
-                const nameCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '2' : '1' }}];
-                const emailCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '5' : '4' }}];
-                const name = nameCell.textContent.toLowerCase();
-                const email = emailCell.textContent.toLowerCase();
-                const department = row.dataset.department;
-                const role = row.dataset.role;
-                const status = row.dataset.status;
+        // Filter desktop table
+        if (table) {
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            for (let row of rows) {
+                if (row.querySelector('td')) {
+                    const nameCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '2' : '1' }}];
+                    const emailCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '5' : '4' }}];
+                    const name = nameCell.textContent.toLowerCase();
+                    const email = emailCell.textContent.toLowerCase();
+                    const department = row.dataset.department;
+                    const role = row.dataset.role;
+                    const status = row.dataset.status;
+                    
+                    const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+                    const matchesDepartment = !departmentTerm || department === departmentTerm;
+                    const matchesRole = !roleTerm || role === roleTerm;
+                    const matchesStatus = !statusTerm || status === statusTerm;
+                    
+                    row.style.display = matchesSearch && matchesDepartment && matchesRole && matchesStatus ? '' : 'none';
+                }
+            }
+        }
+        
+        // Filter mobile cards
+        if (mobileList) {
+            const cards = mobileList.getElementsByClassName('employee-mobile-card');
+            for (let card of cards) {
+                const name = card.textContent.toLowerCase();
+                const department = card.dataset.department;
+                const role = card.dataset.role;
+                const status = card.dataset.status;
                 
-                const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+                const matchesSearch = name.includes(searchTerm);
                 const matchesDepartment = !departmentTerm || department === departmentTerm;
                 const matchesRole = !roleTerm || role === roleTerm;
                 const matchesStatus = !statusTerm || status === statusTerm;
                 
-                row.style.display = matchesSearch && matchesDepartment && matchesRole && matchesStatus ? '' : 'none';
+                card.style.display = matchesSearch && matchesDepartment && matchesRole && matchesStatus ? '' : 'none';
             }
         }
         
@@ -422,14 +544,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateVisibleCount() {
-        const visibleRows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'))
-                                .filter(row => row.style.display !== 'none' && row.querySelector('td'));
+        let visibleCount = 0;
+        
+        // Count from desktop table if visible
+        if (table && window.innerWidth >= 992) {
+            const visibleRows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'))
+                                    .filter(row => row.style.display !== 'none' && row.querySelector('td'));
+            visibleCount = visibleRows.length;
+        } else if (mobileList) {
+            // Count from mobile cards
+            const visibleCards = Array.from(mobileList.getElementsByClassName('employee-mobile-card'))
+                                    .filter(card => card.style.display !== 'none');
+            visibleCount = visibleCards.length;
+        }
         
         // Update header to show filtered count
         const headerText = document.querySelector('.card-header h6');
         if (headerText) {
             const totalCount = {{ $employees->count() }};
-            const visibleCount = visibleRows.length;
             
             if (visibleCount === totalCount) {
                 headerText.textContent = `รายการพนักงาน (${totalCount} คน)`;
@@ -453,18 +585,24 @@ document.addEventListener('DOMContentLoaded', function() {
         filterTable();
     });
     
+    // Window resize handler
+    window.addEventListener('resize', updateVisibleCount);
+    
     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
     // Select all checkbox
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.employee-checkbox');
-        checkboxes.forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            if (row.style.display !== 'none') {  // Only select visible rows
-                checkbox.checked = this.checked;
-            }
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                if (row.style.display !== 'none') {  // Only select visible rows
+                    checkbox.checked = this.checked;
+                }
+            });
+            updateSelectedCount();
         });
-        updateSelectedCount();
-    });
+    }
     
     // Individual checkboxes
     document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
@@ -473,8 +611,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateSelectedCount() {
         const selected = document.querySelectorAll('.employee-checkbox:checked').length;
-        document.getElementById('selectedCount').textContent = 
-            selected > 0 ? `เลือกแล้ว ${selected} รายการ` : '';
+        const selectedCountElement = document.getElementById('selectedCount');
+        if (selectedCountElement) {
+            selectedCountElement.textContent = 
+                selected > 0 ? `เลือกแล้ว ${selected} รายการ` : '';
+        }
     }
     @endif
     
@@ -524,7 +665,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
     
     @if(auth()->user()->role === 'super_admin')
-    // ✅ FIXED: Delete button with proper AJAX call
+    // Delete button with proper AJAX call
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
             const employeeId = this.dataset.id;
@@ -566,7 +707,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
 
-                    // ✅ FIXED: Send actual AJAX request
+                    // Send actual AJAX request
                     const response = await fetch(`/employees/${employeeId}`, {
                         method: 'DELETE',
                         headers: {
@@ -620,51 +761,66 @@ document.addEventListener('DOMContentLoaded', function() {
     
     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
     // Bulk action
-    document.getElementById('executeBulkAction').addEventListener('click', async function() {
-        const action = document.getElementById('bulkAction').value;
-        const selected = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                             .map(cb => cb.value);
-        
-        if (!action) {
-            showNotification('กรุณาเลือกการดำเนินการ', 'warning');
-            return;
-        }
-        
-        if (selected.length === 0) {
-            showNotification('กรุณาเลือกพนักงานที่ต้องการดำเนินการ', 'warning');
-            return;
-        }
-        
-        if (confirm(`ต้องการ${getActionText(action)} ${selected.length} คนหรือไม่?`)) {
-            try {
-                const response = await fetch('/employees/bulk-action', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        employee_ids: selected
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showNotification(data.message, 'error');
-                }
-            } catch (error) {
-                showNotification('เกิดข้อผิดพลาดในการดำเนินการ', 'error');
+    const executeBulkActionBtn = document.getElementById('executeBulkAction');
+    if (executeBulkActionBtn) {
+        executeBulkActionBtn.addEventListener('click', async function() {
+            const action = document.getElementById('bulkAction').value;
+            const selected = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                                 .map(cb => cb.value);
+            
+            if (!action) {
+                showNotification('กรุณาเลือกการดำเนินการ', 'warning');
+                return;
             }
             
-            // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('bulkActionModal')).hide();
-        }
-    });
+            if (selected.length === 0) {
+                showNotification('กรุณาเลือกพนักงานที่ต้องการดำเนินการ', 'warning');
+                return;
+            }
+            
+            const confirmed = await Swal.fire({
+                title: 'ยืนยันการดำเนินการ',
+                text: `ต้องการ${getActionText(action)} ${selected.length} คนหรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ดำเนินการ',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (confirmed.isConfirmed) {
+                try {
+                    const response = await fetch('/employees/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            employee_ids: selected
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('เกิดข้อผิดพลาดในการดำเนินการ', 'error');
+                }
+                
+                // Close modal
+                const bulkModal = bootstrap.Modal.getInstance(document.getElementById('bulkActionModal'));
+                if (bulkModal) {
+                    bulkModal.hide();
+                }
+            }
+        });
+    }
     
     function getActionText(action) {
         switch(action) {
@@ -677,11 +833,15 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
     
     // Export functionality
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        window.location.href = '{{ route("employees.exportExcel") }}';
-    });
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // TODO: Implement export functionality
+            showNotification('ฟังก์ชันส่งออกจะพัฒนาในเวอร์ชันถัดไป', 'info');
+        });
+    }
     
-    // ✅ Load trash count
+    // Load trash count
     loadTrashCount();
     
     async function loadTrashCount() {
@@ -790,6 +950,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+/* ✅ ข้อ 1: แก้ไข Responsive Design */
+@media (max-width: 991.98px) {
+    .h4-md {
+        font-size: 1.25rem;
+    }
+    
+    .fa-md-2x {
+        font-size: 1.5em;
+    }
+    
+    .employee-mobile-card:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transition: background-color 0.2s ease;
+    }
+    
+    .btn-group-sm .btn {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .card-body.p-3 {
+        padding: 1rem !important;
+    }
+    
+    .employee-mobile-card {
+        padding: 1rem !important;
+    }
+    
+    .h5 {
+        font-size: 1rem;
+    }
+    
+    .badge.small {
+        font-size: 0.65em;
+    }
+}
+
 /* Express user highlighting */
 .badge.bg-warning.text-dark {
     background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
@@ -827,6 +1026,40 @@ document.addEventListener('DOMContentLoaded', function() {
 .swal2-popup .alert {
     margin: 0;
     border-radius: 6px;
+}
+
+/* Table responsive improvements */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table td, .table th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.table td.text-wrap, .table th.text-wrap {
+    white-space: normal;
+}
+
+/* Fixed table column widths to prevent horizontal scroll */
+@media (min-width: 992px) {
+    .table {
+        table-layout: fixed;
+        width: 100%;
+    }
+    
+    .table th:nth-child(3), .table td:nth-child(3) {
+        width: 20%;
+        white-space: normal;
+    }
+    
+    .table th:nth-child(6), .table td:nth-child(6) {
+        width: 18%;
+        white-space: normal;
+        word-break: break-word;
+    }
 }
 </style>
 @endpush

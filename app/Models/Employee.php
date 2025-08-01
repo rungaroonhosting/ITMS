@@ -41,6 +41,13 @@ class Employee extends Authenticatable
         'password',
         'email_verified_at',
         'remember_token',
+        'hire_date',
+        // ✅ FIXED: เพิ่ม Permission Fields ที่หายไป
+        'vpn_access',
+        'color_printing',
+        'remote_work',      // เพิ่มเติม
+        'admin_access',     // เพิ่มเติม
+        // 'salary',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
     /**
@@ -67,6 +74,13 @@ class Employee extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'hire_date' => 'date',
+        // ✅ FIXED: เพิ่ม Casting สำหรับ Permission Fields
+        'vpn_access' => 'boolean',
+        'color_printing' => 'boolean',
+        'remote_work' => 'boolean',
+        'admin_access' => 'boolean',
+        // 'salary' => 'decimal:2',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
     /**
@@ -77,8 +91,17 @@ class Employee extends Authenticatable
     protected $appends = [
         'full_name_th',
         'full_name_en',
+        'full_name',          // ✅ เพิ่ม
+        'employee_id',        // ✅ เพิ่ม
         'role_display',
         'status_display',
+        'status_badge',       // ✅ เพิ่ม
+        'status_thai',        // ✅ เพิ่ม
+        'years_of_service',   // ✅ เพิ่ม
+        'permissions_summary', // ✅ NEW: สรุปสิทธิ์
+        // 'formatted_salary',   // ❌ เอาออกตามที่ขอ - ข้อ 4
+        // 'display_password',   // ❌ เอาออก - จะจัดการแยก
+        // 'canBeManaged',       // ❌ เอาออก - นี่คือสาเหตุของ error!
     ];
 
     // ===========================================
@@ -229,6 +252,150 @@ class Employee extends Authenticatable
     }
 
     /**
+     * ✅ เพิ่ม: Get the employee's full name (prefer Thai).
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->full_name_th ?: $this->full_name_en;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get employee ID (same as employee_code).
+     */
+    public function getEmployeeIdAttribute()
+    {
+        return $this->employee_code;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get English name.
+     */
+    public function getEnglishNameAttribute()
+    {
+        return $this->full_name_en;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get department name only.
+     */
+    public function getDepartmentNameAttribute()
+    {
+        return $this->department ? $this->department->name : 'ไม่ระบุแผนก';
+    }
+
+    /**
+     * ✅ เพิ่ม: Check if in accounting department.
+     */
+    public function getIsAccountingDepartmentAttribute()
+    {
+        $dept = $this->department()->first();
+        return $dept && ($dept->name === 'บัญชี' || $dept->express_enabled);
+    }
+
+    /**
+     * ✅ เพิ่ม: Get years of service.
+     */
+    public function getYearsOfServiceAttribute()
+    {
+        if (!$this->hire_date) {
+            return 0;
+        }
+        
+        return $this->hire_date->diffInYears(now());
+    }
+
+    /**
+     * ✅ NEW: Get permissions summary.
+     */
+    public function getPermissionsSummaryAttribute()
+    {
+        $permissions = [];
+        
+        if ($this->vpn_access) {
+            $permissions[] = 'VPN';
+        }
+        if ($this->color_printing) {
+            $permissions[] = 'Print Color';
+        }
+        if ($this->remote_work) {
+            $permissions[] = 'Remote Work';
+        }
+        if ($this->admin_access) {
+            $permissions[] = 'Admin Panel';
+        }
+        
+        return empty($permissions) ? 'Basic Access' : implode(', ', $permissions);
+    }
+
+    /**
+     * ❌ เอาออกตามที่ขอ - ข้อ 4: ไม่แสดงข้อมูลเงินเดือน
+     * Get formatted salary.
+     *
+    public function getFormattedSalaryAttribute()
+    {
+        if (!$this->salary) {
+            return 'ไม่ระบุ';
+        }
+        
+        return number_format($this->salary, 2) . ' บาท';
+    }
+    */
+
+    /**
+     * ✅ เพิ่ม: Get status badge color.
+     */
+    public function getStatusBadgeAttribute()
+    {
+        return $this->status === 'active' ? 'success' : 'secondary';
+    }
+
+    /**
+     * ✅ เพิ่ม: Get status in Thai.
+     */
+    public function getStatusThaiAttribute()
+    {
+        return $this->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    }
+
+    /**
+     * ✅ ข้อ 3: Get email password for display (IT/SystemAdmin only).
+     */
+    public function getDisplayEmailPasswordAttribute()
+    {
+        $currentUser = auth()->user();
+        
+        if (!$currentUser) {
+            return '[ซ่อน]';
+        }
+        
+        // Only IT Admin and Super Admin can see email passwords
+        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
+            return $this->email_password ?: '[ไม่มี]';
+        }
+        
+        return '[ซ่อน]';
+    }
+
+    /**
+     * ✅ ข้อ 3: Get computer password for display (IT/SystemAdmin only).
+     */
+    public function getDisplayComputerPasswordAttribute()
+    {
+        $currentUser = auth()->user();
+        
+        if (!$currentUser) {
+            return '[ซ่อน]';
+        }
+        
+        // Only IT Admin and Super Admin can see computer passwords
+        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
+            return $this->computer_password ?: '[ไม่มี]';
+        }
+        
+        return '[ซ่อน]';
+    }
+
+    /**
      * Get the employee's display name (prefer Thai, fallback to English).
      */
     public function getDisplayNameAttribute()
@@ -270,6 +437,167 @@ class Employee extends Authenticatable
         $lastInitial = $this->last_name_en ? strtoupper(substr($this->last_name_en, 0, 1)) : '';
         
         return $firstInitial . $lastInitial;
+    }
+
+    // ===========================================
+    // PERMISSION ACCESSORS (NEW)
+    // ===========================================
+
+    /**
+     * ✅ NEW: Get VPN access status with icon.
+     */
+    public function getVpnAccessDisplayAttribute()
+    {
+        return $this->vpn_access 
+            ? '<span class="badge bg-success"><i class="fas fa-shield-alt me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get color printing status with icon.
+     */
+    public function getColorPrintingDisplayAttribute()
+    {
+        return $this->color_printing
+            ? '<span class="badge bg-warning text-dark"><i class="fas fa-palette me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get remote work status with icon.
+     */
+    public function getRemoteWorkDisplayAttribute()
+    {
+        return $this->remote_work
+            ? '<span class="badge bg-info"><i class="fas fa-home me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get admin access status with icon.
+     */
+    public function getAdminAccessDisplayAttribute()
+    {
+        return $this->admin_access
+            ? '<span class="badge bg-danger"><i class="fas fa-user-shield me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    // ===========================================
+    // METHODS (ไม่ใช่ ACCESSORS)
+    // ===========================================
+
+    /**
+     * ✅ แก้ไขแล้ว: Check if employee can be managed by current user.
+     * ⚠️ นี่เป็น METHOD ไม่ใช่ ACCESSOR - ห้ามใส่ใน $appends!
+     */
+    public function canBeManaged($user = null)
+    {
+        $currentUser = $user ?: auth()->user();
+        
+        if (!$currentUser) {
+            return false;
+        }
+        
+        // Super admin can manage everyone
+        if ($currentUser->role === 'super_admin') {
+            return true;
+        }
+        
+        // IT admin can manage non-super-admin
+        if ($currentUser->role === 'it_admin' && $this->role !== 'super_admin') {
+            return true;
+        }
+        
+        // HR can manage employee, express
+        if ($currentUser->role === 'hr' && in_array($this->role, ['employee', 'express'])) {
+            return true;
+        }
+        
+        // Manager can manage same department
+        if ($currentUser->role === 'manager' && $currentUser->department_id === $this->department_id) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * ✅ NEW: Check if user has specific permission.
+     */
+    public function hasPermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                return $this->vpn_access;
+            case 'color_printing':
+                return $this->color_printing;
+            case 'remote_work':
+                return $this->remote_work;
+            case 'admin_access':
+                return $this->admin_access;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * ✅ NEW: Grant permission to user.
+     */
+    public function grantPermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                $this->vpn_access = true;
+                break;
+            case 'color_printing':
+                $this->color_printing = true;
+                break;
+            case 'remote_work':
+                $this->remote_work = true;
+                break;
+            case 'admin_access':
+                $this->admin_access = true;
+                break;
+        }
+        
+        return $this->save();
+    }
+
+    /**
+     * ✅ NEW: Revoke permission from user.
+     */
+    public function revokePermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                $this->vpn_access = false;
+                break;
+            case 'color_printing':
+                $this->color_printing = false;
+                break;
+            case 'remote_work':
+                $this->remote_work = false;
+                break;
+            case 'admin_access':
+                $this->admin_access = false;
+                break;
+        }
+        
+        return $this->save();
+    }
+
+    /**
+     * ✅ NEW: Get all permissions as array.
+     */
+    public function getAllPermissions()
+    {
+        return [
+            'vpn_access' => $this->vpn_access,
+            'color_printing' => $this->color_printing,
+            'remote_work' => $this->remote_work,
+            'admin_access' => $this->admin_access,
+        ];
     }
 
     /**
@@ -335,6 +663,38 @@ class Employee extends Authenticatable
     public function scopeByRole($query, $role)
     {
         return $query->where('role', $role);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with VPN access.
+     */
+    public function scopeWithVpnAccess($query)
+    {
+        return $query->where('vpn_access', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with color printing access.
+     */
+    public function scopeWithColorPrinting($query)
+    {
+        return $query->where('color_printing', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with remote work access.
+     */
+    public function scopeWithRemoteWork($query)
+    {
+        return $query->where('remote_work', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with admin access.
+     */
+    public function scopeWithAdminAccess($query)
+    {
+        return $query->where('admin_access', true);
     }
 
     /**
@@ -454,6 +814,7 @@ class Employee extends Authenticatable
             'express_username' => $this->express_username,
             'role' => $this->role,
             'status' => $this->status,
+            'permissions' => $this->getAllPermissions(),
         ];
     }
 
@@ -519,7 +880,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก
+    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก + เพิ่ม Permission Fields
     // ===========================================
 
     /**
@@ -542,12 +903,19 @@ class Employee extends Authenticatable
             'email' => 'required|email|max:255|unique:employees,email',
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'required|string|min:6',
+            'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // ✅ FIXED: เพิ่ม Permission Validation Rules
+            'vpn_access' => 'nullable|boolean',
+            'color_printing' => 'nullable|boolean',
+            'remote_work' => 'nullable|boolean',
+            'admin_access' => 'nullable|boolean',
+            // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
         ];
     }
 
@@ -571,12 +939,19 @@ class Employee extends Authenticatable
             'email' => "required|email|max:255|unique:employees,email,{$id}",
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:6',
+            'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // ✅ FIXED: เพิ่ม Permission Validation Rules
+            'vpn_access' => 'nullable|boolean',
+            'color_printing' => 'nullable|boolean',
+            'remote_work' => 'nullable|boolean',
+            'admin_access' => 'nullable|boolean',
+            // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
         ];
     }
 
@@ -603,6 +978,19 @@ class Employee extends Authenticatable
             'manager' => 'Manager',
             'express' => 'Express',
             'employee' => 'Employee'
+        ];
+    }
+
+    /**
+     * ✅ NEW: Get permission list
+     */
+    public static function getPermissions()
+    {
+        return [
+            'vpn_access' => 'การใช้งาน VPN',
+            'color_printing' => 'การปริ้นสี', 
+            'remote_work' => 'ทำงานจากที่บ้าน',
+            'admin_access' => 'เข้าถึงแผงควบคุม'
         ];
     }
 

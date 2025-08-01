@@ -75,13 +75,13 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', function () {
         try {
-            $employees = \App\Models\Employee::withoutTrashed()->get();
-            $trashCount = \App\Models\Employee::onlyTrashed()->count();
+            $employees = \App\Models\Employee::withoutTrashed()->get(); // ✅ Fixed: เพิ่ม withoutTrashed()
+            $trashCount = \App\Models\Employee::onlyTrashed()->count(); // ✅ New: นับ trash
             
             // Express Statistics
-            $expressUsers = \App\Models\Employee::whereNotNull('express_username')->count();
+            $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(); // ✅ Fixed
             $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
-            $accountingEmployees = \App\Models\Employee::whereHas('department', function($query) {
+            $accountingEmployees = \App\Models\Employee::withoutTrashed()->whereHas('department', function($query) { // ✅ Fixed
                 $query->where('express_enabled', true);
             })->count();
             
@@ -140,11 +140,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/employees/bulk-action', [EmployeeController::class, 'bulkAction'])->name('employees.bulkAction');
     Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');    
     
-    // Trash Management Routes (SuperAdmin Only)
+    // ✅ NEW: Trash Management Routes (SuperAdmin Only)
     Route::middleware(['role:super_admin'])->group(function () {
         Route::get('/employees/trash', [EmployeeController::class, 'trash'])->name('employees.trash');
         Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
-        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDelete'])->name('employees.force-delete');
+        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDestroy'])->name('employees.force-delete');
         Route::post('/employees/bulk-restore', [EmployeeController::class, 'bulkRestore'])->name('employees.bulk-restore');
         Route::delete('/employees/empty-trash', [EmployeeController::class, 'emptyTrash'])->name('employees.empty-trash');
     });
@@ -275,14 +275,14 @@ Route::prefix('api')->middleware('auth')->group(function () {
                 'is_accounting' => $department->express_enabled, // For backward compatibility
                 'department_id' => $department->id,
                 'department_name' => $department->name,
-                'express_users_count' => $department->employees()->whereNotNull('express_username')->count()
+                'express_users_count' => $department->employees()->withoutTrashed()->whereNotNull('express_username')->count() // ✅ Fixed
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     })->name('api.departments.is-accounting');
     
-    // Trash count API
+    // ✅ UPDATED: Trash count API
     Route::get('/employees/trash-count', function () {
         try {
             $count = \App\Models\Employee::onlyTrashed()->count();
@@ -319,6 +319,10 @@ Route::prefix('api')->middleware('auth')->group(function () {
     // Generate data for AJAX
     Route::get('/generate-data', [EmployeeController::class, 'generateData'])
         ->name('api.generate-data');
+    
+    // ✅ NEW: Phone duplicate statistics API
+    Route::get('/employees/phone-duplicates', [EmployeeController::class, 'getPhoneDuplicateStats'])
+        ->name('api.employees.phone-duplicates');
     
 });
 
@@ -361,14 +365,14 @@ Route::prefix('express')->middleware('auth')->name('express.')->group(function (
                 return redirect()->route('dashboard')->with('error', 'ไม่มีสิทธิ์เข้าถึงหน้านี้');
             }
             
-            // Express statistics
-            $totalExpress = \App\Models\Employee::whereNotNull('express_username')->count();
-            $activeExpress = \App\Models\Employee::whereNotNull('express_username')
+            // Express statistics (ใช้ withoutTrashed)
+            $totalExpress = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(); // ✅ Fixed
+            $activeExpress = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username') // ✅ Fixed
                                                 ->where('status', 'active')
                                                 ->count();
             $expressEnabledDepts = \App\Models\Department::where('express_enabled', true)->count();
             
-            $recentExpressUsers = \App\Models\Employee::whereNotNull('express_username')
+            $recentExpressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username') // ✅ Fixed
                                                       ->with('department')
                                                       ->orderBy('created_at', 'desc')
                                                       ->take(10)
@@ -412,7 +416,7 @@ Route::middleware(['auth', 'role:super_admin,it_admin'])->prefix('departments')-
     Route::get('express/report', function () {
         try {
             $departments = \App\Models\Department::with(['employees' => function($query) {
-                $query->select('id', 'department_id', 'name', 'express_username', 'status');
+                $query->withoutTrashed()->select('id', 'department_id', 'name', 'express_username', 'status'); // ✅ Fixed
             }])->get();
 
             $reportData = $departments->map(function ($dept) {
@@ -441,7 +445,7 @@ Route::middleware(['auth', 'role:super_admin,it_admin'])->prefix('departments')-
     // Export Express users
     Route::get('express/export', function () {
         try {
-            $expressUsers = \App\Models\Employee::whereNotNull('express_username')
+            $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username') // ✅ Fixed
                                                 ->with('department')
                                                 ->orderBy('department_id')
                                                 ->orderBy('name')
@@ -508,7 +512,7 @@ Route::middleware(['auth', 'role:super_admin,it_admin'])->group(function () {
     // Export Express users (legacy route - keep for compatibility)
     Route::get('/export/express-users', function () {
         try {
-            $expressUsers = \App\Models\Employee::whereNotNull('express_username')
+            $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username') // ✅ Fixed
                                                 ->with('department')
                                                 ->get();
             
@@ -558,9 +562,9 @@ Route::middleware(['auth', 'role:super_admin,it_admin,hr'])->group(function () {
     
     Route::get('/statistics/express', function () {
         try {
-            $totalEmployees = \App\Models\Employee::count();
-            $totalExpressUsers = \App\Models\Employee::whereNotNull('express_username')->count();
-            $activeExpressUsers = \App\Models\Employee::whereNotNull('express_username')
+            $totalEmployees = \App\Models\Employee::withoutTrashed()->count(); // ✅ Fixed
+            $totalExpressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(); // ✅ Fixed
+            $activeExpressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username') // ✅ Fixed
                                                       ->where('status', 'active')
                                                       ->count();
             $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
@@ -679,6 +683,53 @@ Route::middleware(['auth', 'role:super_admin,it_admin'])->prefix('admin')->name(
 
 /*
 |--------------------------------------------------------------------------
+| ✅ NEW: Trash Management Routes (Super Admin Only)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'role:super_admin'])->prefix('trash')->name('trash.')->group(function () {
+    
+    // Trash dashboard
+    Route::get('/', function () {
+        try {
+            $trashedEmployees = \App\Models\Employee::onlyTrashed()->with('department')->orderBy('deleted_at', 'desc')->get();
+            $trashedDepartments = \App\Models\Department::onlyTrashed()->orderBy('deleted_at', 'desc')->get();
+            
+            return view('trash.index', compact('trashedEmployees', 'trashedDepartments'));
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard')->with('error', 'เกิดข้อผิดพลาดในการโหลดถังขยะ');
+        }
+    })->name('index');
+    
+    // Employee trash operations
+    Route::prefix('employees')->name('employees.')->group(function () {
+        Route::post('{id}/restore', [EmployeeController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [EmployeeController::class, 'forceDestroy'])->name('force-delete');
+        Route::post('bulk-restore', [EmployeeController::class, 'bulkRestore'])->name('bulk-restore');
+        Route::delete('empty', [EmployeeController::class, 'emptyTrash'])->name('empty');
+    });
+    
+    // Quick stats API
+    Route::get('stats', function () {
+        try {
+            $stats = [
+                'employees' => \App\Models\Employee::onlyTrashed()->count(),
+                'departments' => \App\Models\Department::onlyTrashed()->count(),
+                'total_items' => \App\Models\Employee::onlyTrashed()->count() + \App\Models\Department::onlyTrashed()->count(),
+                'oldest_item' => \App\Models\Employee::onlyTrashed()->orderBy('deleted_at', 'asc')->first()?->deleted_at,
+                'newest_item' => \App\Models\Employee::onlyTrashed()->orderBy('deleted_at', 'desc')->first()?->deleted_at
+            ];
+            
+            return response()->json(['success' => true, 'stats' => $stats]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    })->name('stats');
+    
+});
+
+/*
+|--------------------------------------------------------------------------
 | Health Check
 |--------------------------------------------------------------------------
 */
@@ -689,13 +740,19 @@ Route::get('/health', function () {
         $dbStatus = \DB::connection()->getPdo() ? 'connected' : 'disconnected';
         
         // Test Express functionality
-        $expressUsers = \App\Models\Employee::whereNotNull('express_username')->count();
+        $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(); // ✅ Fixed
         $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
+        
+        // ✅ NEW: Trash statistics
+        $trashStats = [
+            'employees_in_trash' => \App\Models\Employee::onlyTrashed()->count(),
+            'departments_in_trash' => \App\Models\Department::onlyTrashed()->count(),
+        ];
         
         return response()->json([
             'status' => 'ok',
             'timestamp' => now(),
-            'version' => '2.0.0',
+            'version' => '2.1.0', // ✅ Updated version
             'environment' => app()->environment(),
             'database' => $dbStatus,
             'features' => [
@@ -706,7 +763,7 @@ Route::get('/health', function () {
                 'express_enabled_departments_count' => $expressEnabledDepartments,
                 'role_based_access' => true,
                 'soft_delete' => true,
-                'trash_management' => true,
+                'trash_management' => true, // ✅ NEW
                 'bulk_actions' => true,
                 'auto_credentials' => true,
                 'express_auto_generation' => true,
@@ -714,7 +771,9 @@ Route::get('/health', function () {
                 'express_department_toggle' => true,
                 'express_smart_detection' => true,
                 'dynamic_express_forms' => true,
-            ]
+                'phone_duplicates_allowed' => true, // ✅ NEW
+            ],
+            'trash_statistics' => $trashStats // ✅ NEW
         ]);
     } catch (\Exception $e) {
         return response()->json([
@@ -743,13 +802,13 @@ if (app()->environment('local')) {
                                                          'name' => $dept->name,
                                                          'code' => $dept->code,
                                                          'express_enabled' => $dept->express_enabled,
-                                                         'express_users_count' => $dept->employees()->whereNotNull('express_username')->count()
+                                                         'express_users_count' => $dept->employees()->withoutTrashed()->whereNotNull('express_username')->count() // ✅ Fixed
                                                      ];
                                                  });
             
             return response()->json([
                 'success' => true,
-                'message' => 'Express departments test - v2.0',
+                'message' => 'Express departments test - v2.1',
                 'data' => $departments
             ]);
         } catch (\Exception $e) {
@@ -759,6 +818,30 @@ if (app()->environment('local')) {
             ], 500);
         }
     })->name('test.express-departments');
+    
+    // ✅ NEW: Test trash functionality
+    Route::get('/test-trash', function () {
+        try {
+            $trashStats = [
+                'employees_active' => \App\Models\Employee::withoutTrashed()->count(),
+                'employees_trashed' => \App\Models\Employee::onlyTrashed()->count(),
+                'employees_total' => \App\Models\Employee::withTrashed()->count(),
+                'departments_active' => \App\Models\Department::count(),
+                'soft_delete_working' => class_exists('\Illuminate\Database\Eloquent\SoftDeletes')
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Trash functionality test - v2.1',
+                'data' => $trashStats
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Trash test failed: ' . $e->getMessage()
+            ], 500);
+        }
+    })->name('test.trash');
     
     // Debug Express data
     Route::get('/debug/express-data', function () {

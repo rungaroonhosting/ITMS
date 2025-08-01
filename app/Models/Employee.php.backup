@@ -41,6 +41,8 @@ class Employee extends Authenticatable
         'password',
         'email_verified_at',
         'remember_token',
+        'hire_date', // ✅ เพิ่ม hire_date
+        // 'salary',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
     /**
@@ -67,6 +69,8 @@ class Employee extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'hire_date' => 'date',      // ✅ เพิ่ม hire_date casting
+        // 'salary' => 'decimal:2',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
     /**
@@ -77,8 +81,16 @@ class Employee extends Authenticatable
     protected $appends = [
         'full_name_th',
         'full_name_en',
+        'full_name',          // ✅ เพิ่ม
+        'employee_id',        // ✅ เพิ่ม
         'role_display',
         'status_display',
+        'status_badge',       // ✅ เพิ่ม
+        'status_thai',        // ✅ เพิ่ม
+        'years_of_service',   // ✅ เพิ่ม
+        // 'formatted_salary',   // ❌ เอาออกตามที่ขอ - ข้อ 4
+        // 'display_password',   // ❌ เอาออก - จะจัดการแยก
+        // 'canBeManaged',       // ❌ เอาออก - นี่คือสาเหตุของ error!
     ];
 
     // ===========================================
@@ -229,6 +241,127 @@ class Employee extends Authenticatable
     }
 
     /**
+     * ✅ เพิ่ม: Get the employee's full name (prefer Thai).
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->full_name_th ?: $this->full_name_en;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get employee ID (same as employee_code).
+     */
+    public function getEmployeeIdAttribute()
+    {
+        return $this->employee_code;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get English name.
+     */
+    public function getEnglishNameAttribute()
+    {
+        return $this->full_name_en;
+    }
+
+    /**
+     * ✅ เพิ่ม: Get department name only.
+     */
+    public function getDepartmentNameAttribute()
+    {
+        return $this->department ? $this->department->name : 'ไม่ระบุแผนก';
+    }
+
+    /**
+     * ✅ เพิ่ม: Check if in accounting department.
+     */
+    public function getIsAccountingDepartmentAttribute()
+    {
+        $dept = $this->department()->first();
+        return $dept && ($dept->name === 'บัญชี' || $dept->express_enabled);
+    }
+
+    /**
+     * ✅ เพิ่ม: Get years of service.
+     */
+    public function getYearsOfServiceAttribute()
+    {
+        if (!$this->hire_date) {
+            return 0;
+        }
+        
+        return $this->hire_date->diffInYears(now());
+    }
+
+    /**
+     * ❌ เอาออกตามที่ขอ - ข้อ 4: ไม่แสดงข้อมูลเงินเดือน
+     * Get formatted salary.
+     *
+    public function getFormattedSalaryAttribute()
+    {
+        if (!$this->salary) {
+            return 'ไม่ระบุ';
+        }
+        
+        return number_format($this->salary, 2) . ' บาท';
+    }
+    */
+
+    /**
+     * ✅ เพิ่ม: Get status badge color.
+     */
+    public function getStatusBadgeAttribute()
+    {
+        return $this->status === 'active' ? 'success' : 'secondary';
+    }
+
+    /**
+     * ✅ เพิ่ม: Get status in Thai.
+     */
+    public function getStatusThaiAttribute()
+    {
+        return $this->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    }
+
+    /**
+     * ✅ ข้อ 3: Get email password for display (IT/SystemAdmin only).
+     */
+    public function getDisplayEmailPasswordAttribute()
+    {
+        $currentUser = auth()->user();
+        
+        if (!$currentUser) {
+            return '[ซ่อน]';
+        }
+        
+        // Only IT Admin and Super Admin can see email passwords
+        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
+            return $this->email_password ?: '[ไม่มี]';
+        }
+        
+        return '[ซ่อน]';
+    }
+
+    /**
+     * ✅ ข้อ 3: Get computer password for display (IT/SystemAdmin only).
+     */
+    public function getDisplayComputerPasswordAttribute()
+    {
+        $currentUser = auth()->user();
+        
+        if (!$currentUser) {
+            return '[ซ่อน]';
+        }
+        
+        // Only IT Admin and Super Admin can see computer passwords
+        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
+            return $this->computer_password ?: '[ไม่มี]';
+        }
+        
+        return '[ซ่อน]';
+    }
+
+    /**
      * Get the employee's display name (prefer Thai, fallback to English).
      */
     public function getDisplayNameAttribute()
@@ -270,6 +403,45 @@ class Employee extends Authenticatable
         $lastInitial = $this->last_name_en ? strtoupper(substr($this->last_name_en, 0, 1)) : '';
         
         return $firstInitial . $lastInitial;
+    }
+
+    // ===========================================
+    // METHODS (ไม่ใช่ ACCESSORS)
+    // ===========================================
+
+    /**
+     * ✅ แก้ไขแล้ว: Check if employee can be managed by current user.
+     * ⚠️ นี่เป็น METHOD ไม่ใช่ ACCESSOR - ห้ามใส่ใน $appends!
+     */
+    public function canBeManaged($user = null)
+    {
+        $currentUser = $user ?: auth()->user();
+        
+        if (!$currentUser) {
+            return false;
+        }
+        
+        // Super admin can manage everyone
+        if ($currentUser->role === 'super_admin') {
+            return true;
+        }
+        
+        // IT admin can manage non-super-admin
+        if ($currentUser->role === 'it_admin' && $this->role !== 'super_admin') {
+            return true;
+        }
+        
+        // HR can manage employee, express
+        if ($currentUser->role === 'hr' && in_array($this->role, ['employee', 'express'])) {
+            return true;
+        }
+        
+        // Manager can manage same department
+        if ($currentUser->role === 'manager' && $currentUser->department_id === $this->department_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -519,7 +691,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // VALIDATION RULES
+    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก
     // ===========================================
 
     /**
@@ -534,7 +706,7 @@ class Employee extends Authenticatable
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20|unique:employees,phone',
+            'phone' => 'required|string|max:20', // ✅ ลบ unique ออกแล้ว
             'nickname' => 'nullable|string|max:50',
             'username' => 'required|string|max:100|unique:employees,username',
             'computer_password' => 'nullable|string|min:6',
@@ -548,6 +720,8 @@ class Employee extends Authenticatable
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'required|string|min:6',
+            'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
         ];
     }
 
@@ -563,7 +737,7 @@ class Employee extends Authenticatable
             'last_name_th' => 'required|string|max:100',
             'first_name_en' => 'required|string|max:100',
             'last_name_en' => 'required|string|max:100',
-            'phone' => "required|string|max:20|unique:employees,phone,{$id}",
+            'phone' => 'required|string|max:20', // ✅ ลบ unique ออกแล้ว
             'nickname' => 'nullable|string|max:50',
             'username' => "required|string|max:100|unique:employees,username,{$id}",
             'computer_password' => 'nullable|string|min:6',
@@ -577,6 +751,34 @@ class Employee extends Authenticatable
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:6',
+            'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
+        ];
+    }
+
+    /**
+     * ✅ เพิ่ม Static method: เอา phone unique validation ออก
+     */
+    public static function getStatuses()
+    {
+        return [
+            'active' => 'ใช้งาน',
+            'inactive' => 'ไม่ใช้งาน'
+        ];
+    }
+
+    /**
+     * ✅ เพิ่ม Static method: Role list
+     */
+    public static function getRoles()
+    {
+        return [
+            'super_admin' => 'Super Admin',
+            'it_admin' => 'IT Admin',
+            'hr' => 'HR',
+            'manager' => 'Manager',
+            'express' => 'Express',
+            'employee' => 'Employee'
         ];
     }
 

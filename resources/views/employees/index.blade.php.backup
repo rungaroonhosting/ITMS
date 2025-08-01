@@ -23,6 +23,13 @@
                         <i class="fas fa-tasks me-1"></i>จัดการหลายรายการ
                     </button>
                 @endif
+                <!-- ✅ Trash Button -->
+                @if(auth()->user()->role === 'super_admin')
+                    <a href="{{ route('employees.trash') }}" class="btn btn-outline-danger" id="viewTrashBtn">
+                        <i class="fas fa-trash me-1"></i>ถังขยะ
+                        <span class="badge bg-danger ms-1 trash-count" style="display: none;">0</span>
+                    </a>
+                @endif
                 @if(auth()->user()->role !== 'employee')
                     <a href="{{ route('employees.create') }}" class="btn btn-primary">
                         <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงาน
@@ -224,7 +231,7 @@
                             <td>
                                 @if($employee->department)
                                     <div class="d-flex align-items-center">
-                                        <span class="badge bg-info me-2">{{ $employee->department->code }}</span>
+                                        <span class="badge bg-info me-2">{{ $employee->department->code ?? 'N/A' }}</span>
                                         <span>{{ $employee->department->name }}</span>
                                     </div>
                                 @else
@@ -250,7 +257,7 @@
                                     <span class="badge bg-warning text-dark">
                                         <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
                                     </span>
-                                    @if(auth()->user()->role === 'super_admin')
+                                    @if(auth()->user()->role === 'super_admin' && $employee->express_password)
                                         <div><small class="text-muted">{{ $employee->express_password }}</small></div>
                                     @endif
                                 @else
@@ -285,7 +292,7 @@
                                     
                                     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
                                         (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
-                                        (auth()->user()->role === 'express' && $employee->department && ($employee->department->name === 'บัญชี' || $employee->department->isAccounting())))
+                                        (auth()->user()->role === 'express' && $employee->department && $employee->department->express_enabled))
                                         <a href="{{ route('employees.edit', $employee) }}" 
                                            class="btn btn-sm btn-outline-warning" 
                                            data-bs-toggle="tooltip" title="แก้ไข">
@@ -367,6 +374,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
@@ -374,6 +382,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
     // Search and filter functionality
     const searchInput = document.getElementById('searchInput');
@@ -445,16 +455,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
     // Select all checkbox
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.employee-checkbox');
-        checkboxes.forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            if (row.style.display !== 'none') {  // Only select visible rows
-                checkbox.checked = this.checked;
-            }
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                if (row.style.display !== 'none') {  // Only select visible rows
+                    checkbox.checked = this.checked;
+                }
+            });
+            updateSelectedCount();
         });
-        updateSelectedCount();
-    });
+    }
     
     // Individual checkboxes
     document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
@@ -463,42 +476,149 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateSelectedCount() {
         const selected = document.querySelectorAll('.employee-checkbox:checked').length;
-        document.getElementById('selectedCount').textContent = 
-            selected > 0 ? `เลือกแล้ว ${selected} รายการ` : '';
+        const selectedCountElement = document.getElementById('selectedCount');
+        if (selectedCountElement) {
+            selectedCountElement.textContent = 
+                selected > 0 ? `เลือกแล้ว ${selected} รายการ` : '';
+        }
     }
     @endif
     
     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
     // Status toggle
     document.querySelectorAll('.status-toggle').forEach(toggle => {
-        toggle.addEventListener('change', function() {
+        toggle.addEventListener('change', async function() {
             const employeeId = this.dataset.id;
             const isActive = this.checked;
             
-            // In real implementation, this would be an AJAX call
-            console.log(`Toggle employee ${employeeId} to ${isActive ? 'active' : 'inactive'}`);
-            
-            this.nextElementSibling.textContent = isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-            showNotification(`${isActive ? 'เปิด' : 'ปิด'}ใช้งานพนักงานเรียบร้อยแล้ว`, 'success');
+            try {
+                // Temporarily disable toggle
+                this.disabled = true;
+
+                const response = await fetch(`/api/employees/${employeeId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ status: isActive ? 'active' : 'inactive' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update UI
+                    const label = this.nextElementSibling;
+                    if (label) {
+                        label.textContent = isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+                    }
+                    showNotification(`${isActive ? 'เปิด' : 'ปิด'}ใช้งานพนักงานเรียบร้อยแล้ว`, 'success');
+                } else {
+                    // Revert toggle state
+                    this.checked = !this.checked;
+                    showNotification(data.message || 'เกิดข้อผิดพลาด', 'error');
+                }
+            } catch (error) {
+                // Revert toggle state
+                this.checked = !this.checked;
+                showNotification('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ', 'error');
+            } finally {
+                this.disabled = false;
+            }
         });
     });
     @endif
     
     @if(auth()->user()->role === 'super_admin')
-    // Delete button
+    // Delete button with proper AJAX call
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', async function() {
             const employeeId = this.dataset.id;
             const employeeName = this.dataset.name;
             
-            if (confirm(`ต้องการลบพนักงาน "${employeeName}" หรือไม่?\n\nการลบจะไม่สามารถกู้คืนได้`)) {
-                // In real implementation, this would be an AJAX call
-                console.log(`Delete employee ${employeeId}`);
-                showNotification('ลบพนักงานเรียบร้อยแล้ว', 'success');
-                
-                // Remove row from table
-                this.closest('tr').remove();
-                updateVisibleCount();
+            // Show confirmation dialog with SweetAlert2
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                html: `
+                    <div class="text-start">
+                        <p>คุณต้องการลบพนักงาน "<strong>${employeeName}</strong>" หรือไม่?</p>
+                        <div class="alert alert-info small mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>หมายเหตุ:</strong> ข้อมูลจะถูกย้ายไปยังถังขยะ และสามารถกู้คืนได้ภายหลัง
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash me-1"></i>ย้ายไปถังขยะ',
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'swal2-popup-wide'
+                }
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    // Show loading
+                    Swal.fire({
+                        title: 'กำลังลบข้อมูล...',
+                        html: `กำลังย้าย "${employeeName}" ไปยังถังขยะ`,
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send actual AJAX request
+                    const response = await fetch(`/employees/${employeeId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'สำเร็จ!',
+                            html: `
+                                <div class="text-start">
+                                    <p>${data.message}</p>
+                                    <div class="alert alert-success small mt-3">
+                                        <i class="fas fa-undo me-2"></i>
+                                        ข้อมูลสามารถกู้คืนได้จาก <strong>ถังขยะ</strong>
+                                    </div>
+                                </div>
+                            `,
+                            icon: 'success',
+                            timer: 3000,
+                            showConfirmButton: true,
+                            confirmButtonText: 'ตกลง',
+                            showCancelButton: true,
+                            cancelButtonText: 'ดูถังขยะ'
+                        }).then((result) => {
+                            if (result.dismiss === Swal.DismissReason.cancel) {
+                                window.location.href = '{{ route("employees.trash") }}';
+                            } else {
+                                // Remove row from table and reload
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message || 'ไม่สามารถลบข้อมูลได้');
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'เกิดข้อผิดพลาด!',
+                        text: error.message,
+                        icon: 'error'
+                    });
+                }
             }
         });
     });
@@ -506,33 +626,66 @@ document.addEventListener('DOMContentLoaded', function() {
     
     @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
     // Bulk action
-    document.getElementById('executeBulkAction').addEventListener('click', function() {
-        const action = document.getElementById('bulkAction').value;
-        const selected = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                             .map(cb => cb.value);
-        
-        if (!action) {
-            showNotification('กรุณาเลือกการดำเนินการ', 'warning');
-            return;
-        }
-        
-        if (selected.length === 0) {
-            showNotification('กรุณาเลือกพนักงานที่ต้องการดำเนินการ', 'warning');
-            return;
-        }
-        
-        if (confirm(`ต้องการ${getActionText(action)} ${selected.length} คนหรือไม่?`)) {
-            // In real implementation, this would be an AJAX call
-            console.log(`Bulk ${action} for employees:`, selected);
-            showNotification(`${getActionText(action)}พนักงาน ${selected.length} คนเรียบร้อยแล้ว`, 'success');
+    const executeBulkActionBtn = document.getElementById('executeBulkAction');
+    if (executeBulkActionBtn) {
+        executeBulkActionBtn.addEventListener('click', async function() {
+            const action = document.getElementById('bulkAction').value;
+            const selected = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+                                 .map(cb => cb.value);
             
-            // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('bulkActionModal')).hide();
+            if (!action) {
+                showNotification('กรุณาเลือกการดำเนินการ', 'warning');
+                return;
+            }
             
-            // Refresh page after some delay
-            setTimeout(() => location.reload(), 1500);
-        }
-    });
+            if (selected.length === 0) {
+                showNotification('กรุณาเลือกพนักงานที่ต้องการดำเนินการ', 'warning');
+                return;
+            }
+            
+            const confirmed = await Swal.fire({
+                title: 'ยืนยันการดำเนินการ',
+                text: `ต้องการ${getActionText(action)} ${selected.length} คนหรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ดำเนินการ',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (confirmed.isConfirmed) {
+                try {
+                    const response = await fetch('/employees/bulk-action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            employee_ids: selected
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                } catch (error) {
+                    showNotification('เกิดข้อผิดพลาดในการดำเนินการ', 'error');
+                }
+                
+                // Close modal
+                const bulkModal = bootstrap.Modal.getInstance(document.getElementById('bulkActionModal'));
+                if (bulkModal) {
+                    bulkModal.hide();
+                }
+            }
+        });
+    }
     
     function getActionText(action) {
         switch(action) {
@@ -545,9 +698,43 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
     
     // Export functionality
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        window.location.href = '{{ route("employees.exportExcel") }}';
-    });
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // TODO: Implement export functionality
+            showNotification('ฟังก์ชันส่งออกจะพัฒนาในเวอร์ชันถัดไป', 'info');
+        });
+    }
+    
+    // Load trash count
+    loadTrashCount();
+    
+    async function loadTrashCount() {
+        try {
+            const response = await fetch('/api/employees/trash-count');
+            const data = await response.json();
+            
+            if (data.success) {
+                updateTrashCount(data.count);
+            }
+        } catch (error) {
+            console.error('Failed to load trash count:', error);
+        }
+    }
+
+    function updateTrashCount(count) {
+        const trashBadges = document.querySelectorAll('.trash-count');
+        trashBadges.forEach(badge => {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline' : 'none';
+        });
+
+        // Update trash button visibility
+        const trashButton = document.getElementById('viewTrashBtn');
+        if (trashButton && count > 0) {
+            trashButton.style.display = 'inline-block';
+        }
+    }
     
     // Notification function
     function showNotification(message, type = 'info') {
@@ -655,6 +842,16 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: rgba(13, 110, 253, 0.05) !important;
     transform: scale(1.01);
     transition: all 0.2s ease;
+}
+
+/* SweetAlert2 custom styles */
+.swal2-popup-wide {
+    width: 500px !important;
+}
+
+.swal2-popup .alert {
+    margin: 0;
+    border-radius: 6px;
 }
 </style>
 @endpush

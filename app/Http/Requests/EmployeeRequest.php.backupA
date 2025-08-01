@@ -13,7 +13,7 @@ class EmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return in_array(auth()->user()->role ?? 'employee', ['super_admin', 'it_admin']);
+        return in_array(auth()->user()->role ?? 'employee', ['super_admin', 'it_admin', 'hr']);
     }
 
     /**
@@ -54,7 +54,15 @@ class EmployeeRequest extends FormRequest
                 'regex:/^[a-z0-9._]+$/',
                 Rule::unique('employees')->ignore($employeeId)->whereNull('deleted_at')
             ],
-            'computer_password' => ['nullable', 'string', 'min:6', 'max:50'],
+            
+            // ✅ FIXED: Computer password - nullable ในโหมดแก้ไข
+            'computer_password' => [
+                $isUpdate ? 'nullable' : 'nullable', // Both modes can be nullable
+                'string', 
+                'min:6', 
+                'max:50'
+            ],
+            
             'copier_code' => [
                 'nullable',
                 'string',
@@ -65,12 +73,19 @@ class EmployeeRequest extends FormRequest
             
             // ข้อมูลระบบอีเมล
             'email' => [
-                'nullable',
+                'required', // Email is required
                 'email',
                 'max:100',
                 Rule::unique('employees')->ignore($employeeId)->whereNull('deleted_at')
             ],
-            'email_password' => ['nullable', 'string', 'min:6', 'max:50'],
+            
+            // ✅ FIXED: Email password - nullable ในโหมดแก้ไข
+            'email_password' => [
+                $isUpdate ? 'nullable' : 'nullable', // Both modes can be nullable
+                'string', 
+                'min:6', 
+                'max:50'
+            ],
             
             // ✅ FIXED: Express Username - รองรับ 1-7 ตัวอักษร
             'express_username' => [
@@ -95,35 +110,33 @@ class EmployeeRequest extends FormRequest
                             $fail('รหัส Express ต้องเป็น 4 ตัวเลขที่ไม่ซ้ำกัน');
                         }
                     }
-                }
+                },
+                Rule::unique('employees')->ignore($employeeId)->whereNull('deleted_at')
             ],
             
-            // ✅ FIXED: ลบ unique constraint จาก phone - อนุญาตให้ซ้ำได้
+            // ✅ FIXED: Phone - ลบ unique constraint - อนุญาตให้ซ้ำได้
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9-+().\s]+$/'],
             
             // แผนกและสิทธิ์
             'department_id' => ['required', 'integer', 'exists:departments,id'],
+            'position' => ['nullable', 'string', 'max:100'],
             'vpn_access' => ['boolean'],  // ✅ เปลี่ยนชื่อให้ตรงกับ form
             'color_printing' => ['boolean'],  // ✅ เปลี่ยนชื่อให้ตรงกับ form
             'status' => ['required', 'string', Rule::in(array_keys(Employee::getStatuses()))],
             'role' => ['required', 'string', Rule::in(array_keys(Employee::getRoles()))],
             
-            // ระบบ Login (รองรับรหัสผ่านแยกกัน)
-            'login_password' => [  // ✅ เพิ่ม login_password field
-                $isUpdate ? 'nullable' : 'required',
+            // ✅ FIXED: Login password - nullable ในโหมดแก้ไข
+            'login_password' => [
+                'nullable', // Always nullable - will be handled in controller
                 'string',
                 'min:6',
                 'max:50'
             ],
-            'password' => [
-                $isUpdate ? 'nullable' : 'required',
-                'string',
-                'min:6',
-                'max:50'
-            ],
+            
+            // ✅ FIXED: Password field - ไม่ validate ที่นี่ (จะ handle ใน controller)
+            // 'password' field จะถูกสร้างใน controller จาก login_password
 
             // ข้อมูลเก่า (รองรับ backward compatibility)
-            'position' => ['nullable', 'string', 'max:100'],
             'hire_date' => ['nullable', 'date', 'before_or_equal:today'],
             'salary' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -164,6 +177,7 @@ class EmployeeRequest extends FormRequest
             'copier_code.regex' => 'รหัสเครื่องถ่ายต้องเป็นตัวเลข 4 หลักเท่านั้น',
             
             // ข้อมูลระบบอีเมล
+            'email.required' => 'กรุณากรอกอีเมล',
             'email.email' => 'รูปแบบอีเมลไม่ถูกต้อง',
             'email.unique' => 'อีเมลนี้มีอยู่ในระบบแล้ว',
             'email_password.min' => 'Password อีเมลต้องมีอย่างน้อย 6 ตัวอักษร',
@@ -174,8 +188,9 @@ class EmployeeRequest extends FormRequest
             'express_username.regex' => 'Username Express ต้องเป็นตัวอักษรอังกฤษและตัวเลขเท่านั้น',
             'express_password.size' => 'รหัส Express ต้องเป็นตัวเลข 4 หลัก',
             'express_password.regex' => 'รหัส Express ต้องเป็นตัวเลข 4 หลักเท่านั้น',
+            'express_password.unique' => 'รหัส Express นี้มีอยู่ในระบบแล้ว',
             
-            // ✅ FIXED: ลบ phone.unique error message
+            // ✅ FIXED: Phone - ไม่มี unique error message
             'phone.regex' => 'รูปแบบเบอร์โทรศัพท์ไม่ถูกต้อง',
             
             // แผนกและสิทธิ์
@@ -187,10 +202,7 @@ class EmployeeRequest extends FormRequest
             'role.in' => 'บทบาทไม่ถูกต้อง',
             
             // ระบบ Login
-            'login_password.required' => 'กรุณากรอกรหัสผ่านเข้าระบบ',
             'login_password.min' => 'รหัสผ่านเข้าระบบต้องมีอย่างน้อย 6 ตัวอักษร',
-            'password.required' => 'กรุณากรอกรหัสผ่าน',
-            'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
             
             // ข้อมูลเก่า
             'hire_date.before_or_equal' => 'วันที่เริ่มงานต้องไม่เกินวันปัจจุบัน',
@@ -222,13 +234,12 @@ class EmployeeRequest extends FormRequest
             'express_password' => 'รหัส Express',
             'phone' => 'เบอร์โทรศัพท์',
             'department_id' => 'แผนก',
+            'position' => 'ตำแหน่ง',
             'vpn_access' => 'สิทธิ์ใช้ VPN',
             'color_printing' => 'สิทธิ์ปริ้นสี',
             'status' => 'สถานะ',
             'role' => 'บทบาท',
             'login_password' => 'รหัสผ่านเข้าระบบ',
-            'password' => 'รหัสผ่าน',
-            'position' => 'ตำแหน่ง',
             'hire_date' => 'วันที่เริ่มงาน',
             'salary' => 'เงินเดือน',
             'address' => 'ที่อยู่',
@@ -239,7 +250,7 @@ class EmployeeRequest extends FormRequest
     }
 
     /**
-     * Prepare the data for validation.
+     * ✅ ENHANCED: Prepare the data for validation.
      */
     protected function prepareForValidation(): void
     {
@@ -247,7 +258,7 @@ class EmployeeRequest extends FormRequest
         $cleanData = [];
 
         // ทำความสะอาดข้อความ
-        foreach (['first_name_th', 'last_name_th', 'first_name_en', 'last_name_en', 'nickname'] as $field) {
+        foreach (['first_name_th', 'last_name_th', 'first_name_en', 'last_name_en', 'nickname', 'position'] as $field) {
             if ($this->has($field)) {
                 $cleanData[$field] = trim($this->input($field));
             }
@@ -290,11 +301,14 @@ class EmployeeRequest extends FormRequest
         $cleanData['vpn_access'] = $this->boolean('vpn_access');
         $cleanData['color_printing'] = $this->boolean('color_printing');
 
+        // ✅ CRITICAL: ไม่ต้องทำอะไรกับ password fields ที่นี่
+        // ปล่อยให้ controller จัดการ
+
         $this->merge($cleanData);
     }
 
     /**
-     * Handle a failed validation attempt.
+     * ✅ ENHANCED: Handle a failed validation attempt.
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
@@ -309,5 +323,23 @@ class EmployeeRequest extends FormRequest
         }
 
         parent::failedValidation($validator);
+    }
+
+    /**
+     * ✅ NEW: Get validated data with password handling
+     */
+    public function getValidatedData(): array
+    {
+        $validated = $this->validated();
+        
+        // Log for debugging
+        \Log::info('Validated data before processing:', [
+            'has_login_password' => !empty($validated['login_password']),
+            'has_computer_password' => !empty($validated['computer_password']),
+            'has_email_password' => !empty($validated['email_password']),
+            'is_update' => $this->isMethod('PUT') || $this->isMethod('PATCH')
+        ]);
+        
+        return $validated;
     }
 }
