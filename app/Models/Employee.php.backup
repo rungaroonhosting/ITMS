@@ -41,7 +41,12 @@ class Employee extends Authenticatable
         'password',
         'email_verified_at',
         'remember_token',
-        'hire_date', // ✅ เพิ่ม hire_date
+        'hire_date',
+        // ✅ FIXED: เพิ่ม Permission Fields ที่หายไป
+        'vpn_access',
+        'color_printing',
+        'remote_work',      // เพิ่มเติม
+        'admin_access',     // เพิ่มเติม
         // 'salary',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
@@ -69,7 +74,12 @@ class Employee extends Authenticatable
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
-        'hire_date' => 'date',      // ✅ เพิ่ม hire_date casting
+        'hire_date' => 'date',
+        // ✅ FIXED: เพิ่ม Casting สำหรับ Permission Fields
+        'vpn_access' => 'boolean',
+        'color_printing' => 'boolean',
+        'remote_work' => 'boolean',
+        'admin_access' => 'boolean',
         // 'salary' => 'decimal:2',    // ❌ เอาออกตามที่ขอ - ข้อ 4
     ];
 
@@ -88,6 +98,7 @@ class Employee extends Authenticatable
         'status_badge',       // ✅ เพิ่ม
         'status_thai',        // ✅ เพิ่ม
         'years_of_service',   // ✅ เพิ่ม
+        'permissions_summary', // ✅ NEW: สรุปสิทธิ์
         // 'formatted_salary',   // ❌ เอาออกตามที่ขอ - ข้อ 4
         // 'display_password',   // ❌ เอาออก - จะจัดการแยก
         // 'canBeManaged',       // ❌ เอาออก - นี่คือสาเหตุของ error!
@@ -294,6 +305,29 @@ class Employee extends Authenticatable
     }
 
     /**
+     * ✅ NEW: Get permissions summary.
+     */
+    public function getPermissionsSummaryAttribute()
+    {
+        $permissions = [];
+        
+        if ($this->vpn_access) {
+            $permissions[] = 'VPN';
+        }
+        if ($this->color_printing) {
+            $permissions[] = 'Print Color';
+        }
+        if ($this->remote_work) {
+            $permissions[] = 'Remote Work';
+        }
+        if ($this->admin_access) {
+            $permissions[] = 'Admin Panel';
+        }
+        
+        return empty($permissions) ? 'Basic Access' : implode(', ', $permissions);
+    }
+
+    /**
      * ❌ เอาออกตามที่ขอ - ข้อ 4: ไม่แสดงข้อมูลเงินเดือน
      * Get formatted salary.
      *
@@ -406,6 +440,50 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
+    // PERMISSION ACCESSORS (NEW)
+    // ===========================================
+
+    /**
+     * ✅ NEW: Get VPN access status with icon.
+     */
+    public function getVpnAccessDisplayAttribute()
+    {
+        return $this->vpn_access 
+            ? '<span class="badge bg-success"><i class="fas fa-shield-alt me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get color printing status with icon.
+     */
+    public function getColorPrintingDisplayAttribute()
+    {
+        return $this->color_printing
+            ? '<span class="badge bg-warning text-dark"><i class="fas fa-palette me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get remote work status with icon.
+     */
+    public function getRemoteWorkDisplayAttribute()
+    {
+        return $this->remote_work
+            ? '<span class="badge bg-info"><i class="fas fa-home me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    /**
+     * ✅ NEW: Get admin access status with icon.
+     */
+    public function getAdminAccessDisplayAttribute()
+    {
+        return $this->admin_access
+            ? '<span class="badge bg-danger"><i class="fas fa-user-shield me-1"></i>อนุญาต</span>'
+            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
+    }
+
+    // ===========================================
     // METHODS (ไม่ใช่ ACCESSORS)
     // ===========================================
 
@@ -442,6 +520,84 @@ class Employee extends Authenticatable
         }
         
         return false;
+    }
+
+    /**
+     * ✅ NEW: Check if user has specific permission.
+     */
+    public function hasPermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                return $this->vpn_access;
+            case 'color_printing':
+                return $this->color_printing;
+            case 'remote_work':
+                return $this->remote_work;
+            case 'admin_access':
+                return $this->admin_access;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * ✅ NEW: Grant permission to user.
+     */
+    public function grantPermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                $this->vpn_access = true;
+                break;
+            case 'color_printing':
+                $this->color_printing = true;
+                break;
+            case 'remote_work':
+                $this->remote_work = true;
+                break;
+            case 'admin_access':
+                $this->admin_access = true;
+                break;
+        }
+        
+        return $this->save();
+    }
+
+    /**
+     * ✅ NEW: Revoke permission from user.
+     */
+    public function revokePermission($permission)
+    {
+        switch ($permission) {
+            case 'vpn':
+                $this->vpn_access = false;
+                break;
+            case 'color_printing':
+                $this->color_printing = false;
+                break;
+            case 'remote_work':
+                $this->remote_work = false;
+                break;
+            case 'admin_access':
+                $this->admin_access = false;
+                break;
+        }
+        
+        return $this->save();
+    }
+
+    /**
+     * ✅ NEW: Get all permissions as array.
+     */
+    public function getAllPermissions()
+    {
+        return [
+            'vpn_access' => $this->vpn_access,
+            'color_printing' => $this->color_printing,
+            'remote_work' => $this->remote_work,
+            'admin_access' => $this->admin_access,
+        ];
     }
 
     /**
@@ -507,6 +663,38 @@ class Employee extends Authenticatable
     public function scopeByRole($query, $role)
     {
         return $query->where('role', $role);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with VPN access.
+     */
+    public function scopeWithVpnAccess($query)
+    {
+        return $query->where('vpn_access', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with color printing access.
+     */
+    public function scopeWithColorPrinting($query)
+    {
+        return $query->where('color_printing', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with remote work access.
+     */
+    public function scopeWithRemoteWork($query)
+    {
+        return $query->where('remote_work', true);
+    }
+
+    /**
+     * ✅ NEW: Scope for employees with admin access.
+     */
+    public function scopeWithAdminAccess($query)
+    {
+        return $query->where('admin_access', true);
     }
 
     /**
@@ -626,6 +814,7 @@ class Employee extends Authenticatable
             'express_username' => $this->express_username,
             'role' => $this->role,
             'status' => $this->status,
+            'permissions' => $this->getAllPermissions(),
         ];
     }
 
@@ -691,7 +880,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก
+    // VALIDATION RULES - ✅ FIXED: เอา PHONE UNIQUE ออก + เพิ่ม Permission Fields
     // ===========================================
 
     /**
@@ -714,13 +903,18 @@ class Employee extends Authenticatable
             'email' => 'required|email|max:255|unique:employees,email',
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'required|string|min:6',
             'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // ✅ FIXED: เพิ่ม Permission Validation Rules
+            'vpn_access' => 'nullable|boolean',
+            'color_printing' => 'nullable|boolean',
+            'remote_work' => 'nullable|boolean',
+            'admin_access' => 'nullable|boolean',
             // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
         ];
     }
@@ -745,13 +939,18 @@ class Employee extends Authenticatable
             'email' => "required|email|max:255|unique:employees,email,{$id}",
             'email_password' => 'nullable|string|min:6',
             'express_username' => 'nullable|string|max:7',
-            'express_code' => 'nullable|string|max:4',
+            'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
             'password' => 'nullable|string|min:6',
             'hire_date' => 'nullable|date', // ✅ เพิ่ม hire_date
+            // ✅ FIXED: เพิ่ม Permission Validation Rules
+            'vpn_access' => 'nullable|boolean',
+            'color_printing' => 'nullable|boolean',
+            'remote_work' => 'nullable|boolean',
+            'admin_access' => 'nullable|boolean',
             // 'salary' => 'nullable|numeric|min:0', // ❌ เอาออกตามที่ขอ - ข้อ 4
         ];
     }
@@ -779,6 +978,19 @@ class Employee extends Authenticatable
             'manager' => 'Manager',
             'express' => 'Express',
             'employee' => 'Employee'
+        ];
+    }
+
+    /**
+     * ✅ NEW: Get permission list
+     */
+    public static function getPermissions()
+    {
+        return [
+            'vpn_access' => 'การใช้งาน VPN',
+            'color_printing' => 'การปริ้นสี', 
+            'remote_work' => 'ทำงานจากที่บ้าน',
+            'admin_access' => 'เข้าถึงแผงควบคุม'
         ];
     }
 

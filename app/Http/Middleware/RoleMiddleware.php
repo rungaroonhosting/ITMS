@@ -109,6 +109,55 @@ class RoleMiddleware
         return in_array($user->role, ['super_admin', 'it_admin']);
     }
 
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์จัดการสาขา
+     */
+    public static function canManageBranches($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์ดูข้อมูลสาขา
+     */
+    public static function canViewBranches($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager', 'express']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์แก้ไขสาขา
+     */
+    public static function canEditBranches($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์ลบสาขา
+     */
+    public static function canDeleteBranches($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์จัดการพนักงานในสาขา
+     */
+    public static function canManageBranchEmployees($user, $branchId = null): bool
+    {
+        if (in_array($user->role, ['super_admin', 'it_admin', 'hr'])) {
+            return true;
+        }
+
+        // Manager สามารถจัดการพนักงานในสาขาของตัวเองได้
+        if ($user->role === 'manager' && $branchId && isset($user->branch_id)) {
+            return $user->branch_id == $branchId;
+        }
+
+        return false;
+    }
+
     public static function canExportData($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
@@ -266,6 +315,7 @@ class RoleMiddleware
                 'delete_employees',
                 'view_all_passwords',
                 'manage_departments',
+                'manage_branches', // ✅ NEW
                 'manage_users',
                 'view_reports',
                 'export_data',
@@ -273,10 +323,10 @@ class RoleMiddleware
                 'view_express_passwords',
                 'manage_express_users',
                 'system_settings',
-                'access_trash', // ✅ NEW
-                'force_delete', // ✅ NEW
-                'restore_employees', // ✅ NEW
-                'manage_soft_deletes' // ✅ NEW
+                'access_trash',
+                'force_delete',
+                'restore_employees',
+                'manage_soft_deletes'
             ],
             'it_admin' => [
                 'view_all_employees',
@@ -284,6 +334,7 @@ class RoleMiddleware
                 'edit_employees',
                 'view_all_passwords',
                 'manage_departments',
+                'manage_branches', // ✅ NEW
                 'view_reports',
                 'export_data',
                 'access_express',
@@ -294,6 +345,8 @@ class RoleMiddleware
                 'view_all_employees',
                 'create_employees',
                 'edit_employees',
+                'view_branches', // ✅ NEW
+                'manage_branches', // ✅ NEW
                 'view_reports',
                 'export_data',
                 'access_express'
@@ -302,6 +355,8 @@ class RoleMiddleware
                 'view_department_employees',
                 'create_employees',
                 'edit_department_employees',
+                'view_branches', // ✅ NEW
+                'manage_branch_employees', // ✅ NEW
                 'view_reports',
                 'access_express'
             ],
@@ -309,6 +364,7 @@ class RoleMiddleware
                 'view_accounting_employees',
                 'create_accounting_employees',
                 'edit_accounting_employees',
+                'view_branches', // ✅ NEW
                 'access_express',
                 'create_express_users'
             ],
@@ -369,6 +425,25 @@ class RoleMiddleware
     }
 
     /**
+     * ✅ NEW: Middleware สำหรับตรวจสอบสิทธิ์สาขา
+     */
+    public static function branchMiddleware(Request $request, Closure $next)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if (!self::canManageBranches($user)) {
+            return redirect()->route('dashboard')
+                ->with('error', 'ไม่มีสิทธิ์เข้าถึงระบบจัดการสาขา');
+        }
+
+        return $next($request);
+    }
+
+    /**
      * Get user's accessible departments
      */
     public static function getAccessibleDepartments($user): array
@@ -392,6 +467,33 @@ class RoleMiddleware
             default:
                 // เข้าถึงแผนกของตัวเองเท่านั้น
                 return isset($user->department_id) ? [$user->department_id] : [];
+        }
+    }
+
+    /**
+     * ✅ NEW: Get user's accessible branches
+     */
+    public static function getAccessibleBranches($user): array
+    {
+        switch ($user->role) {
+            case 'super_admin':
+            case 'it_admin':
+            case 'hr':
+                // เข้าถึงทุกสาขา
+                return ['all'];
+                
+            case 'manager':
+                // เข้าถึงสาขาของตัวเอง
+                return isset($user->branch_id) ? [$user->branch_id] : [];
+                
+            case 'express':
+                // เข้าถึงสาขาที่มีแผนก Express enabled
+                return ['express_branches'];
+                
+            case 'employee':
+            default:
+                // เข้าถึงสาขาของตัวเองเท่านั้น
+                return isset($user->branch_id) ? [$user->branch_id] : [];
         }
     }
 
@@ -437,6 +539,10 @@ class RoleMiddleware
             'can_view_express_passwords' => self::canViewExpressPasswords($user),
             'can_manage_employees' => self::canManageEmployees($user),
             'can_manage_departments' => self::canManageDepartments($user),
+            'can_manage_branches' => self::canManageBranches($user), // ✅ NEW
+            'can_view_branches' => self::canViewBranches($user), // ✅ NEW
+            'can_edit_branches' => self::canEditBranches($user), // ✅ NEW
+            'can_delete_branches' => self::canDeleteBranches($user), // ✅ NEW
             'can_export_data' => self::canExportData($user),
             'can_access_express' => self::canAccessExpressFeatures($user),
             'can_create_express_users' => self::canCreateExpressUsers($user),

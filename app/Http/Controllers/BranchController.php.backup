@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Branch;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class BranchController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(['auth', 'role:super_admin,admin']);
+    }
+
+    /**
+     * Display a listing of branches
+     */
+    public function index()
+    {
+        $branches = Branch::with('manager', 'employees')->paginate(10);
+        return view('branches.index', compact('branches'));
+    }
+
+    /**
+     * Show the form for creating a new branch
+     */
+    public function create()
+    {
+        // ดึงรายชื่อผู้ใช้ที่สามารถเป็น Manager ได้ (ใช้ scope ที่สร้างไว้)
+        $availableManagers = User::availableManagers()
+            ->orderBy('name') // ✅ ใช้ name ถ้าไม่มี full_name_th หรือสร้าง accessor
+            ->get();
+
+        return view('branches.create', compact('availableManagers'));
+    }
+
+    /**
+     * Store a newly created branch
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:branches',
+            'code' => 'required|string|max:10|unique:branches',
+            'description' => 'nullable|string',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'manager_id' => 'nullable|exists:users,id',
+            'is_active' => 'boolean'
+        ]);
+
+        $branch = Branch::create([
+            'name' => $request->name,
+            'code' => strtoupper($request->code),
+            'description' => $request->description,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'manager_id' => $request->manager_id,
+            'is_active' => $request->has('is_active') ? true : false
+        ]);
+
+        // ถ้ามี Manager ให้อัพเดต managed_branch_id
+        if ($request->manager_id) {
+            User::where('id', $request->manager_id)->update([
+                'managed_branch_id' => $branch->id
+            ]);
+        }
+
+        return redirect()->route('branches.index')
+            ->with('success', 'สร้างสาขาใหม่เรียบร้อยแล้ว');
+    }
+
+    /**
+     * Display the specified branch
+     */
+    public function show(Branch $branch)
+    {
+        $branch->load('manager', 'employees');
+        return view('branches.show', compact('branch'));
+    }
+
+    /**
+     * Show the form for editing the specified branch
+     */
+    public function edit(Branch $branch)
+    {
+        // ดึงรายชื่อผู้ใช้ที่สามารถเป็น Manager ได้ (รวมถึง Manager ปัจจุบันด้วย)
+        $availableManagers = User::where('role', '!=', 'super_admin')
+            ->where(function($query) use ($branch) {
+                $query->availableManagers()
+                      ->orWhere('id', $branch->manager_id);
+            })
+            ->orderBy('full_name_th')
+            ->get();
+
+        return view('branches.edit', compact('branch', 'availableManagers'));
+    }
+
+    /**
+     * Update the specified branch
+     */
+    public function update(Request $request, Branch $branch)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:branches,name,' . $branch->id,
+            'code' => 'required|string|max:10|unique:branches,code,' . $branch->id,
+            'description' => 'nullable|string',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'manager_id' => 'nullable|exists:users,id',
+            'is_active' => 'boolean'
+        ]);
+
+        // ลบ managed_branch_id ของ Manager เก่า
+        if ($branch->manager_id && $branch->manager_id != $request->manager_id) {
+            User::where('id', $branch->manager_id)->update([
+                'managed_branch_id' => null
+            ]);
+        }
+
+        $branch->update([
+            'name' => $request->name,
+            'code' => strtoupper($request->code),
+            'description' => $request->description,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'manager_id' => $request->manager_id,
+            'is_active' => $request->has('is_active') ? true : false
+        ]);
+
+        // ถ้ามี Manager ใหม่ให้อัพเดต managed_branch_id
+        if ($request->manager_id) {
+            User::where('id', $request->manager_id)->update([
+                'managed_branch_id' => $branch->id
+            ]);
+        }
+
+        return redirect()->route('branches.index')
+            ->with('success', 'อัพเดตข้อมูลสาขาเรียบร้อยแล้ว');
+    }
+
+    /**
+     * Remove the specified branch
+     */
+    public function destroy(Branch $branch)
+    {
+        try {
+            // ตรวจสอบว่ามีพนักงานในสาขานี้หรือไม่
+            if ($branch->employees()->count() > 0) {
+                return redirect()->route('branches.index')
+                    ->with('error', 'ไม่สามารถลบสาขาที่มีพนักงานอยู่ได้');
+            }
+
+            // ลบ managed_branch_id ของ Manager
+            if ($branch->manager_id) {
+                User::where('id', $branch->manager_id)->update([
+                    'managed_branch_id' => null
+                ]);
+            }
+
+            $branch->delete();
+
+            return redirect()->route('branches.index')
+                ->with('success', 'ลบสาขาเรียบร้อยแล้ว');
+
+        } catch (\Exception $e) {
+            return redirect()->route('branches.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการลบสาขา: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Toggle branch active status
+     */
+    public function toggleStatus(Branch $branch)
+    {
+        $branch->update(['is_active' => !$branch->is_active]);
+        
+        $status = $branch->is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+        
+        return redirect()->back()
+            ->with('success', "เปลี่ยนสถานะสาขาเป็น {$status} เรียบร้อยแล้ว");
+    }
+}

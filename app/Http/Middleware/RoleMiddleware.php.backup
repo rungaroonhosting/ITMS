@@ -129,6 +129,22 @@ class RoleMiddleware
         return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
     }
 
+    /**
+     * ✅ Updated: ตรวจสอบแผนกที่รองรับ Express (ใช้ express_enabled แทน hardcode)
+     */
+    public static function isDepartmentExpressEnabled($departmentId): bool
+    {
+        try {
+            $department = \App\Models\Department::find($departmentId);
+            return $department ? (bool) $department->express_enabled : false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * 🔄 Backward compatibility - แผนกบัญชี
+     */
     public static function isAccountingDepartment($departmentName): bool
     {
         $accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance'];
@@ -143,9 +159,9 @@ class RoleMiddleware
     }
 
     /**
-     * ตรวจสอบสิทธิ์เฉพาะ Express
+     * ✅ Updated: ตรวจสอบสิทธิ์เฉพาะ Express
      */
-    public static function canAccessExpress($user, $departmentName = null): bool
+    public static function canAccessExpress($user, $departmentId = null): bool
     {
         // SuperAdmin และ IT Admin เข้าได้เสมอ
         if (in_array($user->role, ['super_admin', 'it_admin'])) {
@@ -157,10 +173,10 @@ class RoleMiddleware
             return true;
         }
 
-        // Express role ต้องเป็นแผนกบัญชี
+        // Express role ต้องเป็นแผนกที่เปิด Express
         if ($user->role === 'express') {
-            if ($departmentName) {
-                return self::isAccountingDepartment($departmentName);
+            if ($departmentId) {
+                return self::isDepartmentExpressEnabled($departmentId);
             }
             return true; // ให้เข้าได้ถ้าไม่ระบุแผนก
         }
@@ -194,6 +210,30 @@ class RoleMiddleware
         }
 
         return false;
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การเข้าถึงถังขยะ
+     */
+    public static function canAccessTrash($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การลบอย่างถาวร
+     */
+    public static function canForceDelete($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การกู้คืน
+     */
+    public static function canRestore($user): bool
+    {
+        return $user->role === 'super_admin';
     }
 
     /**
@@ -232,7 +272,11 @@ class RoleMiddleware
                 'access_express',
                 'view_express_passwords',
                 'manage_express_users',
-                'system_settings'
+                'system_settings',
+                'access_trash', // ✅ NEW
+                'force_delete', // ✅ NEW
+                'restore_employees', // ✅ NEW
+                'manage_soft_deletes' // ✅ NEW
             ],
             'it_admin' => [
                 'view_all_employees',
@@ -306,6 +350,25 @@ class RoleMiddleware
     }
 
     /**
+     * ✅ NEW: Middleware สำหรับตรวจสอบสิทธิ์ถังขยะ
+     */
+    public static function trashMiddleware(Request $request, Closure $next)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if (!self::canAccessTrash($user)) {
+            return redirect()->route('dashboard')
+                ->with('error', 'ไม่มีสิทธิ์เข้าถึงถังขยะ (เฉพาะ Super Admin)');
+        }
+
+        return $next($request);
+    }
+
+    /**
      * Get user's accessible departments
      */
     public static function getAccessibleDepartments($user): array
@@ -322,13 +385,69 @@ class RoleMiddleware
                 return isset($user->department_id) ? [$user->department_id] : [];
                 
             case 'express':
-                // เข้าถึงเฉพาะแผนกบัญชี
-                return ['accounting'];
+                // เข้าถึงเฉพาะแผนกที่เปิด Express
+                return ['express_enabled'];
                 
             case 'employee':
             default:
                 // เข้าถึงแผนกของตัวเองเท่านั้น
                 return isset($user->department_id) ? [$user->department_id] : [];
         }
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การดู Phone Duplicates
+     */
+    public static function canViewPhoneDuplicates($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การจัดการ Bulk Actions
+     */
+    public static function canPerformBulkActions($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การส่งออกข้อมูล
+     */
+    public static function canExportEmployees($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    /**
+     * ✅ NEW: ตรวจสอบสิทธิ์การดูรายงาน
+     */
+    public static function canViewReports($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    /**
+     * ✅ NEW: Get feature flags based on user role
+     */
+    public static function getFeatureFlags($user): array
+    {
+        return [
+            'can_view_passwords' => self::canViewPasswords($user),
+            'can_view_express_passwords' => self::canViewExpressPasswords($user),
+            'can_manage_employees' => self::canManageEmployees($user),
+            'can_manage_departments' => self::canManageDepartments($user),
+            'can_export_data' => self::canExportData($user),
+            'can_access_express' => self::canAccessExpressFeatures($user),
+            'can_create_express_users' => self::canCreateExpressUsers($user),
+            'can_view_express_reports' => self::canViewExpressReports($user),
+            'can_access_trash' => self::canAccessTrash($user),
+            'can_force_delete' => self::canForceDelete($user),
+            'can_restore' => self::canRestore($user),
+            'can_view_phone_duplicates' => self::canViewPhoneDuplicates($user),
+            'can_perform_bulk_actions' => self::canPerformBulkActions($user),
+            'can_export_employees' => self::canExportEmployees($user),
+            'can_view_reports' => self::canViewReports($user),
+        ];
     }
 }
