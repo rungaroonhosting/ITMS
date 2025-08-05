@@ -17,15 +17,13 @@ class Branch extends Model
      */
     protected $fillable = [
         'name',
-        'code', // ✅ ใช้ 'code' เป็นหลัก
-        'branch_code', // ✅ รองรับเก่าด้วย
+        'code', // ✅ ใช้ 'code' แทน 'branch_code' ให้ตรงกับ Controller
         'description',
         'address',
         'phone',
         'email',
         'manager_id',
-        'is_active', // ✅ ใช้ 'is_active' เป็นหลัก
-        'status', // ✅ รองรับเก่าด้วย
+        'is_active', // ✅ ใช้ 'is_active' แทน 'status' ให้ตรงกับ Controller
         'capacity',
         'area_sqm',
         'opening_date',
@@ -37,7 +35,7 @@ class Branch extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active' => 'boolean', // ✅ เปลี่ยนจาก status เป็น is_active
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -60,71 +58,55 @@ class Branch extends Model
         'manager_name',
         'years_since_opening',
         'formatted_area',
-        'branch_code_compat', // ✅ เพิ่ม compatibility
     ];
 
     // ===========================================
-    // ✅ FIXED: RELATIONSHIPS - ใช้ Employee แทน User
+    // RELATIONSHIPS (แก้ไขให้ใช้ User แทน Employee)
     // ===========================================
 
     /**
-     * ✅ FIXED: Get all employees in this branch.
+     * Get all employees (users) in this branch.
      */
     public function employees()
     {
-        return $this->hasMany(Employee::class, 'branch_id'); // ✅ ใช้ Employee แทน User
+        return $this->hasMany(User::class, 'branch_id'); // ✅ ใช้ User แทน Employee
     }
 
     /**
-     * ✅ FIXED: Get active employees in this branch.
+     * Get active employees in this branch.
      */
     public function activeEmployees()
     {
-        return $this->hasMany(Employee::class, 'branch_id')->where('status', 'active'); // ✅ ใช้ Employee
+        return $this->hasMany(User::class, 'branch_id')->where('is_active', true); // ✅ ใช้ User
     }
 
     /**
-     * ✅ FIXED: Get the branch manager.
+     * Get the branch manager.
      */
     public function manager()
     {
-        return $this->belongsTo(Employee::class, 'manager_id'); // ✅ ใช้ Employee แทน User
+        return $this->belongsTo(User::class, 'manager_id'); // ✅ ใช้ User แทน Employee
     }
 
     /**
-     * Get departments in this branch (through employees).
+     * Get departments in this branch (if you have department-branch relationship).
      */
     public function departments()
     {
-        return $this->hasManyThrough(
-            Department::class, 
-            Employee::class, // ✅ ใช้ Employee
-            'branch_id', // Foreign key on employees table
-            'id', // Foreign key on departments table  
-            'id', // Local key on branches table
-            'department_id' // Local key on employees table
-        )->distinct();
+        return $this->hasManyThrough(Department::class, User::class, 'branch_id', 'id', 'id', 'department_id')
+                    ->distinct();
     }
 
     // ===========================================
-    // ✅ ENHANCED: ACCESSORS & MUTATORS
+    // ACCESSORS & MUTATORS
     // ===========================================
-
-    /**
-     * ✅ COMPATIBILITY: Get branch_code (รองรับทั้ง code และ branch_code)
-     */
-    public function getBranchCodeCompatAttribute()
-    {
-        return $this->code ?? $this->branch_code ?? 'N/A';
-    }
 
     /**
      * Get the branch's full name with code.
      */
     public function getFullNameAttribute()
     {
-        $code = $this->branch_code_compat;
-        return "{$this->name} ({$code})";
+        return "{$this->name} ({$this->code})"; // ✅ ใช้ code แทน branch_code
     }
 
     /**
@@ -132,7 +114,7 @@ class Branch extends Model
      */
     public function getStatusDisplayAttribute()
     {
-        return $this->is_active ? 'เปิดให้บริการ' : 'ปิดชั่วคราว';
+        return $this->is_active ? 'เปิดให้บริการ' : 'ปิดชั่วคราว'; // ✅ ใช้ is_active
     }
 
     /**
@@ -140,11 +122,11 @@ class Branch extends Model
      */
     public function getStatusBadgeAttribute()
     {
-        return $this->is_active ? 'success' : 'secondary';
+        return $this->is_active ? 'success' : 'secondary'; // ✅ ใช้ is_active
     }
 
     /**
-     * ✅ FIXED: Get the number of employees in this branch.
+     * Get the number of employees in this branch.
      */
     public function getEmployeeCountAttribute()
     {
@@ -152,7 +134,7 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Get active employee count in this branch.
+     * Get active employee count in this branch.
      */
     public function getActiveEmployeeCountAttribute()
     {
@@ -173,7 +155,7 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Get manager's name.
+     * Get manager's name.
      */
     public function getManagerNameAttribute()
     {
@@ -243,40 +225,11 @@ class Branch extends Model
     }
 
     /**
-     * ✅ COMPATIBILITY: Mutator for code - ensure uppercase.
+     * Mutator for code - ensure uppercase.
      */
-    public function setCodeAttribute($value)
+    public function setCodeAttribute($value) // ✅ ใช้ code แทน branch_code
     {
         $this->attributes['code'] = strtoupper($value);
-        // ✅ Auto-sync เก่าด้วย
-        $this->attributes['branch_code'] = strtoupper($value);
-    }
-
-    /**
-     * ✅ COMPATIBILITY: Mutator for branch_code - ensure uppercase.
-     */
-    public function setBranchCodeAttribute($value)
-    {
-        $this->attributes['branch_code'] = strtoupper($value);
-        // ✅ Auto-sync ใหม่ด้วย
-        if (empty($this->attributes['code'])) {
-            $this->attributes['code'] = strtoupper($value);
-        }
-    }
-
-    /**
-     * ✅ COMPATIBILITY: Handle status field
-     */
-    public function setStatusAttribute($value)
-    {
-        // Convert old status to new is_active
-        if ($value === 'active') {
-            $this->attributes['is_active'] = true;
-        } elseif ($value === 'inactive') {
-            $this->attributes['is_active'] = false;
-        } else {
-            $this->attributes['is_active'] = (bool) $value;
-        }
     }
 
     /**
@@ -304,7 +257,7 @@ class Branch extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true); // ✅ ใช้ is_active
     }
 
     /**
@@ -312,7 +265,7 @@ class Branch extends Model
      */
     public function scopeInactive($query)
     {
-        return $query->where('is_active', false);
+        return $query->where('is_active', false); // ✅ ใช้ is_active
     }
 
     /**
@@ -321,10 +274,9 @@ class Branch extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where(function($q) use ($search) {
-            $q->where('code', 'LIKE', "%{$search}%")
-              ->orWhere('branch_code', 'LIKE', "%{$search}%") // ✅ รองรับเก่าด้วย
+            $q->where('code', 'LIKE', "%{$search}%") // ✅ ใช้ code
               ->orWhere('name', 'LIKE', "%{$search}%")
-              ->orWhere('description', 'LIKE', "%{$search}%")
+              ->orWhere('description', 'LIKE', "%{$search}%") // ✅ เพิ่ม description
               ->orWhere('address', 'LIKE', "%{$search}%")
               ->orWhere('phone', 'LIKE', "%{$search}%")
               ->orWhere('email', 'LIKE', "%{$search}%");
@@ -340,16 +292,16 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Scope branches with high capacity usage.
+     * Scope branches with high capacity usage.
      */
     public function scopeNearCapacity($query, $threshold = 70)
     {
         return $query->whereRaw('
-            (SELECT COUNT(*) FROM employees 
-             WHERE employees.branch_id = branches.id 
-             AND employees.status = "active"
-             AND employees.deleted_at IS NULL) >= (branches.capacity * ? / 100)
-        ', [$threshold]); // ✅ ใช้ employees table
+            (SELECT COUNT(*) FROM users 
+             WHERE users.branch_id = branches.id 
+             AND users.is_active = 1 
+             AND users.deleted_at IS NULL) >= (branches.capacity * ? / 100)
+        ', [$threshold]); // ✅ ใช้ users table และ is_active
     }
 
     /**
@@ -369,7 +321,7 @@ class Branch extends Model
     }
 
     // ===========================================
-    // ✅ ENHANCED: METHODS
+    // METHODS
     // ===========================================
 
     /**
@@ -377,7 +329,7 @@ class Branch extends Model
      */
     public function isActive()
     {
-        return $this->is_active;
+        return $this->is_active; // ✅ ใช้ is_active
     }
 
     /**
@@ -411,16 +363,17 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Assign manager to branch.
+     * Assign manager to branch.
      */
-    public function assignManager(Employee $employee) // ✅ ใช้ Employee แทน User
+    public function assignManager(User $user) // ✅ ใช้ User แทน Employee
     {
-        // Ensure employee is in this branch
-        if ($employee->branch_id !== $this->id) {
-            $employee->update(['branch_id' => $this->id]);
+        // Ensure user is in this branch
+        if ($user->branch_id !== $this->id) {
+            $user->update(['branch_id' => $this->id]);
         }
 
-        $this->update(['manager_id' => $employee->id]);
+        $this->update(['manager_id' => $user->id]);
+        $user->update(['managed_branch_id' => $this->id]); // ✅ เพิ่มการอัพเดต managed_branch_id
         
         return $this;
     }
@@ -430,12 +383,17 @@ class Branch extends Model
      */
     public function removeManager()
     {
+        if ($this->manager) {
+            $this->manager->update(['managed_branch_id' => null]); // ✅ เพิ่มการลบ managed_branch_id
+        }
+        
         $this->update(['manager_id' => null]);
+        
         return $this;
     }
 
     /**
-     * ✅ FIXED: Transfer employees to another branch.
+     * Transfer employees to another branch.
      */
     public function transferEmployeesTo(Branch $targetBranch, $employeeIds = null)
     {
@@ -451,7 +409,7 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Get branch statistics.
+     * Get branch statistics.
      */
     public function getStatistics()
     {
@@ -459,16 +417,15 @@ class Branch extends Model
         
         return [
             'total_employees' => $employees->count(),
-            'active_employees' => $employees->where('status', 'active')->count(),
-            'inactive_employees' => $employees->where('status', 'inactive')->count(),
-            'departments' => $employees->get()->pluck('department.name')->unique()->filter()->values(),
+            'active_employees' => $employees->where('is_active', true)->count(), // ✅ ใช้ is_active
+            'inactive_employees' => $employees->where('is_active', false)->count(), // ✅ ใช้ is_active
+            'departments' => $employees->get()->pluck('department.name')->unique()->values(),
             'capacity_info' => $this->getCapacityInfo(),
             'years_operating' => $this->years_since_opening,
             'manager' => $this->manager ? [
                 'id' => $this->manager->id,
                 'name' => $this->manager->full_name_th,
                 'email' => $this->manager->email,
-                'employee_code' => $this->manager->employee_code,
             ] : null,
         ];
     }
@@ -478,7 +435,7 @@ class Branch extends Model
      */
     public function activate()
     {
-        $this->update(['is_active' => true]);
+        $this->update(['is_active' => true]); // ✅ ใช้ is_active
         return $this;
     }
 
@@ -487,7 +444,7 @@ class Branch extends Model
      */
     public function deactivate()
     {
-        $this->update(['is_active' => false]);
+        $this->update(['is_active' => false]); // ✅ ใช้ is_active
         return $this;
     }
 
@@ -501,25 +458,23 @@ class Branch extends Model
     }
 
     // ===========================================
-    // ✅ ENHANCED: VALIDATION RULES
+    // VALIDATION RULES
     // ===========================================
 
     /**
-     * ✅ FIXED: Get validation rules for creating branch.
+     * Get validation rules for creating branch.
      */
     public static function getCreateRules()
     {
         return [
-            'code' => 'required|string|max:10|unique:branches,code',
-            'branch_code' => 'nullable|string|max:10|unique:branches,branch_code', // ✅ รองรับเก่า
+            'code' => 'required|string|max:10|unique:branches,code', // ✅ ใช้ code
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:employees,id', // ✅ ใช้ employees table
-            'is_active' => 'boolean',
-            'status' => 'nullable|in:active,inactive', // ✅ รองรับเก่า
+            'manager_id' => 'nullable|exists:users,id', // ✅ ใช้ users table
+            'is_active' => 'boolean', // ✅ ใช้ is_active
             'capacity' => 'nullable|integer|min:1|max:1000',
             'area_sqm' => 'nullable|numeric|min:0|max:99999.99',
             'opening_date' => 'nullable|date|before_or_equal:today',
@@ -527,21 +482,19 @@ class Branch extends Model
     }
 
     /**
-     * ✅ FIXED: Get validation rules for updating branch.
+     * Get validation rules for updating branch.
      */
     public static function getUpdateRules($id)
     {
         return [
-            'code' => "required|string|max:10|unique:branches,code,{$id}",
-            'branch_code' => "nullable|string|max:10|unique:branches,branch_code,{$id}", // ✅ รองรับเก่า
+            'code' => "required|string|max:10|unique:branches,code,{$id}", // ✅ ใช้ code
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'manager_id' => 'nullable|exists:employees,id', // ✅ ใช้ employees table
-            'is_active' => 'boolean',
-            'status' => 'nullable|in:active,inactive', // ✅ รองรับเก่า
+            'manager_id' => 'nullable|exists:users,id', // ✅ ใช้ users table
+            'is_active' => 'boolean', // ✅ ใช้ is_active
             'capacity' => 'nullable|integer|min:1|max:1000',
             'area_sqm' => 'nullable|numeric|min:0|max:99999.99',
             'opening_date' => 'nullable|date|before_or_equal:today',
@@ -556,59 +509,30 @@ class Branch extends Model
         return [
             true => 'เปิดให้บริการ',
             false => 'ปิดชั่วคราว'
-        ];
+        ]; // ✅ ใช้ boolean แทน string
     }
 
     /**
-     * ✅ ENHANCED: Boot method for model events.
+     * Boot method for model events.
      */
     protected static function booted()
     {
         // Auto uppercase branch code
         static::saving(function ($branch) {
-            if ($branch->isDirty('code')) {
+            if ($branch->isDirty('code')) { // ✅ ใช้ code
                 $branch->code = strtoupper($branch->code);
-                $branch->branch_code = strtoupper($branch->code); // ✅ Auto-sync
-            }
-            
-            if ($branch->isDirty('branch_code')) {
-                $branch->branch_code = strtoupper($branch->branch_code);
-                if (empty($branch->code)) {
-                    $branch->code = strtoupper($branch->branch_code); // ✅ Auto-sync
-                }
             }
         });
         
-        // ✅ FIXED: Clean up when deleting
+        // Clean up when deleting
         static::deleting(function ($branch) {
             // Remove manager assignment
             if ($branch->manager) {
-                // ไม่ต้องแก้ managed_branch_id เพราะ Employee table ไม่มี field นี้
+                $branch->manager->update(['managed_branch_id' => null]);
             }
 
             // Remove branch assignment from employees
             $branch->employees()->update(['branch_id' => null]);
         });
-    }
-
-    // ===========================================
-    // ✅ COMPATIBILITY METHODS
-    // ===========================================
-
-    /**
-     * ✅ COMPATIBILITY: Get branch_code attribute (รองรับเก่า)
-     */
-    public function getBranchCodeAttribute($value)
-    {
-        // ถ้ามี branch_code ให้ใช้ ถ้าไม่มีให้ใช้ code
-        return $value ?? $this->attributes['code'] ?? null;
-    }
-
-    /**
-     * ✅ COMPATIBILITY: Get status attribute (รองรับเก่า)
-     */
-    public function getStatusAttribute()
-    {
-        return $this->is_active ? 'active' : 'inactive';
     }
 }

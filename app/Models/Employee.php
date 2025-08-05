@@ -100,6 +100,8 @@ class Employee extends Authenticatable
         'permissions_summary',
         'branch_name',         // ✅ NEW: เพิ่ม branch_name accessor
         'full_location',       // ✅ NEW: เพิ่ม full_location (department + branch)
+        'branch_code',         // ✅ NEW: เพิ่ม branch_code accessor
+        'location_display',    // ✅ NEW: แสดงที่ตั้งแบบสั้น
     ];
 
     // ===========================================
@@ -159,7 +161,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // RELATIONSHIPS
+    // ✅ ENHANCED: RELATIONSHIPS
     // ===========================================
 
     /**
@@ -171,11 +173,11 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get the branch that owns the employee.
+     * ✅ ENHANCED: Get the branch that owns the employee.
      */
     public function branch()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     /**
@@ -187,15 +189,35 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get branches managed by this employee.
+     * ✅ ENHANCED: Get branches managed by this employee.
      */
     public function managedBranches()
     {
         return $this->hasMany(Branch::class, 'manager_id');
     }
 
+    /**
+     * ✅ NEW: Get colleagues in the same branch.
+     */
+    public function branchColleagues()
+    {
+        return $this->hasMany(Employee::class, 'branch_id', 'branch_id')
+                    ->where('id', '!=', $this->id)
+                    ->where('status', 'active');
+    }
+
+    /**
+     * ✅ NEW: Get colleagues in the same department.
+     */
+    public function departmentColleagues()
+    {
+        return $this->hasMany(Employee::class, 'department_id', 'department_id')
+                    ->where('id', '!=', $this->id)
+                    ->where('status', 'active');
+    }
+
     // ===========================================
-    // ACCESSORS & MUTATORS (เหมือนเดิม + เพิ่มใหม่)
+    // ✅ ENHANCED: ACCESSORS & MUTATORS (เหมือนเดิม + เพิ่มใหม่)
     // ===========================================
 
     public function getFullNameThAttribute()
@@ -229,7 +251,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get branch name.
+     * ✅ ENHANCED: Get branch name.
      */
     public function getBranchNameAttribute()
     {
@@ -237,7 +259,15 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get full location (Department + Branch).
+     * ✅ NEW: Get branch code.
+     */
+    public function getBranchCodeAttribute()
+    {
+        return $this->branch ? ($this->branch->code ?? $this->branch->branch_code ?? 'N/A') : 'N/A';
+    }
+
+    /**
+     * ✅ ENHANCED: Get full location (Department + Branch).
      */
     public function getFullLocationAttribute()
     {
@@ -256,7 +286,26 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get branch code with name.
+     * ✅ NEW: Get location display (short version).
+     */
+    public function getLocationDisplayAttribute()
+    {
+        $department = $this->department ? $this->department->name : null;
+        $branch = $this->branch ? $this->branch->name : null;
+        
+        if ($department && $branch) {
+            return $branch . ' (' . $department . ')';
+        } elseif ($branch) {
+            return $branch;
+        } elseif ($department) {
+            return $department;
+        } else {
+            return 'ไม่ระบุ';
+        }
+    }
+
+    /**
+     * ✅ ENHANCED: Get branch code with name.
      */
     public function getBranchFullNameAttribute()
     {
@@ -403,7 +452,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // METHODS (เหมือนเดิม + เพิ่มใหม่)
+    // ✅ ENHANCED: METHODS (เหมือนเดิม + เพิ่มใหม่)
     // ===========================================
 
     public function canBeManaged($user = null)
@@ -434,7 +483,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Check if employee can be managed in the same branch.
+     * ✅ ENHANCED: Check if employee can be managed in the same branch.
      */
     public function canBeManagedInBranch($user = null)
     {
@@ -460,12 +509,16 @@ class Employee extends Authenticatable
         }
         
         // Branch manager can manage same branch
-        if ($currentUser->role === 'manager' && $currentUser->branch_id === $this->branch_id) {
+        if ($currentUser->role === 'manager' && 
+            $currentUser->branch_id && 
+            $currentUser->branch_id === $this->branch_id) {
             return true;
         }
         
         // Department manager can manage same department
-        if ($currentUser->role === 'manager' && $currentUser->department_id === $this->department_id) {
+        if ($currentUser->role === 'manager' && 
+            $currentUser->department_id && 
+            $currentUser->department_id === $this->department_id) {
             return true;
         }
         
@@ -559,7 +612,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // SCOPES (เหมือนเดิม + เพิ่มใหม่)
+    // ✅ ENHANCED: SCOPES (เหมือนเดิม + เพิ่มใหม่)
     // ===========================================
 
     public function scopeActive($query)
@@ -578,7 +631,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Scope by branch.
+     * ✅ ENHANCED: Scope by branch.
      */
     public function scopeByBranch($query, $branchId)
     {
@@ -586,7 +639,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Scope by branch and department.
+     * ✅ ENHANCED: Scope by branch and department.
      */
     public function scopeByLocation($query, $branchId = null, $departmentId = null)
     {
@@ -599,6 +652,22 @@ class Employee extends Authenticatable
         }
         
         return $query;
+    }
+
+    /**
+     * ✅ NEW: Scope employees without branch.
+     */
+    public function scopeWithoutBranch($query)
+    {
+        return $query->whereNull('branch_id');
+    }
+
+    /**
+     * ✅ NEW: Scope employees with branch.
+     */
+    public function scopeWithBranch($query)
+    {
+        return $query->whereNotNull('branch_id');
     }
 
     public function scopeByRole($query, $role)
@@ -652,7 +721,7 @@ class Employee extends Authenticatable
     }
 
     // ===========================================
-    // ADDITIONAL METHODS (เหมือนเดิม + เพิ่มใหม่)
+    // ✅ ENHANCED: ADDITIONAL METHODS (เหมือนเดิม + เพิ่มใหม่)
     // ===========================================
 
     public function hasRole($role)
@@ -675,7 +744,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Check if employee is branch manager.
+     * ✅ ENHANCED: Check if employee is branch manager.
      */
     public function isBranchManager()
     {
@@ -683,7 +752,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Check if employee is manager of specific branch.
+     * ✅ ENHANCED: Check if employee is manager of specific branch.
      */
     public function isManagerOfBranch($branchId)
     {
@@ -706,7 +775,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Check if employee is in specific branch.
+     * ✅ ENHANCED: Check if employee is in specific branch.
      */
     public function isInBranch($branchId)
     {
@@ -714,7 +783,15 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Get employee's location information.
+     * ✅ NEW: Check if employee is in same branch as another employee.
+     */
+    public function isInSameBranchAs(Employee $otherEmployee)
+    {
+        return $this->branch_id && $this->branch_id === $otherEmployee->branch_id;
+    }
+
+    /**
+     * ✅ ENHANCED: Get employee's location information.
      */
     public function getLocationInfo()
     {
@@ -722,14 +799,17 @@ class Employee extends Authenticatable
             'branch' => $this->branch ? [
                 'id' => $this->branch->id,
                 'name' => $this->branch->name,
-                'code' => $this->branch->branch_code,
+                'code' => $this->branch->branch_code_compat,
                 'full_name' => $this->branch->full_name,
+                'is_active' => $this->branch->is_active,
             ] : null,
             'department' => $this->department ? [
                 'id' => $this->department->id,
                 'name' => $this->department->name,
+                'express_enabled' => $this->department->express_enabled ?? false,
             ] : null,
             'full_location' => $this->full_location,
+            'location_display' => $this->location_display,
         ];
     }
 
@@ -739,8 +819,9 @@ class Employee extends Authenticatable
             'email' => $this->email,
             'phone' => $this->phone,
             'department' => $this->department->name ?? null,
-            'branch' => $this->branch->name ?? null,          // ✅ NEW: เพิ่ม branch
+            'branch' => $this->branch->name ?? null,          // ✅ ENHANCED: เพิ่ม branch
             'position' => $this->position,
+            'location_display' => $this->location_display,    // ✅ NEW: เพิ่ม location_display
         ];
     }
 
@@ -756,6 +837,7 @@ class Employee extends Authenticatable
             'role' => $this->role,
             'status' => $this->status,
             'permissions' => $this->getAllPermissions(),
+            'branch' => $this->branch ? $this->branch->name : null, // ✅ NEW: เพิ่ม branch
         ];
     }
 
@@ -805,7 +887,7 @@ class Employee extends Authenticatable
     }
 
     /**
-     * ✅ NEW: Transfer employee to new branch.
+     * ✅ ENHANCED: Transfer employee to new branch.
      */
     public function transferToBranch($branchId, $departmentId = null, $newPosition = null)
     {
@@ -824,8 +906,49 @@ class Employee extends Authenticatable
         return $this;
     }
 
+    /**
+     * ✅ NEW: Transfer employee with full location change.
+     */
+    public function transferToLocation($branchId = null, $departmentId = null, $newPosition = null, $reason = null)
+    {
+        $updateData = [];
+        $changes = [];
+        
+        if ($branchId !== null) {
+            $updateData['branch_id'] = $branchId;
+            $oldBranch = $this->branch ? $this->branch->name : 'ไม่ระบุ';
+            $newBranch = Branch::find($branchId)->name ?? 'ไม่ระบุ';
+            $changes[] = "สาขา: {$oldBranch} → {$newBranch}";
+        }
+        
+        if ($departmentId !== null) {
+            $updateData['department_id'] = $departmentId;
+            $oldDept = $this->department ? $this->department->name : 'ไม่ระบุ';
+            $newDept = Department::find($departmentId)->name ?? 'ไม่ระบุ';
+            $changes[] = "แผนก: {$oldDept} → {$newDept}";
+        }
+        
+        if ($newPosition) {
+            $updateData['position'] = $newPosition;
+            $changes[] = "ตำแหน่ง: {$this->position} → {$newPosition}";
+        }
+        
+        if (!empty($updateData)) {
+            $this->update($updateData);
+            
+            \Log::info("Employee location transfer completed", [
+                'employee_id' => $this->id,
+                'employee_name' => $this->full_name_th,
+                'changes' => $changes,
+                'reason' => $reason ?? 'ไม่ระบุ'
+            ]);
+        }
+        
+        return $this;
+    }
+
     // ===========================================
-    // VALIDATION RULES (อัพเดตเพิ่ม branch_id)
+    // ✅ ENHANCED: VALIDATION RULES (อัพเดตเพิ่ม branch_id)
     // ===========================================
 
     public static function getCreateRules()
@@ -847,7 +970,7 @@ class Employee extends Authenticatable
             'express_username' => 'nullable|string|max:7',
             'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',           // ✅ NEW: branch validation
+            'branch_id' => 'nullable|exists:branches,id',           // ✅ ENHANCED: branch validation
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',
@@ -880,7 +1003,7 @@ class Employee extends Authenticatable
             'express_username' => 'nullable|string|max:7',
             'express_password' => 'nullable|string|max:4',
             'department_id' => 'required|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',           // ✅ NEW: branch validation
+            'branch_id' => 'nullable|exists:branches,id',           // ✅ ENHANCED: branch validation
             'position' => 'required|string|max:100',
             'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
             'status' => 'required|in:active,inactive',

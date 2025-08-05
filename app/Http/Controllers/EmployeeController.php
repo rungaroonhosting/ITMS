@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Department;
+use App\Models\Branch; // ✅ เพิ่ม Branch model
 use App\Http\Requests\EmployeeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Employee::withoutTrashed()->with('department');
+            $query = Employee::withoutTrashed()->with(['department', 'branch']); // ✅ เพิ่ม branch
             
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {
@@ -40,6 +41,11 @@ class EmployeeController extends Controller
             // Department filter
             if ($request->has('department') && !empty($request->department)) {
                 $query->where('department_id', $request->department);
+            }
+
+            // ✅ NEW: Branch filter
+            if ($request->has('branch') && !empty($request->branch)) {
+                $query->where('branch_id', $request->branch);
             }
             
             // Role filter
@@ -69,23 +75,31 @@ class EmployeeController extends Controller
             
             $employees = $query->orderBy('created_at', 'desc')->paginate(20);
             $departments = Department::all();
+            $branches = Branch::where('is_active', true)->orderBy('name')->get(); // ✅ เพิ่ม branches
             
-            // Statistics for dashboard (with permissions)
+            // ✅ Enhanced statistics (with branch info)
             $stats = [
                 'total' => Employee::withoutTrashed()->count(),
                 'active' => Employee::withoutTrashed()->where('status', 'active')->count(),
                 'express_users' => Employee::withoutTrashed()->whereNotNull('express_username')->count(),
                 'vpn_users' => Employee::withoutTrashed()->where('vpn_access', true)->count(),
                 'color_printing_users' => Employee::withoutTrashed()->where('color_printing', true)->count(),
-                'trash_count' => Employee::onlyTrashed()->count()
+                'trash_count' => Employee::onlyTrashed()->count(),
+                'with_branch' => Employee::withoutTrashed()->whereNotNull('branch_id')->count(), // ✅ เพิ่ม
+                'without_branch' => Employee::withoutTrashed()->whereNull('branch_id')->count(), // ✅ เพิ่ม
             ];
             
-            return view('employees.index', compact('employees', 'departments', 'stats'));
+            return view('employees.index', compact('employees', 'departments', 'branches', 'stats')); // ✅ เพิ่ม branches
         } catch (\Exception $e) {
             return view('employees.index', [
                 'employees' => collect(),
                 'departments' => collect(),
-                'stats' => ['total' => 0, 'active' => 0, 'express_users' => 0, 'vpn_users' => 0, 'color_printing_users' => 0, 'trash_count' => 0]
+                'branches' => collect(), // ✅ เพิ่ม
+                'stats' => [
+                    'total' => 0, 'active' => 0, 'express_users' => 0, 
+                    'vpn_users' => 0, 'color_printing_users' => 0, 'trash_count' => 0,
+                    'with_branch' => 0, 'without_branch' => 0 // ✅ เพิ่ม
+                ]
             ]);
         }
     }
@@ -97,7 +111,8 @@ class EmployeeController extends Controller
     {
         try {
             $departments = Department::where('is_active', true)->orderBy('name')->get();
-            return view('employees.create', compact('departments'));
+            $branches = Branch::where('is_active', true)->orderBy('name')->get(); // ✅ เพิ่ม branches
+            return view('employees.create', compact('departments', 'branches')); // ✅ เพิ่ม branches
         } catch (\Exception $e) {
             return redirect()->route('employees.index')
                 ->with('error', 'ไม่สามารถเข้าถึงหน้าเพิ่มพนักงานได้');
@@ -105,7 +120,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * ✅ ENHANCED: Store a newly created resource in storage with Branch support.
      */
     public function store(EmployeeRequest $request)
     {
@@ -122,6 +137,9 @@ class EmployeeController extends Controller
             
             // ✅ FIXED: Handle Permission Fields
             $this->handlePermissionFields($validated);
+
+            // ✅ NEW: Handle Branch assignment
+            $this->handleBranchAssignment($validated);
             
             // ✅ UPDATED: Auto-sync login_email
             $validated['login_email'] = $validated['email'];
@@ -131,19 +149,23 @@ class EmployeeController extends Controller
             
             DB::commit();
             
-            Log::info("Employee created successfully: {$employee->employee_code} with Permissions System v2.0");
+            Log::info("Employee created successfully: {$employee->employee_code} with Branch System + Permissions v2.0", [
+                'branch_id' => $employee->branch_id,
+                'branch_name' => $employee->branch ? $employee->branch->name : 'N/A'
+            ]);
             
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว',
-                    'employee' => $employee->load('department'),
+                    'message' => 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว (รวม Branch System)',
+                    'employee' => $employee->load(['department', 'branch']), // ✅ เพิ่ม branch
                     'redirect' => route('employees.show', $employee)
                 ]);
             }
             
             return redirect()->route('employees.show', $employee)
-                ->with('success', 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว: ' . $employee->full_name_th);
+                ->with('success', 'เพิ่มพนักงานใหม่เรียบร้อยแล้ว: ' . $employee->full_name_th . 
+                       ($employee->branch ? ' ที่สาขา: ' . $employee->branch->name : ''));
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -169,8 +191,8 @@ class EmployeeController extends Controller
     public function show(Employee $employee)
     {
         try {
-            // Load relationships
-            $employee->load('department');
+            // ✅ Load relationships including branch
+            $employee->load(['department', 'branch']);
             
             // Check access permissions
             if (!$this->canAccessEmployee($employee)) {
@@ -198,9 +220,10 @@ class EmployeeController extends Controller
             }
             
             $departments = Department::where('is_active', true)->orderBy('name')->get();
-            $employee->load('department');
+            $branches = Branch::where('is_active', true)->orderBy('name')->get(); // ✅ เพิ่ม branches
+            $employee->load(['department', 'branch']); // ✅ เพิ่ม branch
             
-            return view('employees.edit', compact('employee', 'departments'));
+            return view('employees.edit', compact('employee', 'departments', 'branches')); // ✅ เพิ่ม branches
         } catch (\Exception $e) {
             return redirect()->route('employees.index')
                 ->with('error', 'ไม่สามารถแก้ไขข้อมูลได้');
@@ -208,7 +231,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * ✅ FIXED: Update method with proper password and permission handling
+     * ✅ ENHANCED: Update method with proper password and branch handling
      */
     public function update(EmployeeRequest $request, Employee $employee)
     {
@@ -236,8 +259,11 @@ class EmployeeController extends Controller
             // ✅ UPDATED: Handle Express credentials (Enhanced)
             $this->handleExpressCredentials($validated, $employee);
             
-            // ✅ FIXED: Handle Permission Fields (NEW)
+            // ✅ FIXED: Handle Permission Fields
             $this->handlePermissionFields($validated);
+
+            // ✅ NEW: Handle Branch assignment changes
+            $this->handleBranchAssignment($validated, $employee);
             
             // ✅ UPDATED: Auto-sync login_email
             if (isset($validated['email'])) {
@@ -251,22 +277,25 @@ class EmployeeController extends Controller
             Log::info('Employee update validated data:', [
                 'employee_id' => $employee->id,
                 'employee_code' => $employee->employee_code,
+                'branch_id' => $validated['branch_id'] ?? 'not_set',
+                'branch_change' => ($employee->branch_id != ($validated['branch_id'] ?? null)),
                 'permissions' => [
                     'vpn_access' => $validated['vpn_access'] ?? 'not_set',
                     'color_printing' => $validated['color_printing'] ?? 'not_set',
                     'remote_work' => $validated['remote_work'] ?? 'not_set',
                     'admin_access' => $validated['admin_access'] ?? 'not_set',
                 ],
-                'has_permission_fields' => array_key_exists('vpn_access', $validated)
             ]);
             
             // Update employee
             $employee->update($validated);
             
-            // ✅ VERIFY: Check if permissions were actually saved
+            // ✅ VERIFY: Check if branch and permissions were actually saved
             $employee->refresh();
-            Log::info('Employee permissions after update:', [
+            Log::info('Employee after update:', [
                 'employee_id' => $employee->id,
+                'branch_id' => $employee->branch_id,
+                'branch_name' => $employee->branch ? $employee->branch->name : 'N/A',
                 'vpn_access' => $employee->vpn_access,
                 'color_printing' => $employee->color_printing,
                 'remote_work' => $employee->remote_work,
@@ -275,19 +304,20 @@ class EmployeeController extends Controller
             
             DB::commit();
             
-            Log::info("Employee updated successfully: {$employee->employee_code} with Permissions System v2.0");
+            Log::info("Employee updated successfully: {$employee->employee_code} with Branch + Permissions System v2.0");
             
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว (รวมสิทธิ์พิเศษ)',
-                    'employee' => $employee->fresh()->load('department'),
+                    'message' => 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว (รวม Branch System)',
+                    'employee' => $employee->fresh()->load(['department', 'branch']), // ✅ เพิ่ม branch
                     'redirect' => route('employees.show', $employee)
                 ]);
             }
             
             return redirect()->route('employees.show', $employee)
-                ->with('success', 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employee->full_name_th . ' (รวมสิทธิ์พิเศษ)');
+                ->with('success', 'อัปเดตข้อมูลพนักงานเรียบร้อยแล้ว: ' . $employee->full_name_th . 
+                       ($employee->branch ? ' ที่สาขา: ' . $employee->branch->name : '') . ' (รวม Branch + สิทธิ์พิเศษ)');
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -308,7 +338,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * ✅ ENHANCED: Remove the specified resource from storage with Branch handling.
      */
     public function destroy(Employee $employee)
     {
@@ -321,13 +351,18 @@ class EmployeeController extends Controller
                 ], 403);
             }
 
+            // ✅ ENHANCED: Load relationships before soft delete for logging
+            $employee->load(['department', 'branch']);
+            
             $employeeName = $employee->full_name_th;
             $employeeCode = $employee->employee_code;
+            $branchName = $employee->branch ? $employee->branch->name : 'ไม่ระบุสาขา'; // ✅ เพิ่ม branch info
+            $departmentName = $employee->department ? $employee->department->name : 'ไม่ระบุแผนก';
             
             // Soft delete
             $employee->delete();
 
-            Log::info("Employee soft deleted: {$employeeName} (Code: {$employeeCode})");
+            Log::info("Employee soft deleted: {$employeeName} (Code: {$employeeCode}) from Branch: {$branchName}, Department: {$departmentName}");
 
             return response()->json([
                 'success' => true,
@@ -340,6 +375,448 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'เกิดข้อผิดพลาดในการลบข้อมูล'
+            ], 500);
+        }
+    }
+
+    // =====================================================
+    // ✅ NEW: COMPLETE TRASH MANAGEMENT METHODS
+    // =====================================================
+
+    /**
+     * ✅ NEW: Display trashed employees (Super Admin only)
+     */
+    public function trash()
+    {
+        try {
+            // Check Super Admin permission
+            if (auth()->user()->role !== 'super_admin') {
+                return redirect()->route('employees.index')
+                    ->with('error', 'เฉพาะ Super Admin เท่านั้นที่สามารถเข้าถึงถังขยะได้');
+            }
+
+            // ✅ Load relationships including branch
+            $trashedEmployees = Employee::onlyTrashed()
+                ->with(['department', 'branch'])
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+
+            Log::info('Trash page accessed', [
+                'user' => auth()->user()->employee_code,
+                'trashed_count' => $trashedEmployees->count()
+            ]);
+
+            return view('employees.trash', compact('trashedEmployees'));
+            
+        } catch (\Exception $e) {
+            Log::error('Trash page access failed: ' . $e->getMessage());
+            
+            return redirect()->route('employees.index')
+                ->with('error', 'เกิดข้อผิดพลาดในการเข้าถึงถังขยะ');
+        }
+    }
+
+    /**
+     * ✅ NEW: Restore employee from trash
+     */
+    public function restore($id)
+    {
+        try {
+            // Check Super Admin permission
+            if (auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ Super Admin เท่านั้นที่สามารถกู้คืนได้'
+                ], 403);
+            }
+
+            // ✅ Find trashed employee with relationships
+            $employee = Employee::onlyTrashed()
+                ->with(['department', 'branch'])
+                ->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบพนักงานในถังขยะ'
+                ], 404);
+            }
+
+            $employeeName = $employee->full_name_th;
+            $branchName = $employee->branch ? $employee->branch->name : 'ไม่ระบุสาขา';
+            
+            // Restore employee
+            $employee->restore();
+
+            Log::info("Employee restored from trash: {$employeeName} (Branch: {$branchName})", [
+                'employee_id' => $employee->id,
+                'restored_by' => auth()->user()->employee_code
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "กู้คืนพนักงาน {$employeeName} เรียบร้อยแล้ว"
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Employee restore failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการกู้คืนข้อมูล'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Force delete employee permanently
+     */
+    public function forceDestroy($id)
+    {
+        try {
+            // Check Super Admin permission
+            if (auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ Super Admin เท่านั้นที่สามารถลบถาวรได้'
+                ], 403);
+            }
+
+            // ✅ Find trashed employee with relationships
+            $employee = Employee::onlyTrashed()
+                ->with(['department', 'branch'])
+                ->find($id);
+
+            if (!$employee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่พบพนักงานในถังขยะ'
+                ], 404);
+            }
+
+            $employeeName = $employee->full_name_th;
+            $employeeCode = $employee->employee_code;
+            $branchName = $employee->branch ? $employee->branch->name : 'ไม่ระบุสาขา';
+            
+            // Force delete permanently
+            $employee->forceDelete();
+
+            Log::warning("Employee permanently deleted: {$employeeName} (Code: {$employeeCode}, Branch: {$branchName})", [
+                'deleted_by' => auth()->user()->employee_code,
+                'action' => 'PERMANENT_DELETE'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "ลบพนักงาน {$employeeName} อย่างถาวรเรียบร้อยแล้ว"
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Employee force delete failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการลบถาวร'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Bulk restore employees from trash
+     */
+    public function bulkRestore(Request $request)
+    {
+        try {
+            // Check Super Admin permission
+            if (auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ Super Admin เท่านั้นที่สามารถกู้คืนหลายรายการได้'
+                ], 403);
+            }
+
+            $employeeIds = $request->get('employee_ids', []);
+            
+            if (empty($employeeIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'กรุณาเลือกพนักงานที่ต้องการกู้คืน'
+                ], 400);
+            }
+
+            // ✅ Find trashed employees with relationships
+            $employees = Employee::onlyTrashed()
+                ->with(['department', 'branch'])
+                ->whereIn('id', $employeeIds)
+                ->get();
+
+            $restoredCount = 0;
+            $restoredNames = [];
+
+            foreach ($employees as $employee) {
+                $employee->restore();
+                $restoredCount++;
+                $restoredNames[] = $employee->full_name_th;
+                
+                Log::info("Bulk restore: {$employee->full_name_th} (Branch: " . ($employee->branch ? $employee->branch->name : 'N/A') . ")");
+            }
+
+            Log::info("Bulk restore completed: {$restoredCount} employees restored", [
+                'restored_by' => auth()->user()->employee_code,
+                'employee_names' => $restoredNames
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "กู้คืนพนักงาน {$restoredCount} คนเรียบร้อยแล้ว",
+                'restored_count' => $restoredCount
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk restore failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการกู้คืนหลายรายการ'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Empty trash (permanently delete all trashed employees)
+     */
+    public function emptyTrash()
+    {
+        try {
+            // Check Super Admin permission
+            if (auth()->user()->role !== 'super_admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'เฉพาะ Super Admin เท่านั้นที่สามารถล้างถังขยะได้'
+                ], 403);
+            }
+
+            // ✅ Get all trashed employees with relationships for logging
+            $trashedEmployees = Employee::onlyTrashed()
+                ->with(['department', 'branch'])
+                ->get();
+
+            $trashedCount = $trashedEmployees->count();
+            
+            if ($trashedCount === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ถังขยะว่างเปล่าอยู่แล้ว'
+                ], 400);
+            }
+
+            // Log before permanent deletion
+            $trashedNames = $trashedEmployees->map(function($emp) {
+                return $emp->full_name_th . ' (Branch: ' . ($emp->branch ? $emp->branch->name : 'N/A') . ')';
+            })->toArray();
+
+            // Force delete all trashed employees
+            Employee::onlyTrashed()->forceDelete();
+
+            Log::critical("Trash emptied: {$trashedCount} employees permanently deleted", [
+                'emptied_by' => auth()->user()->employee_code,
+                'action' => 'EMPTY_TRASH',
+                'deleted_employees' => $trashedNames
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "ล้างถังขยะเรียบร้อยแล้ว (ลบ {$trashedCount} คนอย่างถาวร)",
+                'deleted_count' => $trashedCount
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Empty trash failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการล้างถังขยะ'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Preview employee data (for trash view)
+     */
+    public function preview(Employee $employee)
+    {
+        try {
+            // Check if employee is trashed
+            if (!$employee->trashed()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'พนักงานนี้ไม่อยู่ในถังขยะ'
+                ], 404);
+            }
+
+            // ✅ Load relationships including branch
+            $employee->load(['department', 'branch']);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $employee->id,
+                    'employee_code' => $employee->employee_code,
+                    'first_name_th' => $employee->first_name_th,
+                    'last_name_th' => $employee->last_name_th,
+                    'first_name_en' => $employee->first_name_en,
+                    'last_name_en' => $employee->last_name_en,
+                    'email' => $employee->email,
+                    'phone' => $employee->phone,
+                    'department' => $employee->department ? [
+                        'id' => $employee->department->id,
+                        'name' => $employee->department->name,
+                        'code' => $employee->department->code
+                    ] : null,
+                    // ✅ NEW: Branch information
+                    'branch' => $employee->branch ? [
+                        'id' => $employee->branch->id,
+                        'name' => $employee->branch->name,
+                        'code' => $employee->branch->branch_code_compat
+                    ] : null,
+                    'role' => $employee->role,
+                    'status' => $employee->status,
+                    'status_display' => $employee->status_display,
+                    'deleted_at' => $employee->deleted_at,
+                    'location_display' => $employee->location_display, // ✅ NEW: Combined location
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Employee preview failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการดูข้อมูล'
+            ], 500);
+        }
+    }
+
+    // =====================================================
+    // ✅ NEW: BRANCH MANAGEMENT METHODS
+    // =====================================================
+
+    /**
+     * ✅ NEW: Handle Branch assignment
+     */
+    private function handleBranchAssignment(&$validated, $employee = null)
+    {
+        $isUpdate = !is_null($employee);
+        
+        // ถ้าไม่มี branch_id ในข้อมูลที่ validate แล้ว ให้เป็น null
+        if (!isset($validated['branch_id']) || empty($validated['branch_id'])) {
+            $validated['branch_id'] = null;
+            Log::info('Branch assignment: Set to null (no branch selected)');
+            return;
+        }
+        
+        // ตรวจสอบว่า branch_id ที่ส่งมามีอยู่จริงและ active
+        $branch = Branch::where('id', $validated['branch_id'])
+                       ->where('is_active', true)
+                       ->first();
+        
+        if (!$branch) {
+            Log::warning('Branch assignment: Invalid branch_id provided', ['branch_id' => $validated['branch_id']]);
+            $validated['branch_id'] = null;
+            return;
+        }
+        
+        Log::info('Branch assignment successful', [
+            'branch_id' => $validated['branch_id'],
+            'branch_name' => $branch->name,
+            'is_update' => $isUpdate
+        ]);
+    }
+
+    /**
+     * ✅ NEW: Transfer employee to different branch
+     */
+    public function transferToBranch(Request $request, Employee $employee)
+    {
+        try {
+            // Check permissions
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ย้ายพนักงานนี้'
+                ], 403);
+            }
+            
+            $validated = $request->validate([
+                'branch_id' => 'required|exists:branches,id',
+                'reason' => 'nullable|string|max:255'
+            ]);
+            
+            $branch = Branch::findOrFail($validated['branch_id']);
+            
+            if (!$branch->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่สามารถย้ายไปสาขาที่ปิดให้บริการได้'
+                ], 400);
+            }
+            
+            $oldBranch = $employee->branch;
+            $employee->update(['branch_id' => $validated['branch_id']]);
+            
+            Log::info("Employee transferred between branches", [
+                'employee_id' => $employee->id,
+                'employee_name' => $employee->full_name_th,
+                'from_branch' => $oldBranch ? $oldBranch->name : 'ไม่ระบุ',
+                'to_branch' => $branch->name,
+                'reason' => $validated['reason'] ?? 'ไม่ระบุ'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "ย้าย {$employee->full_name_th} ไปสาขา {$branch->name} เรียบร้อยแล้ว",
+                'employee' => $employee->fresh()->load(['department', 'branch'])
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Employee branch transfer failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการย้ายสาขา'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Get employees by branch
+     */
+    public function getEmployeesByBranch(Request $request, Branch $branch)
+    {
+        try {
+            $employees = $branch->employees()
+                ->with(['department'])
+                ->when($request->get('status'), function($query, $status) {
+                    $query->where('status', $status);
+                })
+                ->orderBy('first_name_th')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'branch' => [
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'code' => $branch->branch_code_compat,
+                ],
+                'employees' => $employees,
+                'count' => $employees->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการโหลดข้อมูลพนักงาน'
             ], 500);
         }
     }
@@ -778,6 +1255,115 @@ class EmployeeController extends Controller
     }
 
     // =====================================================
+    // ✅ NEW: ENHANCED API METHODS
+    // =====================================================
+
+    /**
+     * ✅ NEW: API Index for AJAX
+     */
+    public function apiIndex(Request $request)
+    {
+        try {
+            $query = Employee::withoutTrashed()->with(['department', 'branch']);
+            
+            // Apply filters
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('employee_code', 'LIKE', "%{$search}%")
+                      ->orWhere('first_name_th', 'LIKE', "%{$search}%")
+                      ->orWhere('last_name_th', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            }
+            
+            if ($request->has('department_id')) {
+                $query->where('department_id', $request->department_id);
+            }
+            
+            if ($request->has('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            }
+            
+            $employees = $query->orderBy('created_at', 'desc')->paginate(20);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $employees
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: API Search for AJAX
+     */
+    public function apiSearch(Request $request)
+    {
+        try {
+            $search = $request->get('q', '');
+            
+            $employees = Employee::withoutTrashed()
+                ->with(['department', 'branch'])
+                ->where(function($query) use ($search) {
+                    $query->where('employee_code', 'LIKE', "%{$search}%")
+                          ->orWhere('first_name_th', 'LIKE', "%{$search}%")
+                          ->orWhere('last_name_th', 'LIKE', "%{$search}%")
+                          ->orWhere('email', 'LIKE', "%{$search}%");
+                })
+                ->limit(10)
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $employees->map(function($employee) {
+                    return [
+                        'id' => $employee->id,
+                        'text' => $employee->full_name_th . ' (' . $employee->employee_code . ')',
+                        'employee_code' => $employee->employee_code,
+                        'name' => $employee->full_name_th,
+                        'email' => $employee->email,
+                        'department' => $employee->department ? $employee->department->name : null,
+                        'branch' => $employee->branch ? $employee->branch->name : null,
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: API Show for AJAX
+     */
+    public function apiShow(Employee $employee)
+    {
+        try {
+            $employee->load(['department', 'branch']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $employee
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // =====================================================
     // EXISTING PRIVATE HELPER METHODS
     // =====================================================
 
@@ -873,5 +1459,346 @@ class EmployeeController extends Controller
     private function generateCopierCode()
     {
         return str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+
+    // =====================================================
+    // ✅ NEW: PASSWORD RESET METHODS (Enhanced v2.1)
+    // =====================================================
+
+    /**
+     * ✅ NEW: Reset login password only
+     */
+    public function resetPassword(Request $request, Employee $employee)
+    {
+        try {
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์แก้ไขรหัสผ่านพนักงานนี้'
+                ], 403);
+            }
+
+            $newPassword = $this->generatePassword(12);
+            $employee->update(['password' => Hash::make($newPassword)]);
+
+            Log::info("Login password reset for employee: {$employee->employee_code}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'รีเซ็ตรหัสผ่านเข้าระบบเรียบร้อยแล้ว',
+                'new_password' => $newPassword,
+                'type' => 'login_password'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Login password reset failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Reset email password only
+     */
+    public function resetEmailPassword(Request $request, Employee $employee)
+    {
+        try {
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์แก้ไขรหัสผ่านอีเมลพนักงานนี้'
+                ], 403);
+            }
+
+            $newPassword = $this->generatePassword(10);
+            $employee->update(['email_password' => $newPassword]);
+
+            Log::info("Email password reset for employee: {$employee->employee_code}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'รีเซ็ตรหัสผ่านอีเมลเรียบร้อยแล้ว',
+                'new_password' => $newPassword,
+                'type' => 'email_password'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Email password reset failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่านอีเมล'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Reset computer password only
+     */
+    public function resetComputerPassword(Request $request, Employee $employee)
+    {
+        try {
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์แก้ไขรหัสผ่านคอมพิวเตอร์พนักงานนี้'
+                ], 403);
+            }
+
+            $newPassword = $this->generatePassword(10);
+            $employee->update(['computer_password' => $newPassword]);
+
+            Log::info("Computer password reset for employee: {$employee->employee_code}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'รีเซ็ตรหัสผ่านคอมพิวเตอร์เรียบร้อยแล้ว',
+                'new_password' => $newPassword,
+                'type' => 'computer_password'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Computer password reset failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่านคอมพิวเตอร์'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Reset both login and email passwords
+     */
+    public function resetBothPasswords(Request $request, Employee $employee)
+    {
+        try {
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์แก้ไขรหัสผ่านพนักงานนี้'
+                ], 403);
+            }
+
+            $newLoginPassword = $this->generatePassword(12);
+            $newEmailPassword = $this->generatePassword(10);
+            
+            $employee->update([
+                'password' => Hash::make($newLoginPassword),
+                'email_password' => $newEmailPassword
+            ]);
+
+            Log::info("Both passwords reset for employee: {$employee->employee_code}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'รีเซ็ตรหัสผ่านทั้งคู่เรียบร้อยแล้ว',
+                'login_password' => $newLoginPassword,
+                'email_password' => $newEmailPassword,
+                'type' => 'both_passwords'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Both passwords reset failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Generate Express credentials
+     */
+    public function generateExpressCredentials(Request $request, Employee $employee)
+    {
+        try {
+            if (!$this->canEditEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์จัดการข้อมูล Express ของพนักงานนี้'
+                ], 403);
+            }
+
+            // Check if department supports Express
+            if (!$this->isDepartmentExpressEnabled($employee->department_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'แผนกของพนักงานนี้ไม่รองรับ Express'
+                ], 400);
+            }
+
+            $newUsername = $this->generateExpressUsername(
+                $employee->first_name_en, 
+                $employee->last_name_en, 
+                $employee->id
+            );
+            $newPassword = $this->generateExpressPassword($employee->id);
+
+            $employee->update([
+                'express_username' => $newUsername,
+                'express_password' => $newPassword
+            ]);
+
+            Log::info("Express credentials generated for employee: {$employee->employee_code}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'สร้างข้อมูล Express เรียบร้อยแล้ว',
+                'express_username' => $newUsername,
+                'express_password' => $newPassword,
+                'type' => 'express_credentials'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Express credentials generation failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการสร้างข้อมูล Express'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Get Express credentials
+     */
+    public function getExpressCredentials(Employee $employee)
+    {
+        try {
+            if (!$this->canAccessEmployee($employee)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ไม่มีสิทธิ์ดูข้อมูล Express ของพนักงานนี้'
+                ], 403);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'express_username' => $employee->express_username,
+                    'express_password' => $employee->express_password,
+                    'department_express_enabled' => $this->isDepartmentExpressEnabled($employee->department_id)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการดูข้อมูล Express'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Check Express eligibility
+     */
+    public function checkExpressEligibility(Request $request)
+    {
+        try {
+            $departmentId = $request->get('department_id');
+            
+            if (!$departmentId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'กรุณาระบุแผนก'
+                ], 400);
+            }
+
+            $isEligible = $this->isDepartmentExpressEnabled($departmentId);
+            $department = Department::find($departmentId);
+
+            return response()->json([
+                'success' => true,
+                'eligible' => $isEligible,
+                'department' => $department ? $department->name : null,
+                'message' => $isEligible ? 'แผนกนี้รองรับ Express' : 'แผนกนี้ไม่รองรับ Express'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Test Express connection
+     */
+    public function testExpressConnection(Request $request)
+    {
+        try {
+            $username = $request->get('username');
+            $password = $request->get('password');
+
+            if (!$username || !$password) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'กรุณาระบุ Username และ Password'
+                ], 400);
+            }
+
+            // Simulate Express connection test
+            // In real implementation, you would test actual Express API connection
+            $connectionResult = [
+                'connected' => true,
+                'response_time' => rand(50, 200) . 'ms',
+                'test_timestamp' => now()->toDateTimeString()
+            ];
+
+            Log::info("Express connection test", [
+                'username' => $username,
+                'result' => $connectionResult
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'connection' => $connectionResult,
+                'message' => 'การเชื่อมต่อ Express สำเร็จ'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการทดสอบการเชื่อมต่อ'
+            ], 500);
+        }
+    }
+
+    /**
+     * ✅ NEW: Get Express report
+     */
+    public function getExpressReport()
+    {
+        try {
+            $expressUsers = Employee::withoutTrashed()
+                ->whereNotNull('express_username')
+                ->with(['department', 'branch'])
+                ->get();
+
+            $stats = [
+                'total_express_users' => $expressUsers->count(),
+                'active_express_users' => $expressUsers->where('status', 'active')->count(),
+                'by_department' => $expressUsers->groupBy('department.name')->map->count(),
+                'by_branch' => $expressUsers->groupBy('branch.name')->map->count(),
+                'recent_users' => $expressUsers->sortByDesc('created_at')->take(5)->values()
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

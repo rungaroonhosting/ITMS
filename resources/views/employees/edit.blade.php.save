@@ -33,6 +33,16 @@
                             @endif
                         </span>
                     @endif
+                    {{-- ✅ NEW: Branch Display in Header --}}
+                    @if($employee->branch)
+                        <span class="badge text-white me-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                            <i class="fas fa-building me-1"></i>{{ $employee->branch->name }}
+                        </span>
+                    @else
+                        <span class="badge bg-warning text-dark me-2">
+                            <i class="fas fa-building me-1"></i>ไม่ระบุสาขา
+                        </span>
+                    @endif
                     <span class="badge bg-success">
                         <i class="fas fa-phone me-1"></i>
                         ✅ เบอร์โทรซ้ำได้แล้ว
@@ -52,49 +62,103 @@
 
 <!-- ✅ FIXED: Success Alert for Phone Fix & Edit Mode -->
 <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>โหมดแก้ไข - ระบบพร้อมใช้งาน! (แก้ไข Password Handling แล้ว)</h6>
+    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>โหมดแก้ไข - ระบบพร้อมใช้งาน! (แก้ไข Password Handling + Branch System แล้ว)</h6>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <ul class="mb-0">
                 <li><strong>✅ เบอร์โทรซ้ำได้:</strong> สามารถใช้เบอร์เดียวกันได้หลายคน</li>
                 <li><strong>🔒 รหัสผ่าน:</strong> แก้ไข NULL error แล้ว</li>
             </ul>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <ul class="mb-0">
                 <li><strong>🔒 ความปลอดภัย:</strong> Email, Username ยังคง unique</li>
                 <li><strong>⚡ Express v2.0:</strong> ทำงานปกติ ไม่กระทบ</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <ul class="mb-0">
+                <li><strong>🏢 Branch System:</strong> สามารถเลือกสาขาได้แล้ว</li>
+                <li><strong>🎨 ITMS Theme:</strong> สีแดง-ส้ม สำหรับ Branch</li>
             </ul>
         </div>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
+<!-- ✅ NEW: Branch Status Alert -->
+@if(!$employee->branch_id)
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-building me-2"></i>⚠️ กำหนดสาขาสำหรับพนักงาน
+        </h6>
+        <p class="mb-0">
+            พนักงานนี้ยังไม่ได้กำหนดสาขา กรุณาเลือกสาขาด้านล่างเพื่อให้ข้อมูลสมบูรณ์
+            <a href="#branchSection" class="btn btn-sm btn-warning text-dark ms-2">
+                <i class="fas fa-arrow-down me-1"></i>ไปเลือกสาขา
+            </a>
+        </p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@elseif($employee->branch_id && !$employee->branch)
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-exclamation-triangle me-2"></i>🚨 ข้อมูลสาขาผิดพลาด
+        </h6>
+        <p class="mb-0">
+            พนักงานมี Branch ID ({{ $employee->branch_id }}) แต่ไม่พบข้อมูลสาขาในระบบ 
+            กรุณาแก้ไขข้อมูลสาขาด้านล่าง
+            <a href="#branchSection" class="btn btn-sm btn-danger ms-2">
+                <i class="fas fa-wrench me-1"></i>แก้ไขทันที
+            </a>
+        </p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 <!-- Current Data Overview -->
 <div class="alert alert-info alert-dismissible fade show" role="alert">
     <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>ข้อมูลปัจจุบัน - สำหรับอ้างอิง</h6>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <ul class="mb-0 small">
                 <li><strong>รหัสพนักงาน:</strong> {{ $employee->employee_code }}</li>
                 <li><strong>อีเมล:</strong> {{ $employee->email }}</li>
                 <li><strong>Username:</strong> {{ $employee->username }}</li>
             </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <ul class="mb-0 small">
                 <li><strong>แผนก:</strong> {{ $employee->department ? $employee->department->name : 'ไม่ระบุ' }}</li>
                 <li><strong>ตำแหน่ง:</strong> {{ $employee->position }}</li>
                 <li><strong>เบอร์โทร:</strong> {{ $employee->phone }} <span class="badge bg-success">ซ้ำได้</span></li>
             </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            {{-- ✅ NEW: Branch in Current Data --}}
             <ul class="mb-0 small">
+                <li><strong>สาขา:</strong> 
+                    @if($employee->branch)
+                        <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A); font-size: 0.75rem;">
+                            {{ $employee->branch->name }}
+                        </span>
+                    @else
+                        <span class="text-warning">ไม่ระบุ</span>
+                    @endif
+                </li>
                 <li><strong>รหัสผ่านคอม:</strong> <code>{{ $employee->computer_password ?: 'ไม่มี' }}</code></li>
                 <li><strong>รหัสผ่านอีเมล:</strong> <code>{{ $employee->email_password ?: 'ไม่มี' }}</code></li>
+            </ul>
+        </div>
+        <div class="col-md-3">
+            <ul class="mb-0 small">
                 @if($employee->express_username)
                     <li><strong>Express:</strong> <code>{{ $employee->express_username }}</code>/<code>{{ $employee->express_password }}</code></li>
+                @else
+                    <li><strong>Express:</strong> <span class="text-muted">ไม่มี</span></li>
                 @endif
+                <li><strong>VPN:</strong> <span class="badge bg-{{ $employee->vpn_access ? 'success' : 'secondary' }}">{{ $employee->vpn_access ? 'อนุญาต' : 'ไม่อนุญาต' }}</span></li>
+                <li><strong>ปริ้นสี:</strong> <span class="badge bg-{{ $employee->color_printing ? 'warning text-dark' : 'secondary' }}">{{ $employee->color_printing ? 'อนุญาต' : 'ไม่อนุญาต' }}</span></li>
             </ul>
         </div>
     </div>
@@ -197,7 +261,7 @@
                 </div>
                 <div>
                     <h5 class="card-title mb-0">ข้อมูลพื้นฐาน</h5>
-                    <small class="text-muted">ข้อมูルส่วนตัวและการติดต่อ</small>
+                    <small class="text-muted">ข้อมูลส่วนตัวและการติดต่อ</small>
                 </div>
             </div>
         </div>
@@ -737,21 +801,117 @@
         </div>
     </div>
 
-    <!-- แผนกและสิทธิ์ -->
-    <div class="card mb-4">
+    <!-- ✅ ENHANCED: แผนก สาขา และสิทธิ์ (เพิ่ม Branch System) -->
+    <div class="card mb-4" id="branchSection">
         <div class="card-header">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-warning rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
                     <i class="fas fa-building text-warning" style="font-size: 20px;"></i>
                 </div>
                 <div>
-                    <h5 class="card-title mb-0">แผนกและสิทธิ์</h5>
-                    <small class="text-muted">แผนกการทำงานและสิทธิ์การใช้งาน</small>
+                    <h5 class="card-title mb-0">แผนก สาขา และสิทธิ์</h5>
+                    <small class="text-muted">แผนกการทำงาน สาขาที่สังกัด และสิทธิ์การใช้งาน 
+                        <span class="badge text-white ms-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                            + Branch System
+                        </span>
+                    </small>
                 </div>
             </div>
         </div>
         <div class="card-body">
             <div class="row g-3">
+                <!-- ✅ NEW: Branch Selection (รองรับ ITMS Theme) -->
+                <div class="col-md-6">
+                    <label for="branch_id" class="form-label">
+                        <i class="fas fa-building me-1" style="color: #B54544;"></i>สาขา
+                        @if(!$employee->branch_id)
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>ต้องเลือก
+                            </span>
+                        @else
+                            <span class="badge text-white ms-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                                <i class="fas fa-check me-1"></i>กำหนดแล้ว
+                            </span>
+                        @endif
+                    </label>
+                    <select class="form-select @error('branch_id') is-invalid @enderror" 
+                            id="branch_id" 
+                            name="branch_id">
+                        <option value="">-- เลือกสาขา --</option>
+                        @php
+                            // ใช้ branches ที่ส่งมาจาก controller หรือ fallback
+                            if (isset($branches) && is_object($branches)) {
+                                $branchCollection = $branches;
+                            } elseif (isset($branches) && is_array($branches)) {
+                                $branchCollection = collect($branches);
+                            } else {
+                                // Fallback branches
+                                $branchCollection = collect([
+                                    (object)['id' => 1, 'name' => 'สำนักงานใหญ่', 'code' => 'HQ001', 'is_active' => true],
+                                    (object)['id' => 2, 'name' => 'สาขา 1', 'code' => 'BR001', 'is_active' => true],
+                                    (object)['id' => 3, 'name' => 'สาขา 2', 'code' => 'BR002', 'is_active' => true],
+                                    (object)['id' => 4, 'name' => 'สาขา 3', 'code' => 'BR003', 'is_active' => true],
+                                ]);
+                            }
+                        @endphp
+                        
+                        @foreach($branchCollection->where('is_active', true) as $branch)
+                            <option value="{{ $branch->id }}" 
+                                    data-code="{{ $branch->code ?? $branch->branch_code ?? 'N/A' }}"
+                                    {{ old('branch_id', $employee->branch_id) == $branch->id ? 'selected' : '' }}>
+                                {{ $branch->name }}
+                                @if(!empty($branch->code) || !empty($branch->branch_code))
+                                    ({{ $branch->code ?? $branch->branch_code }})
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">
+                        <div id="branchInfo" class="mt-2">
+                            @if($employee->branch)
+                                <div class="alert alert-success p-2 mb-0">
+                                    <small>
+                                        <strong>ปัจจุบัน:</strong> 
+                                        <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                                            {{ $employee->branch->name }}
+                                        </span>
+                                        @if($employee->branch->code || $employee->branch->branch_code)
+                                            <br><strong>รหัสสาขา:</strong> {{ $employee->branch->code ?? $employee->branch->branch_code }}
+                                        @endif
+                                        @if($employee->branch->manager)
+                                            <br><strong>ผู้จัดการ:</strong> {{ $employee->branch->manager->full_name_th ?? 'N/A' }}
+                                        @endif
+                                    </small>
+                                </div>
+                            @elseif($employee->branch_id)
+                                <div class="alert alert-danger p-2 mb-0">
+                                    <small>
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        <strong>ข้อมูลผิดพลาด:</strong> มี Branch ID ({{ $employee->branch_id }}) แต่ไม่พบข้อมูลสาขา
+                                    </small>
+                                </div>
+                            @else
+                                <div class="alert alert-warning p-2 mb-0">
+                                    <small>
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>ยังไม่ได้เลือกสาขา:</strong> กรุณาเลือกสาขาที่พนักงานสังกัด
+                                    </small>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                <strong>คำแนะนำ:</strong> สาขาใช้สำหรับจัดกลุ่มพนักงานตามพื้นที่ทำงาน
+                            </small>
+                        </div>
+                    </div>
+                    @error('branch_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <!-- Department -->
                 <div class="col-md-6">
                     <label for="department_id" class="form-label">
@@ -901,303 +1061,56 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- โปรแกรม Express (Dynamic v2.0 Enhanced) -->
-    <div class="card mb-4" id="expressSection" 
-         style="{{ ($employee->department && ($employee->department->express_enabled ?? false)) ? 'display: block;' : 'display: none;' }}">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <div class="border border-2 border-danger rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-bolt text-danger" style="font-size: 20px;"></i>
-                </div>
-                <div>
-                    <h5 class="card-title mb-0">
-                        โปรแกรม Express v2.0
-                        <span class="badge bg-warning text-dark ms-2">Enhanced</span>
-                        @if($employee->express_username)
-                            <span class="badge bg-success ms-2">มีข้อมูล</span>
+                <!-- Hire Date -->
+                <div class="col-md-6">
+                    <label for="hire_date" class="form-label">วันที่เข้าทำงาน</label>
+                    <input type="date" 
+                           class="form-control @error('hire_date') is-invalid @enderror" 
+                           id="hire_date" 
+                           name="hire_date" 
+                           value="{{ old('hire_date', $employee->hire_date ? $employee->hire_date->format('Y-m-d') : '') }}">
+                    <div class="form-text">
+                        @if($employee->hire_date)
+                            ปัจจุบัน: <strong>{{ $employee->hire_date->format('d/m/Y') }}</strong>
+                            ({{ $employee->hire_date->diffInYears(now()) }} ปี)
                         @else
-                            <span class="badge bg-secondary ms-2">ยังไม่มีข้อมูล</span>
+                            ปัจจุบัน: <strong>ไม่ระบุ</strong>
                         @endif
-                    </h5>
-                    <small class="text-muted">รองรับแผนกที่เปิดใช้งาน Express - ปรับแต่งใหม่</small>
-                </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-warning" id="generateExpressBtn">
-                <i class="fas fa-bolt me-1"></i>สร้าง Express
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-success" role="alert">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <div>
-                        <strong>Express v2.0 Enhanced:</strong> ระบบได้รับการปรับปรุง
-                        <div class="mt-2">
-                            <span class="badge bg-success me-1">
-                                <i class="fas fa-user me-1"></i>Username: 1-7 ตัวอักษร
-                            </span>
-                            <span class="badge bg-info me-1">
-                                <i class="fas fa-lock me-1"></i>Password: 4 ตัวเลข (ไม่ซ้ำ)
-                            </span>
-                            <span class="badge bg-primary me-1">
-                                <i class="fas fa-eye me-1"></i>แสดงได้ทั้งหมด
-                            </span>
-                        </div>
                     </div>
-                </div>
-            </div>
-            
-            @if($employee->express_username)
-                <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>ข้อมูลปัจจุบัน:</strong> 
-                    Username: <code>{{ $employee->express_username }}</code>, 
-                    Password: <code>{{ $employee->express_password }}</code>
-                </div>
-            @endif
-            
-            <div class="row g-3">
-                <!-- Express Username (Enhanced: 1-7 ตัวอักษร) -->
-                <div class="col-md-6">
-                    <label for="express_username" class="form-label">
-                        Username Express (1-7 ตัวอักษร)
-                        <span class="badge bg-warning text-dark ms-2">Enhanced</span>
-                    </label>
-                    <div class="input-group">
-                        <input type="text" 
-                               class="form-control @error('express_username') is-invalid @enderror" 
-                               id="express_username" 
-                               name="express_username" 
-                               value="{{ old('express_username', $employee->express_username) }}"
-                               placeholder="จะสร้างจากชื่อ EN (1-7 ตัว)" 
-                               maxlength="7">
-                        <button type="button" class="btn btn-outline-primary" data-target="express_username">
-                            <i class="fas fa-bolt"></i>
-                        </button>
-                    </div>
-                    <div class="form-text">
-                        @if($employee->express_username)
-                            ปัจจุบัน: <code class="text-info">{{ $employee->express_username }}</code> ({{ strlen($employee->express_username) }} ตัว)
-                            <br>
-                        @endif
-                        <strong class="text-success">ปรับปรุงใหม่:</strong> ใช้ชื่อภาษาอังกฤษได้ 1-7 ตัวอักษร (ไม่ต้อง pad)
-                        <div class="mt-1">
-                            <small class="text-muted">
-                                <i class="fas fa-lightbulb me-1"></i>
-                                ตัวอย่าง: "John" → "john", "Alexandra" → "alexand"
-                            </small>
-                        </div>
-                    </div>
-                    @error('express_username')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- Express Password (Enhanced: 4 ตัวเลขไม่ซ้ำ) -->
-                <div class="col-md-6">
-                    <label for="express_password" class="form-label">
-                        Password โปรแกรม Express
-                        <span class="badge bg-success ms-2">Numbers Only</span>
-                        <span class="badge bg-primary ms-2">แสดงได้</span>
-                    </label>
-                    <div class="input-group">
-                        <input type="text" 
-                               class="form-control @error('express_password') is-invalid @enderror" 
-                               id="express_password" 
-                               name="express_password" 
-                               value="{{ old('express_password', $employee->express_password) }}"
-                               placeholder="4 ตัวเลขไม่ซ้ำ" 
-                               maxlength="4"
-                               pattern="[0-9]{4}">
-                        <button type="button" class="btn btn-outline-primary" data-target="express_password">
-                            <i class="fas fa-lock"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="express_password">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="form-text">
-                        @if($employee->express_password)
-                            ปัจจุบัน: <code class="text-info">{{ $employee->express_password }}</code>
-                            <br>
-                        @endif
-                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน (เช่น 1234, 5678) 
-                        <span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
-                        <div class="mt-1">
-                            <small class="text-info">
-                                <i class="fas fa-calculator me-1"></i>
-                                ตัวอย่าง: 1357, 2468, 1029 (ไม่ซ้ำเลข)
-                            </small>
-                        </div>
-                    </div>
-                    @error('express_password')
+                    @error('hire_date')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- สิทธิ์พิเศษ -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <div class="d-flex align-items-center">
-                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-shield-alt text-secondary" style="font-size: 20px;"></i>
-                </div>
-                <div>
-                    <h5 class="card-title mb-0">สิทธิ์พิเศษ</h5>
-                    <small class="text-muted">การอนุญาตใช้งานเพิ่มเติม</small>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <!-- VPN Permission -->
-                <div class="col-md-6">
-                    <div class="card border-primary">
-                        <div class="card-body text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-shield-alt text-primary fa-2x"></i>
-                            </div>
-                            <h6 class="card-title">การใช้งาน VPN</h6>
-                            <div class="form-check form-switch d-flex justify-content-center">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       id="vpn_access" 
-                                       name="vpn_access" 
-                                       value="1"
-                                       {{ old('vpn_access', $employee->vpn_access) ? 'checked' : '' }}>
-                                <label class="form-check-label ms-2" for="vpn_access">
-                                    <span id="vpnStatus">{{ old('vpn_access', $employee->vpn_access) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
-                                </label>
-                            </div>
-                            <small class="text-muted">
-                                อนุญาตให้เชื่อมต่อ VPN เพื่อทำงานจากที่บ้าน
-                            </small>
-                            <div class="form-text mt-2">
-                                ปัจจุบัน: 
-                                <span class="badge bg-{{ $employee->vpn_access ? 'success' : 'secondary' }}">
-                                    {{ $employee->vpn_access ? 'อนุญาต' : 'ไม่อนุญาต' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Color Printing Permission -->
-                <div class="col-md-6">
-                    <div class="card border-warning">
-                        <div class="card-body text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-palette text-warning fa-2x"></i>
-                            </div>
-                            <h6 class="card-title">การปริ้นสี</h6>
-                            <div class="form-check form-switch d-flex justify-content-center">
-                                <input class="form-check-input" 
-                                       type="checkbox" 
-                                       id="color_printing" 
-                                       name="color_printing" 
-                                       value="1"
-                                       {{ old('color_printing', $employee->color_printing) ? 'checked' : '' }}>
-                                <label class="form-check-label ms-2" for="color_printing">
-                                    <span id="printingStatus">{{ old('color_printing', $employee->color_printing) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
-                                </label>
-                            </div>
-                            <small class="text-muted">
-                                อนุญาตให้ใช้เครื่องพิมพ์สีในการพิมพ์เอกสาร
-                            </small>
-                            <div class="form-text mt-2">
-                                ปัจจุบัน: 
-                                <span class="badge bg-{{ $employee->color_printing ? 'warning text-dark' : 'secondary' }}">
-                                    {{ $employee->color_printing ? 'อนุญาต' : 'ไม่อนุญาต' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
-            <div class="row mt-3">
+            <!-- ✅ Branch & Department Summary Card -->
+            <div class="row mt-4">
                 <div class="col-12">
-                    <div class="alert alert-info mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>หมายเหตุ:</strong> สิทธิ์พิเศษเหล่านี้สามารถปรับเปลี่ยนได้ภายหลังโดย Admin
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Form Actions -->
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <a href="{{ route('employees.show', $employee) }}" 
-                   class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>ยกเลิก
-                </a>
-                
-                <button type="submit" 
-                        class="btn btn-success"
-                        id="submitBtn">
-                    <i class="fas fa-save me-2"></i>บันทึกการแก้ไข
-                </button>
-            </div>
-        </div>
-    </div>
-</form>
-
-<!-- Preview Modal -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="previewModalLabel">
-                    <i class="fas fa-eye me-2"></i>ตัวอย่างการแก้ไขข้อมูลพนักงาน
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="previewContent">
-                <!-- Preview content will be inserted here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                <button type="button" class="btn btn-success" onclick="submitForm()">
-                    ยืนยันและบันทึก
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reset Password Modal -->
-<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="resetPasswordModalLabel">
-                    <i class="fas fa-key me-2"></i>รีเซ็ตรหัสผ่าน - เลือกรหัสที่ต้องการ
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>เลือกรหัสผ่านที่ต้องการรีเซ็ต</h6>
-                    <p class="mb-0">คุณสามารถเลือกรีเซ็ตรหัสผ่านแยกกันได้ หรือรีเซ็ตทั้งหมดพร้อมกัน</p>
-                </div>
-                
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center" onclick="resetSpecificPassword('computer')" style="min-height: 60px;">
-                            <div class="text-center">
-                                <i class="fas fa-desktop fa-2x mb-2"></i><br>
-                                <strong>รหัสผ่านคอมพิวเตอร์</strong><br>
-                                <small class="text-muted">(10 ตัวอักษร)</small>
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>🏢 สรุปข้อมูลองค์กร
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-building me-2" style="color: #B54544;"></i>สาขา
+                                    </h6>
+                                    <div id="branchSummary">
+                                        @if($employee->branch)
+                                            <p class="mb-1">
+                                                <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                                                    {{ $employee->branch->name }}
+                                                </span>
+                                                @if($employee->branch->code || $employee->branch->branch_code)
+                                                    <code class="ms-2">{{ $employee->branch->code ?? $employee->branch->branch_code }}</code>
+                                                @endif
+                                            </p>
+                                            @if($employee->branch->manager)
+                                                <small class="text-muted">(10 ตัวอักษร)</small>
                             </div>
                         </button>
                     </div>
@@ -1249,7 +1162,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Enhanced Employee Edit Form Loaded - Password NULL Error FIXED! ✅');
+    console.log('🚀 Enhanced Employee Edit Form Loaded - Password NULL Error FIXED + Branch System! ✅');
     
     // Utility Functions
     const utils = {
@@ -1524,25 +1437,102 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         
+        // ✅ ENHANCED: Branch Change Handler
+        handleBranchChange: () => {
+            const branchSelect = document.getElementById('branch_id');
+            const branchInfo = document.getElementById('branchInfo');
+            const branchSummary = document.getElementById('branchSummary');
+            
+            if (!branchSelect) return;
+            
+            const selectedOption = branchSelect.options[branchSelect.selectedIndex];
+            
+            if (!selectedOption || !selectedOption.value) {
+                // No branch selected
+                if (branchInfo) {
+                    branchInfo.innerHTML = `
+                        <div class="alert alert-warning p-2 mb-0">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                <strong>ยังไม่ได้เลือกสาขา:</strong> กรุณาเลือกสาขาที่พนักงานสังกัด
+                            </small>
+                        </div>
+                    `;
+                }
+                if (branchSummary) {
+                    branchSummary.innerHTML = `
+                        <p class="text-warning mb-1">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            ยังไม่ได้เลือกสาขา
+                        </p>
+                    `;
+                }
+                return;
+            }
+            
+            const branchName = selectedOption.textContent.trim();
+            const branchCode = selectedOption.dataset.code || 'N/A';
+            
+            // Update branch info
+            if (branchInfo) {
+                branchInfo.innerHTML = `
+                    <div class="alert alert-success p-2 mb-0">
+                        <small>
+                            <strong>เลือกแล้ว:</strong> 
+                            <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                                ${branchName}
+                            </span>
+                            <br><strong>รหัสสาขา:</strong> ${branchCode}
+                        </small>
+                    </div>
+                `;
+            }
+            
+            // Update branch summary
+            if (branchSummary) {
+                branchSummary.innerHTML = `
+                    <p class="mb-1">
+                        <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                            ${branchName}
+                        </span>
+                        <code class="ms-2">${branchCode}</code>
+                    </p>
+                    <small class="text-muted">สาขาที่เลือกใหม่</small>
+                `;
+            }
+            
+            utils.showNotification(`🏢 เลือกสาขา: ${branchName} เรียบร้อยแล้ว`, 'success');
+        },
+        
         // Department Change Handler - Express v2.0
         handleDepartmentChange: () => {
             const departmentSelect = document.getElementById('department_id');
             const expressSection = document.getElementById('expressSection');
             const expressIndicator = document.getElementById('expressIndicator');
+            const departmentSummary = document.getElementById('departmentSummary');
             
-            if (!departmentSelect || !expressSection) return;
+            if (!departmentSelect) return;
             
             const selectedOption = departmentSelect.options[departmentSelect.selectedIndex];
             if (!selectedOption || !selectedOption.value) {
-                expressSection.style.display = 'none';
+                if (expressSection) expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
+                if (departmentSummary) {
+                    departmentSummary.innerHTML = `
+                        <p class="text-warning mb-1">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            ยังไม่ได้เลือกแผนก
+                        </p>
+                    `;
+                }
                 return;
             }
             
             const expressEnabled = selectedOption.dataset.express === 'true';
+            const departmentName = selectedOption.textContent.trim();
             
             if (expressEnabled) {
-                expressSection.style.display = 'block';
+                if (expressSection) expressSection.style.display = 'block';
                 if (expressIndicator) expressIndicator.style.display = 'inline-block';
                 
                 // Auto-generate Express fields if name is available and fields are empty
@@ -1559,10 +1549,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                utils.showNotification(`⚡ ${selectedOption.textContent}: เปิดใช้งาน Express แล้ว`, 'success');
+                utils.showNotification(`⚡ ${departmentName}: เปิดใช้งาน Express แล้ว`, 'success');
             } else {
-                expressSection.style.display = 'none';
+                if (expressSection) expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
+            }
+            
+            // Update department summary
+            if (departmentSummary) {
+                departmentSummary.innerHTML = `
+                    <p class="mb-1">
+                        <span class="badge bg-info">${departmentName}</span>
+                        ${expressEnabled ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-bolt me-1"></i>Express</span>' : ''}
+                    </p>
+                    <small class="text-muted">แผนกที่เลือกใหม่</small>
+                `;
             }
         },
         
@@ -1611,24 +1612,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Handle Special Permission Switches
         handlePermissionSwitches: () => {
-            const vpnSwitch = document.getElementById('vpn_access');
-            const printingSwitch = document.getElementById('color_printing');
-            const vpnStatus = document.getElementById('vpnStatus');
-            const printingStatus = document.getElementById('printingStatus');
+            const switches = [
+                { switch: 'vpn_access', status: 'vpnStatus' },
+                { switch: 'color_printing', status: 'printingStatus' },
+                { switch: 'remote_work', status: 'remoteStatus' },
+                { switch: 'admin_access', status: 'adminStatus' }
+            ];
             
-            if (vpnSwitch && vpnStatus) {
-                vpnSwitch.addEventListener('change', function() {
-                    vpnStatus.textContent = this.checked ? 'อนุญาต' : 'ไม่อนุญาต';
-                    vpnStatus.className = this.checked ? 'text-success' : 'text-muted';
-                });
-            }
-            
-            if (printingSwitch && printingStatus) {
-                printingSwitch.addEventListener('change', function() {
-                    printingStatus.textContent = this.checked ? 'อนุญาต' : 'ไม่อนุญาต';
-                    printingStatus.className = this.checked ? 'text-success' : 'text-muted';
-                });
-            }
+            switches.forEach(item => {
+                const switchEl = document.getElementById(item.switch);
+                const statusEl = document.getElementById(item.status);
+                
+                if (switchEl && statusEl) {
+                    switchEl.addEventListener('change', function() {
+                        statusEl.textContent = this.checked ? 'อนุญาต' : 'ไม่อนุญาต';
+                        statusEl.className = this.checked ? 'text-success' : 'text-muted';
+                    });
+                }
+            });
         },
         
         // Email Auto-sync Handler
@@ -1723,7 +1724,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('copier_code').value = generators.copierCode();
                 }
                 
-                utils.showNotification('🎉 สร้างรหัสผ่านใหม่ทั้งหมดสำเร็จ! (แก้ไข NULL Error แล้ว)', 'success');
+                utils.showNotification('🎉 สร้างรหัสผ่านใหม่ทั้งหมดสำเร็จ! (แก้ไข NULL Error + Branch System แล้ว)', 'success');
                 
             } catch (error) {
                 console.error('Error in generateAll:', error);
@@ -1783,8 +1784,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="row mt-3">
                     <div class="col-md-6">
-                        <h6 class="text-warning">แผนกและสิทธิ์</h6>
+                        <h6 class="text-warning">แผนก สาขา และสิทธิ์</h6>
                         <table class="table table-sm">
+                            <tr><th>สาขา:</th><td>${document.querySelector('#branch_id option:checked')?.textContent || 'ไม่ระบุ'}</td></tr>
                             <tr><th>แผนก:</th><td>${document.querySelector('#department_id option:checked')?.textContent || '-'}</td></tr>
                             <tr><th>ตำแหน่ง:</th><td>${data.position || '-'}</td></tr>
                             <tr><th>สิทธิ์:</th><td>${document.querySelector('#role option:checked')?.textContent || '-'}</td></tr>
@@ -1802,13 +1804,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         <table class="table table-sm">
                             <tr><th>VPN:</th><td>${data.vpn_access ? '<span class="badge bg-success">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
                             <tr><th>ปริ้นสี:</th><td>${data.color_printing ? '<span class="badge bg-warning text-dark">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
+                            <tr><th>ทำงานจากบ้าน:</th><td>${data.remote_work ? '<span class="badge bg-info">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
+                            <tr><th>แผงควบคุม:</th><td>${data.admin_access ? '<span class="badge bg-danger">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
                         </table>
                     </div>
                 </div>
                 
                 <div class="alert alert-success mt-3">
                     <i class="fas fa-check-circle me-2"></i>
-                    <strong>✅ Password Handling แก้ไขแล้ว:</strong> ระบบจะไม่อัปเดตรหัสผ่านถ้าฟิลด์เว้นว่าง
+                    <strong>✅ Password Handling + Branch System แก้ไขแล้ว:</strong> ระบบจะไม่อัปเดตรหัสผ่านถ้าฟิลด์เว้นว่าง พร้อมรองรับ Branch Management
                 </div>
             `;
         }
@@ -1819,6 +1823,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Click handlers
         document.addEventListener('click', eventHandlers.handleMagicClick);
         document.addEventListener('click', eventHandlers.handlePasswordToggle);
+        
+        // ✅ NEW: Branch change handler
+        const branchSelect = document.getElementById('branch_id');
+        if (branchSelect) {
+            branchSelect.addEventListener('change', eventHandlers.handleBranchChange);
+        }
         
         // Department change handler
         const departmentSelect = document.getElementById('department_id');
@@ -1895,7 +1905,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Setup email auto-sync
         eventHandlers.handleEmailSync();
         
-        console.log('✅ All event listeners attached successfully (Enhanced Edit Version - Password FIXED)');
+        console.log('✅ All event listeners attached successfully (Enhanced Edit Version - Password FIXED + Branch System)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
@@ -1904,6 +1914,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial setup
     setTimeout(() => {
         try {
+            // Initialize branch change handler
+            eventHandlers.handleBranchChange();
+            
             // Initialize department change handler
             eventHandlers.handleDepartmentChange();
             
@@ -1911,31 +1924,33 @@ document.addEventListener('DOMContentLoaded', function() {
             autoGenerate.showEmailPreview();
             
             // Initialize permission switches
-            const vpnStatus = document.getElementById('vpnStatus');
-            const printingStatus = document.getElementById('printingStatus');
+            const switches = [
+                { switch: 'vpn_access', status: 'vpnStatus' },
+                { switch: 'color_printing', status: 'printingStatus' },
+                { switch: 'remote_work', status: 'remoteStatus' },
+                { switch: 'admin_access', status: 'adminStatus' }
+            ];
             
-            const vpnSwitch = document.getElementById('vpn_access');
-            const printingSwitch = document.getElementById('color_printing');
-            
-            if (vpnStatus && vpnSwitch) {
-                vpnStatus.textContent = vpnSwitch.checked ? 'อนุญาต' : 'ไม่อนุญาต';
-                vpnStatus.className = vpnSwitch.checked ? 'text-success' : 'text-muted';
-            }
-            
-            if (printingStatus && printingSwitch) {
-                printingStatus.textContent = printingSwitch.checked ? 'อนุญาต' : 'ไม่อนุญาต';
-                printingStatus.className = printingSwitch.checked ? 'text-success' : 'text-muted';
-            }
+            switches.forEach(item => {
+                const switchEl = document.getElementById(item.switch);
+                const statusEl = document.getElementById(item.status);
+                
+                if (statusEl && switchEl) {
+                    statusEl.textContent = switchEl.checked ? 'อนุญาต' : 'ไม่อนุญาต';
+                    statusEl.className = switchEl.checked ? 'text-success' : 'text-muted';
+                }
+            });
             
             // Initialize email sync
             eventHandlers.handleEmailSync();
             
-            console.log('✅ Enhanced Employee Edit Form Ready - Password NULL Error FIXED! 🎉');
-            console.log('📝 Features: แสดงรหัสผ่านปัจจุบัน, แยกกลุ่มตาม create.blade.php');
+            console.log('✅ Enhanced Employee Edit Form Ready - Password NULL Error FIXED + Branch System Complete! 🎉');
+            console.log('📝 Features: แสดงรหัสผ่านปัจจุบัน, แยกกลุ่มตาม create.blade.php, Branch Management');
             console.log('🔒 Password Display: แสดงรหัสผ่านทั้งหมดให้เห็น');
             console.log('⚡ Express v2.0: ทำงานปกติตามแผนกที่เปิดใช้งาน');
             console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว (แก้ไขเรียบร้อย)');
             console.log('🛡️ Password Handling: แก้ไข NULL Error แล้ว - ไม่อัปเดตถ้าเว้นว่าง');
+            console.log('🏢 Branch System: Full integration with ITMS theme complete');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -2032,9 +2047,411 @@ function submitForm() {
     }
 }
 
-console.log('📝 Enhanced Employee Edit Form Script Loaded (Password NULL Error FIXED! ✅)');
+console.log('📝 Enhanced Employee Edit Form Script Loaded (Password NULL Error FIXED + Branch System Complete! ✅)');
 console.log('🔧 Available functions: resetSpecificPassword(), resetAllPasswords(), submitForm()');
-console.log('⚡ Features: Auto-fill, Preview, Reset Password Modal, Email Sync');
+console.log('⚡ Features: Auto-fill, Preview, Reset Password Modal, Email Sync, Branch Management');
 console.log('🛡️ FIXED: Password handling - ไม่อัปเดตรหัสผ่านถ้าเว้นว่าง');
+console.log('🏢 ENHANCED: Branch System - เลือกสาขาได้แล้ว พร้อม ITMS Theme');
 </script>
-@endpush
+@endpush="text-muted">
+                                                    ผู้จัดการ: {{ $employee->branch->manager->full_name_th }}
+                                                </small>
+                                            @endif
+                                        @else
+                                            <p class="text-warning mb-1">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                ยังไม่ได้เลือกสาขา
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-info">
+                                        <i class="fas fa-users me-2"></i>แผนก
+                                    </h6>
+                                    <div id="departmentSummary">
+                                        @if($employee->department)
+                                            <p class="mb-1">
+                                                <span class="badge bg-info">{{ $employee->department->name }}</span>
+                                                @if($employee->department->express_enabled ?? false)
+                                                    <span class="badge bg-warning text-dark ms-1">
+                                                        <i class="fas fa-bolt me-1"></i>Express
+                                                    </span>
+                                                @endif
+                                            </p>
+                                            <small class="text-muted">
+                                                ตำแหน่ง: {{ $employee->position }}
+                                            </small>
+                                        @else
+                                            <p class="text-warning mb-1">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                ยังไม่ได้เลือกแผนก
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- โปรแกรม Express (Dynamic v2.0 Enhanced) -->
+    <div class="card mb-4" id="expressSection" 
+         style="{{ ($employee->department && ($employee->department->express_enabled ?? false)) ? 'display: block;' : 'display: none;' }}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="border border-2 border-danger rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
+                    <i class="fas fa-bolt text-danger" style="font-size: 20px;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">
+                        โปรแกรม Express v2.0
+                        <span class="badge bg-warning text-dark ms-2">Enhanced</span>
+                        @if($employee->express_username)
+                            <span class="badge bg-success ms-2">มีข้อมูล</span>
+                        @else
+                            <span class="badge bg-secondary ms-2">ยังไม่มีข้อมูล</span>
+                        @endif
+                    </h5>
+                    <small class="text-muted">รองรับแผนกที่เปิดใช้งาน Express - ปรับแต่งใหม่</small>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-warning" id="generateExpressBtn">
+                <i class="fas fa-bolt me-1"></i>สร้าง Express
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>
+                        <strong>Express v2.0 Enhanced:</strong> ระบบได้รับการปรับปรุง
+                        <div class="mt-2">
+                            <span class="badge bg-success me-1">
+                                <i class="fas fa-user me-1"></i>Username: 1-7 ตัวอักษร
+                            </span>
+                            <span class="badge bg-info me-1">
+                                <i class="fas fa-lock me-1"></i>Password: 4 ตัวเลข (ไม่ซ้ำ)
+                            </span>
+                            <span class="badge bg-primary me-1">
+                                <i class="fas fa-eye me-1"></i>แสดงได้ทั้งหมด
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            @if($employee->express_username)
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>ข้อมูลปัจจุบัน:</strong> 
+                    Username: <code>{{ $employee->express_username }}</code>, 
+                    Password: <code>{{ $employee->express_password }}</code>
+                </div>
+            @endif
+            
+            <div class="row g-3">
+                <!-- Express Username (Enhanced: 1-7 ตัวอักษร) -->
+                <div class="col-md-6">
+                    <label for="express_username" class="form-label">
+                        Username Express (1-7 ตัวอักษร)
+                        <span class="badge bg-warning text-dark ms-2">Enhanced</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" 
+                               class="form-control @error('express_username') is-invalid @enderror" 
+                               id="express_username" 
+                               name="express_username" 
+                               value="{{ old('express_username', $employee->express_username) }}"
+                               placeholder="จะสร้างจากชื่อ EN (1-7 ตัว)" 
+                               maxlength="7">
+                        <button type="button" class="btn btn-outline-primary" data-target="express_username">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        @if($employee->express_username)
+                            ปัจจุบัน: <code class="text-info">{{ $employee->express_username }}</code> ({{ strlen($employee->express_username) }} ตัว)
+                            <br>
+                        @endif
+                        <strong class="text-success">ปรับปรุงใหม่:</strong> ใช้ชื่อภาษาอังกฤษได้ 1-7 ตัวอักษร (ไม่ต้อง pad)
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                ตัวอย่าง: "John" → "john", "Alexandra" → "alexand"
+                            </small>
+                        </div>
+                    </div>
+                    @error('express_username')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Express Password (Enhanced: 4 ตัวเลขไม่ซ้ำ) -->
+                <div class="col-md-6">
+                    <label for="express_password" class="form-label">
+                        Password โปรแกรม Express
+                        <span class="badge bg-success ms-2">Numbers Only</span>
+                        <span class="badge bg-primary ms-2">แสดงได้</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" 
+                               class="form-control @error('express_password') is-invalid @enderror" 
+                               id="express_password" 
+                               name="express_password" 
+                               value="{{ old('express_password', $employee->express_password) }}"
+                               placeholder="4 ตัวเลขไม่ซ้ำ" 
+                               maxlength="4"
+                               pattern="[0-9]{4}">
+                        <button type="button" class="btn btn-outline-primary" data-target="express_password">
+                            <i class="fas fa-lock"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" data-toggle-password="express_password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        @if($employee->express_password)
+                            ปัจจุบัน: <code class="text-info">{{ $employee->express_password }}</code>
+                            <br>
+                        @endif
+                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน (เช่น 1234, 5678) 
+                        <span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
+                        <div class="mt-1">
+                            <small class="text-info">
+                                <i class="fas fa-calculator me-1"></i>
+                                ตัวอย่าง: 1357, 2468, 1029 (ไม่ซ้ำเลข)
+                            </small>
+                        </div>
+                    </div>
+                    @error('express_password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- สิทธิ์พิเศษ -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
+                    <i class="fas fa-shield-alt text-secondary" style="font-size: 20px;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">สิทธิ์พิเศษ</h5>
+                    <small class="text-muted">การอนุญาตใช้งานเพิ่มเติม</small>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <!-- VPN Permission -->
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-shield-alt text-primary fa-2x"></i>
+                            </div>
+                            <h6 class="card-title">การใช้งาน VPN</h6>
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="vpn_access" 
+                                       name="vpn_access" 
+                                       value="1"
+                                       {{ old('vpn_access', $employee->vpn_access) ? 'checked' : '' }}>
+                                <label class="form-check-label ms-2" for="vpn_access">
+                                    <span id="vpnStatus">{{ old('vpn_access', $employee->vpn_access) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                อนุญาตให้เชื่อมต่อ VPN เพื่อทำงานจากที่บ้าน
+                            </small>
+                            <div class="form-text mt-2">
+                                ปัจจุบัน: 
+                                <span class="badge bg-{{ $employee->vpn_access ? 'success' : 'secondary' }}">
+                                    {{ $employee->vpn_access ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Printing Permission -->
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-palette text-warning fa-2x"></i>
+                            </div>
+                            <h6 class="card-title">การปริ้นสี</h6>
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="color_printing" 
+                                       name="color_printing" 
+                                       value="1"
+                                       {{ old('color_printing', $employee->color_printing) ? 'checked' : '' }}>
+                                <label class="form-check-label ms-2" for="color_printing">
+                                    <span id="printingStatus">{{ old('color_printing', $employee->color_printing) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                อนุญาตให้ใช้เครื่องพิมพ์สีในการพิมพ์เอกสาร
+                            </small>
+                            <div class="form-text mt-2">
+                                ปัจจุบัน: 
+                                <span class="badge bg-{{ $employee->color_printing ? 'warning text-dark' : 'secondary' }}">
+                                    {{ $employee->color_printing ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remote Work Permission -->
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-home text-info fa-2x"></i>
+                            </div>
+                            <h6 class="card-title">ทำงานจากที่บ้าน</h6>
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="remote_work" 
+                                       name="remote_work" 
+                                       value="1"
+                                       {{ old('remote_work', $employee->remote_work) ? 'checked' : '' }}>
+                                <label class="form-check-label ms-2" for="remote_work">
+                                    <span id="remoteStatus">{{ old('remote_work', $employee->remote_work) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                อนุญาตให้ทำงานจากที่บ้านได้
+                            </small>
+                            <div class="form-text mt-2">
+                                ปัจจุบัน: 
+                                <span class="badge bg-{{ $employee->remote_work ? 'info' : 'secondary' }}">
+                                    {{ $employee->remote_work ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Access Permission -->
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-user-shield text-danger fa-2x"></i>
+                            </div>
+                            <h6 class="card-title">แผงควบคุมระบบ</h6>
+                            <div class="form-check form-switch d-flex justify-content-center">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="admin_access" 
+                                       name="admin_access" 
+                                       value="1"
+                                       {{ old('admin_access', $employee->admin_access) ? 'checked' : '' }}>
+                                <label class="form-check-label ms-2" for="admin_access">
+                                    <span id="adminStatus">{{ old('admin_access', $employee->admin_access) ? 'อนุญาต' : 'ไม่อนุญาต' }}</span>
+                                </label>
+                            </div>
+                            <small class="text-muted">
+                                อนุญาตให้เข้าถึงแผงควบคุมผู้ดูแลระบบ
+                            </small>
+                            <div class="form-text mt-2">
+                                ปัจจุบัน: 
+                                <span class="badge bg-{{ $employee->admin_access ? 'danger' : 'secondary' }}">
+                                    {{ $employee->admin_access ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>หมายเหตุ:</strong> สิทธิ์พิเศษเหล่านี้สามารถปรับเปลี่ยนได้ภายหลังโดย Admin
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ route('employees.show', $employee) }}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>ยกเลิก
+                </a>
+                
+                <button type="submit" 
+                        class="btn btn-success"
+                        id="submitBtn">
+                    <i class="fas fa-save me-2"></i>บันทึกการแก้ไข
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">
+                    <i class="fas fa-eye me-2"></i>ตัวอย่างการแก้ไขข้อมูลพนักงาน
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <!-- Preview content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-success" onclick="submitForm()">
+                    ยืนยันและบันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="resetPasswordModalLabel">
+                    <i class="fas fa-key me-2"></i>รีเซ็ตรหัสผ่าน - เลือกรหัสที่ต้องการ
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>เลือกรหัสผ่านที่ต้องการรีเซ็ต</h6>
+                    <p class="mb-0">คุณสามารถเลือกรีเซ็ตรหัสผ่านแยกกันได้ หรือรีเซ็ตทั้งหมดพร้อมกัน</p>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center" onclick="resetSpecificPassword('computer')" style="min-height: 60px;">
+                            <div class="text-center">
+                                <i class="fas fa-desktop fa-2x mb-2"></i><br>
+                                <strong>รหัสผ่านคอมพิวเตอร์</strong><br>
+                                <small class

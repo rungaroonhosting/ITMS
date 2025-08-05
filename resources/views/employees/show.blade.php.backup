@@ -10,7 +10,7 @@
 @section('content')
 <!-- Employee Header -->
 <div class="card mb-4">
-    <div class="card-header" style="background: linear-gradient(135deg, #495057 0%, #343a40 100%); color: white; border: none;">
+    <div class="card-header" style="background: linear-gradient(135deg, #B54544 0%, #E6952A 100%); color: white; border: none;">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <div class="d-flex align-items-center">
@@ -21,10 +21,10 @@
                         </span>
                     </div>
                     <div>
-                        <h2 class="mb-1" style="color: #fd7e14; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        <h2 class="mb-1" style="color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
                             {{ $employee->full_name_th }}
                         </h2>
-                        <h5 class="mb-2" style="color: #ff922b; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        <h5 class="mb-2" style="color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
                             {{ $employee->full_name_en }}
                         </h5>
                         <div class="d-flex flex-wrap gap-2">
@@ -45,6 +45,9 @@
                                     @endif
                                 </span>
                             @endif
+                            <span class="badge bg-success" style="border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                <i class="fas fa-eye me-1"></i>แสดง Password เลย
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -74,6 +77,35 @@
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+<!-- Password Display Notice -->
+@php
+    $currentUser = auth()->user();
+    $canSeePasswords = $currentUser && in_array($currentUser->role, ['super_admin', 'it_admin']);
+@endphp
+
+@if($canSeePasswords)
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-shield-alt me-2"></i>🔓 Admin Mode - แสดง Password ทั้งหมด
+        </h6>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1">
+                    <i class="fas fa-eye me-2"></i>
+                    <strong>คุณมีสิทธิ์ดู Password:</strong> ระบบจะแสดง Password จริงให้เห็นทันที
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1">
+                    <i class="fas fa-copy me-2"></i>
+                    <strong>Copy Function:</strong> คลิกปุ่ม <i class="fas fa-copy"></i> เพื่อคัดลอกรหัสผ่าน
+                </p>
+            </div>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
@@ -170,7 +202,7 @@
             </div>
         </div>
 
-        <!-- ✅ NEW: Special Permissions Section -->
+        <!-- ✅ Special Permissions Section -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -276,41 +308,46 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-desktop text-success me-2"></i>ระบบคอมพิวเตอร์
+                    <span class="badge bg-success ms-2">
+                        <i class="fas fa-eye me-1"></i>แสดงเลย
+                    </span>
                 </h5>
             </div>
             <div class="card-body">
                 <div class="info-item-inline">
                     <span class="info-label">Username:</span>
                     <span class="info-value">
-                        <code>{{ $employee->username }}</code>
-                        <button class="btn btn-outline-secondary btn-xs ms-2" onclick="copyToClipboard('{{ $employee->username }}')">
-                            <i class="fas fa-copy"></i>
-                        </button>
+                        <div class="d-flex align-items-center">
+                            <code class="me-2">{{ $employee->username }}</code>
+                            <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->username }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
                     </span>
                 </div>
-                
-                @php
-                    $currentUser = auth()->user();
-                    $canSeePasswords = $currentUser && in_array($currentUser->role, ['super_admin', 'it_admin']);
-                @endphp
                 
                 <div class="info-item-inline">
                     <span class="info-label">รหัสผ่านคอมพิวเตอร์:</span>
                     <span class="info-value">
                         @if($canSeePasswords)
                             <div class="d-flex align-items-center">
-                                <code id="computer-password" class="password-hidden">••••••••••</code>
-                                <button class="btn btn-outline-secondary btn-xs ms-2" onclick="togglePassword('computer-password', '{{ $employee->computer_password ?: 'ไม่มี' }}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <div class="password-container me-2">
+                                    @if($employee->computer_password)
+                                        <code class="text-success fw-bold">{{ $employee->computer_password }}</code>
+                                    @else
+                                        <span class="text-muted fst-italic">ไม่มีข้อมูล</span>
+                                    @endif
+                                </div>
                                 @if($employee->computer_password)
-                                    <button class="btn btn-outline-secondary btn-xs ms-1" onclick="copyToClipboard('{{ $employee->computer_password }}')">
+                                    <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->computer_password }}')">
                                         <i class="fas fa-copy"></i>
                                     </button>
                                 @endif
                             </div>
                         @else
-                            <span class="text-muted">[ซ่อน - เฉพาะ Admin]</span>
+                            <span class="text-muted">
+                                <i class="fas fa-lock me-1"></i>[ซ่อน - เฉพาะ Admin]
+                            </span>
                         @endif
                     </span>
                 </div>
@@ -319,10 +356,12 @@
                     <div class="info-item-inline">
                         <span class="info-label">รหัสเครื่องถ่ายเอกสาร:</span>
                         <span class="info-value">
-                            <code>{{ $employee->copier_code }}</code>
-                            <button class="btn btn-outline-secondary btn-xs ms-2" onclick="copyToClipboard('{{ $employee->copier_code }}')">
-                                <i class="fas fa-copy"></i>
-                            </button>
+                            <div class="d-flex align-items-center">
+                                <code class="me-2">{{ $employee->copier_code }}</code>
+                                <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->copier_code }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </span>
                     </div>
                 @endif
@@ -335,6 +374,9 @@
                 <h5 class="card-title mb-0">
                     <i class="fas fa-envelope text-info me-2"></i>ระบบอีเมลและเข้าสู่ระบบ
                     <span class="badge bg-success ms-2">แยกแล้ว</span>
+                    <span class="badge bg-info ms-2">
+                        <i class="fas fa-eye me-1"></i>แสดงเลย
+                    </span>
                 </h5>
             </div>
             <div class="card-body">
@@ -346,10 +388,12 @@
                 <div class="info-item-inline">
                     <span class="info-label">อีเมล:</span>
                     <span class="info-value">
-                        <code>{{ $employee->email }}</code>
-                        <button class="btn btn-outline-secondary btn-xs ms-2" onclick="copyToClipboard('{{ $employee->email }}')">
-                            <i class="fas fa-copy"></i>
-                        </button>
+                        <div class="d-flex align-items-center">
+                            <code class="me-2">{{ $employee->email }}</code>
+                            <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->email }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
                     </span>
                 </div>
                 
@@ -358,18 +402,23 @@
                     <span class="info-value">
                         @if($canSeePasswords)
                             <div class="d-flex align-items-center">
-                                <code id="email-password" class="password-hidden">••••••••••</code>
-                                <button class="btn btn-outline-secondary btn-xs ms-2" onclick="togglePassword('email-password', '{{ $employee->email_password ?: 'ไม่มี' }}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
+                                <div class="password-container me-2">
+                                    @if($employee->email_password)
+                                        <code class="text-warning fw-bold">{{ $employee->email_password }}</code>
+                                    @else
+                                        <span class="text-muted fst-italic">ไม่มีข้อมูล</span>
+                                    @endif
+                                </div>
                                 @if($employee->email_password)
-                                    <button class="btn btn-outline-secondary btn-xs ms-1" onclick="copyToClipboard('{{ $employee->email_password }}')">
+                                    <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->email_password }}')">
                                         <i class="fas fa-copy"></i>
                                     </button>
                                 @endif
                             </div>
                         @else
-                            <span class="text-muted">[ซ่อน - เฉพาะ Admin]</span>
+                            <span class="text-muted">
+                                <i class="fas fa-lock me-1"></i>[ซ่อน - เฉพาะ Admin]
+                            </span>
                         @endif
                     </span>
                 </div>
@@ -384,8 +433,10 @@
                 <div class="info-item-inline">
                     <span class="info-label">อีเมลเข้าระบบ:</span>
                     <span class="info-value">
-                        <code>{{ $employee->login_email ?: $employee->email }}</code>
-                        <span class="badge bg-secondary ms-2">Auto Sync</span>
+                        <div class="d-flex align-items-center">
+                            <code class="me-2">{{ $employee->login_email ?: $employee->email }}</code>
+                            <span class="badge bg-secondary ms-2">Auto Sync</span>
+                        </div>
                     </span>
                 </div>
                 
@@ -394,13 +445,25 @@
                     <span class="info-value">
                         @if($canSeePasswords)
                             <div class="d-flex align-items-center">
-                                <code>••••••••••••</code>
-                                <span class="badge bg-success ms-2">
-                                    <i class="fas fa-check-circle me-1"></i>แก้ไข NULL Error แล้ว
-                                </span>
+                                <div class="password-container me-2">
+                                    <code class="text-primary fw-bold">••••••••••••</code>
+                                    <small class="text-success ms-2">
+                                        <i class="fas fa-check-circle me-1"></i>แก้ไข NULL แล้ว
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="alert alert-info p-2 mb-0">
+                                    <small>
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <strong>Password Login:</strong> ไม่แสดงเพื่อความปลอดภัย (มี hash protection)
+                                    </small>
+                                </div>
                             </div>
                         @else
-                            <span class="text-muted">[ซ่อน - เฉพาะ Admin]</span>
+                            <span class="text-muted">
+                                <i class="fas fa-lock me-1"></i>[ซ่อน - เฉพาะ Admin]
+                            </span>
                         @endif
                     </span>
                 </div>
@@ -414,6 +477,9 @@
                     <h5 class="card-title mb-0">
                         <i class="fas fa-bolt text-warning me-2"></i>โปรแกรม Express v2.0
                         <span class="badge bg-warning text-dark ms-2">Enhanced</span>
+                        <span class="badge bg-success ms-2">
+                            <i class="fas fa-eye me-1"></i>แสดงเลย
+                        </span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -425,11 +491,13 @@
                     <div class="info-item-inline">
                         <span class="info-label">Username Express:</span>
                         <span class="info-value">
-                            <code>{{ $employee->express_username }}</code>
-                            <span class="badge bg-info ms-2">{{ strlen($employee->express_username) }} ตัว</span>
-                            <button class="btn btn-outline-secondary btn-xs ms-2" onclick="copyToClipboard('{{ $employee->express_username }}')">
-                                <i class="fas fa-copy"></i>
-                            </button>
+                            <div class="d-flex align-items-center">
+                                <code class="text-warning fw-bold me-2">{{ $employee->express_username }}</code>
+                                <span class="badge bg-info me-2">{{ strlen($employee->express_username) }} ตัว</span>
+                                <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->express_username }}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </span>
                     </div>
                     
@@ -437,12 +505,11 @@
                         <span class="info-label">รหัสผ่าน Express:</span>
                         <span class="info-value">
                             <div class="d-flex align-items-center">
-                                <code id="express-password" class="password-hidden">••••</code>
-                                <span class="badge bg-success ms-2">4 ตัวเลขไม่ซ้ำ</span>
-                                <button class="btn btn-outline-secondary btn-xs ms-2" onclick="togglePassword('express-password', '{{ $employee->express_password }}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary btn-xs ms-1" onclick="copyToClipboard('{{ $employee->express_password }}')">
+                                <div class="password-container me-2">
+                                    <code class="text-danger fw-bold">{{ $employee->express_password }}</code>
+                                </div>
+                                <span class="badge bg-success me-2">4 ตัวเลขไม่ซ้ำ</span>
+                                <button class="btn btn-outline-secondary btn-xs" onclick="copyToClipboard('{{ $employee->express_password }}')">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
@@ -457,7 +524,7 @@
 <!-- Success/Fixed Notification -->
 <div class="alert alert-success" role="alert">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <h6 class="alert-heading">
                 <i class="fas fa-check-circle me-2"></i>✅ ระบบแก้ไขแล้ว
             </h6>
@@ -467,14 +534,24 @@
                 <li><strong>บันทึกข้อมูล:</strong> คงอยู่ไม่หาย</li>
             </ul>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
+            <h6 class="alert-heading">
+                <i class="fas fa-eye me-2"></i>🔓 Password Display
+            </h6>
+            <ul class="mb-0">
+                <li><strong>แสดงเลย:</strong> ไม่ต้องกดปุ่มดู Password</li>
+                <li><strong>Copy Function:</strong> คลิกปุ่ม Copy ได้เลย</li>
+                <li><strong>Admin Only:</strong> เฉพาะ Admin ที่เห็นได้</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
             <h6 class="alert-heading">
                 <i class="fas fa-plus-circle me-2"></i>✨ เพิ่มเติม
             </h6>
             <ul class="mb-0">
                 <li><strong>Remote Work:</strong> ทำงานจากที่บ้าน</li>
                 <li><strong>Admin Access:</strong> แผงควบคุมระบบ</li>
-                <li><strong>Permission Management:</strong> จัดการแบบ API</li>
+                <li><strong>Visual Display:</strong> แสดงผลสวยงาม</li>
             </ul>
         </div>
     </div>
@@ -522,9 +599,41 @@
     border-radius: 0.25rem;
 }
 
-.password-hidden {
-    font-family: monospace;
-    letter-spacing: 2px;
+/* ✅ NEW: Password display styling */
+.password-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-container code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 0.25rem;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Different colors for different password types */
+.password-container code.text-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.2);
+}
+
+.password-container code.text-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.2);
+}
+
+.password-container code.text-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.2);
+}
+
+.password-container code.text-primary {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.2);
 }
 
 .card {
@@ -558,6 +667,12 @@
     border-color: #6c757d !important;
 }
 
+/* Copy button hover effect */
+.btn-xs:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .info-item-inline {
@@ -569,10 +684,16 @@
     .info-value {
         justify-content: flex-start;
         margin-top: 0.25rem;
+        width: 100%;
     }
     
     .info-label {
         min-width: auto;
+    }
+    
+    .password-container {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 </style>
@@ -581,34 +702,16 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎉 Employee Show Page Loaded with Permission System v2.0');
-    console.log('✅ Features: Permission Display, Password Toggle, Copy Functions');
+    console.log('🎉 Employee Show Page Loaded - Direct Password Display Mode');
+    console.log('✅ Features: Direct Password Display, Copy Functions, Enhanced UI');
+    console.log('🔓 Admin Mode: Passwords shown immediately without toggle');
 });
-
-// Password toggle functionality
-function togglePassword(elementId, actualPassword) {
-    const element = document.getElementById(elementId);
-    const button = element.nextElementSibling;
-    const icon = button.querySelector('i');
-    
-    if (element.classList.contains('password-hidden')) {
-        element.textContent = actualPassword;
-        element.classList.remove('password-hidden');
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        element.textContent = '••••••••••';
-        element.classList.add('password-hidden');
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
 
 // Copy to clipboard functionality
 function copyToClipboard(text) {
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(function() {
-            showNotification('คัดลอกเรียบร้อยแล้ว: ' + text, 'success');
+            showNotification('✅ คัดลอกเรียบร้อยแล้ว: ' + maskPassword(text), 'success');
         }).catch(function(err) {
             console.error('Failed to copy: ', err);
             fallbackCopyTextToClipboard(text);
@@ -633,16 +736,32 @@ function fallbackCopyTextToClipboard(text) {
     try {
         const successful = document.execCommand('copy');
         if (successful) {
-            showNotification('คัดลอกเรียบร้อยแล้ว: ' + text, 'success');
+            showNotification('✅ คัดลอกเรียบร้อยแล้ว: ' + maskPassword(text), 'success');
         } else {
-            showNotification('ไม่สามารถคัดลอกได้', 'error');
+            showNotification('❌ ไม่สามารถคัดลอกได้', 'error');
         }
     } catch (err) {
         console.error('Fallback: Oops, unable to copy', err);
-        showNotification('ไม่สามารถคัดลอกได้', 'error');
+        showNotification('❌ ไม่สามารถคัดลอกได้', 'error');
     }
     
     document.body.removeChild(textArea);
+}
+
+// Mask password for notification (show first 2 chars + ***)
+function maskPassword(text) {
+    if (text.length <= 2) {
+        return text;
+    } else if (text.includes('@')) {
+        // Email address - don't mask
+        return text;
+    } else if (text.length <= 4) {
+        // Short passwords - show first char
+        return text.charAt(0) + '***';
+    } else {
+        // Long passwords - show first 2 chars
+        return text.substring(0, 2) + '***';
+    }
 }
 
 // Show notification
@@ -664,12 +783,28 @@ function showNotification(message, type = 'success') {
         if (alert.parentNode) {
             alert.remove();
         }
-    }, 3000);
+    }, 4000);
 }
 
-console.log('📝 Employee Show Page Script Loaded');
-console.log('🔧 Available functions: togglePassword(), copyToClipboard(), showNotification()');
-console.log('✅ Features: Permission Display, Password Management, Copy to Clipboard');
-console.log('🎯 Permission System v2.0: VPN, Color Printing, Remote Work, Admin Access');
+// Add some visual feedback for copy buttons
+document.querySelectorAll('.btn-xs').forEach(button => {
+    button.addEventListener('click', function(e) {
+        // Add visual feedback
+        const originalHTML = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-check text-success"></i>';
+        this.disabled = true;
+        
+        setTimeout(() => {
+            this.innerHTML = originalHTML;
+            this.disabled = false;
+        }, 1000);
+    });
+});
+
+console.log('📝 Employee Show Page Script Loaded - Direct Password Display');
+console.log('🔧 Available functions: copyToClipboard(), showNotification(), maskPassword()');
+console.log('✅ Features: Direct Password Display, Enhanced Copy Function, Visual Feedback');
+console.log('🎯 Password System: Computer, Email, Express - All visible for Admins');
+console.log('🔓 Admin Mode: No toggle buttons needed - passwords shown immediately');
 </script>
 @endpush

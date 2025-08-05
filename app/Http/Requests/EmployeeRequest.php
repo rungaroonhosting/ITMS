@@ -130,6 +130,13 @@ class EmployeeRequest extends FormRequest
                 }
             ],
             
+            // ✅ FIXED: เพิ่ม Branch Validation
+            'branch_id' => [
+                'nullable',
+                'integer',
+                'exists:branches,id,is_active,1' // ตรวจสอบว่า branch ต้องเป็น active
+            ],
+            
             // Department and Role
             'department_id' => 'required|exists:departments,id',
             'position' => 'required|string|max:100',
@@ -195,6 +202,10 @@ class EmployeeRequest extends FormRequest
             'express_password.size' => 'รหัสผ่าน Express ต้องเป็นตัวเลข 4 หลักเท่านั้น',
             'express_password.regex' => 'รหัสผ่าน Express ต้องเป็นตัวเลข 0-9 เท่านั้น',
             
+            // ✅ NEW: Branch Messages
+            'branch_id.integer' => 'รหัสสาขาต้องเป็นตัวเลข',
+            'branch_id.exists' => 'สาขาที่เลือกไม่ถูกต้องหรือไม่เปิดให้บริการ',
+            
             // Department and Role Messages
             'department_id.required' => 'กรุณาเลือกแผนกการทำงาน',
             'department_id.exists' => 'แผนกที่เลือกไม่ถูกต้อง',
@@ -238,6 +249,7 @@ class EmployeeRequest extends FormRequest
             'login_password' => 'รหัสผ่านเข้าระบบ',
             'express_username' => 'Username Express',
             'express_password' => 'รหัสผ่าน Express',
+            'branch_id' => 'สาขา', // ✅ NEW: เพิ่ม branch attribute
             'department_id' => 'แผนกการทำงาน',
             'position' => 'ตำแหน่ง',
             'role' => 'สิทธิ์การใช้งาน',
@@ -267,6 +279,9 @@ class EmployeeRequest extends FormRequest
             
             // ✅ NEW: Department Express compatibility validation
             $this->validateDepartmentExpressCompatibility($validator);
+            
+            // ✅ NEW: Branch validation
+            $this->validateBranchConsistency($validator);
         });
     }
 
@@ -380,11 +395,34 @@ class EmployeeRequest extends FormRequest
     }
 
     /**
+     * ✅ NEW: Validate branch consistency
+     */
+    private function validateBranchConsistency($validator)
+    {
+        $branchId = $this->input('branch_id');
+        
+        if ($branchId) {
+            // Check if branch exists and is active
+            $branch = \App\Models\Branch::where('id', $branchId)
+                                      ->where('is_active', true)
+                                      ->first();
+            
+            if (!$branch) {
+                $validator->errors()->add('branch_id', 
+                    'สาขาที่เลือกไม่มีอยู่ในระบบหรือไม่เปิดให้บริการ');
+            }
+        }
+        
+        // Note: branch_id is nullable, so empty value is allowed
+    }
+
+    /**
      * ✅ NEW: Get validation rules for quick validation
      */
     public static function getQuickRules($employeeId = null): array 
     {
         return [
+            'branch_id' => 'nullable|integer|exists:branches,id,is_active,1',
             'vpn_access' => 'nullable|boolean',
             'color_printing' => 'nullable|boolean',
             'remote_work' => 'nullable|boolean',

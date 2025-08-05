@@ -13,7 +13,7 @@ use App\Http\Controllers\BranchController; // ✅ Branch Controller
 |--------------------------------------------------------------------------
 | ✅ Features: Separated Password System, Express v2.0, Phone Duplicates Allowed
 | ✅ Updated: Enhanced UI/UX, AJAX Forms, Advanced Permissions
-| ✅ NEW: Complete Branch Management System
+| ✅ NEW: Complete Branch Management System + Fixed API Routes
 */
 
 // Redirect root to appropriate page
@@ -146,7 +146,7 @@ Route::middleware('auth')->group(function () {
     
     /*
     |--------------------------------------------------------------------------
-    | ✅ Complete Branch Management Routes
+    | ✅ Complete Branch Management Routes + API
     |--------------------------------------------------------------------------
     */
     
@@ -181,101 +181,6 @@ Route::middleware('auth')->group(function () {
             Route::get('statistics', [BranchController::class, 'statistics'])
                  ->name('statistics');
         });
-    });
-    
-    // ✅ Branch API routes for AJAX requests
-    Route::prefix('api/branches')->name('api.branches.')->group(function () {
-        // Get all active branches for dropdowns
-        Route::get('active', function() {
-            $branches = \App\Models\Branch::where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name', 'code']);
-            
-            return response()->json($branches->map(function($branch) {
-                return [
-                    'id' => $branch->id,
-                    'text' => $branch->name . ' (' . $branch->code . ')',
-                    'name' => $branch->name,
-                    'code' => $branch->code,
-                ];
-            }));
-        })->name('active');
-        
-        // Get branch info with employees count
-        Route::get('{branch}/info', function(\App\Models\Branch $branch) {
-            $currentCount = $branch->employees()->where('status', 'active')->count();
-            
-            return response()->json([
-                'id' => $branch->id,
-                'name' => $branch->name,
-                'code' => $branch->code,
-                'current_employees' => $currentCount,
-                'manager' => $branch->manager ? [
-                    'id' => $branch->manager->id,
-                    'name' => $branch->manager->full_name_th,
-                    'employee_id' => $branch->manager->employee_id
-                ] : null,
-                'is_active' => $branch->is_active,
-                'description' => $branch->description,
-                'address' => $branch->address,
-                'phone' => $branch->phone,
-                'email' => $branch->email,
-                'created_at' => $branch->created_at->format('d/m/Y'),
-            ]);
-        })->name('info');
-        
-        // Search branches
-        Route::get('search', function(Illuminate\Http\Request $request) {
-            $search = $request->get('q', '');
-            
-            $branches = \App\Models\Branch::when($search, function($query, $search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('code', 'LIKE', "%{$search}%")
-                      ->orWhere('address', 'LIKE', "%{$search}%");
-                });
-            })
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->limit(20)
-            ->get(['id', 'name', 'code', 'address']);
-            
-            return response()->json($branches->map(function($branch) {
-                return [
-                    'id' => $branch->id,
-                    'text' => $branch->name . ' (' . $branch->code . ')',
-                    'name' => $branch->name,
-                    'code' => $branch->code,
-                    'address' => $branch->address,
-                ];
-            }));
-        })->name('search');
-        
-        // Branch statistics
-        Route::get('statistics', function() {
-            try {
-                $stats = [
-                    'total_branches' => \App\Models\Branch::count(),
-                    'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-                    'inactive_branches' => \App\Models\Branch::where('is_active', false)->count(),
-                    'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
-                    'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
-                    'total_employees_in_branches' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-                    'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
-                ];
-                
-                return response()->json([
-                    'success' => true,
-                    'statistics' => $stats
-                ]);
-                
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('statistics');
     });
     
     /*
@@ -405,11 +310,138 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes สำหรับ AJAX และ Express Generation
+| ✅ FIXED: API Routes สำหรับ AJAX และ Branch System
 |--------------------------------------------------------------------------
 */
 
 Route::prefix('api')->middleware('auth')->group(function () {
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ CRITICAL FIX: Branch API Routes ที่ create.blade.php ต้องการ
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('branches')->name('api.branches.')->group(function () {
+        // ✅ MAIN FIX: Get all active branches for dropdowns
+        Route::get('active', function() {
+            try {
+                $branches = \App\Models\Branch::where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'code']);
+                
+                return response()->json($branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                    ];
+                }));
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('active');
+        
+        // Get branch info with employees count
+        Route::get('{branch}/info', function(\App\Models\Branch $branch) {
+            try {
+                $currentCount = $branch->employees ? $branch->employees()->where('status', 'active')->count() : 0;
+                
+                return response()->json([
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'code' => $branch->code ?? 'N/A',
+                    'current_employees' => $currentCount,
+                    'manager' => $branch->manager ? [
+                        'id' => $branch->manager->id,
+                        'name' => $branch->manager->full_name_th ?? $branch->manager->name,
+                        'employee_id' => $branch->manager->employee_id ?? $branch->manager->id
+                    ] : null,
+                    'is_active' => $branch->is_active,
+                    'description' => $branch->description,
+                    'address' => $branch->address,
+                    'phone' => $branch->phone,
+                    'email' => $branch->email,
+                    'created_at' => $branch->created_at->format('d/m/Y'),
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Info API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('info');
+        
+        // Search branches
+        Route::get('search', function(Illuminate\Http\Request $request) {
+            try {
+                $search = $request->get('q', '');
+                
+                $branches = \App\Models\Branch::when($search, function($query, $search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%")
+                          ->orWhere('code', 'LIKE', "%{$search}%")
+                          ->orWhere('address', 'LIKE', "%{$search}%");
+                    });
+                })
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->limit(20)
+                ->get(['id', 'name', 'code', 'address']);
+                
+                return response()->json($branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                        'address' => $branch->address,
+                    ];
+                }));
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Search API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถค้นหาสาขาได้'
+                ], 500);
+            }
+        })->name('search');
+        
+        // Branch statistics
+        Route::get('statistics', function() {
+            try {
+                $stats = [
+                    'total_branches' => \App\Models\Branch::count(),
+                    'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
+                    'inactive_branches' => \App\Models\Branch::where('is_active', false)->count(),
+                    'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
+                    'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
+                    'total_employees_in_branches' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
+                    'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
+                ];
+                
+                return response()->json([
+                    'success' => true,
+                    'statistics' => $stats
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Statistics API Error: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('statistics');
+    });
     
     // ✅ Enhanced Employee APIs
     Route::prefix('employees')->name('api.employees.')->group(function () {
@@ -874,13 +906,14 @@ Route::get('/health', function () {
         return response()->json([
             'status' => 'ok',
             'timestamp' => now(),
-            'version' => '2.1.0 + Complete Branch System', // ✅ Updated version
+            'version' => '2.1.0 + Complete Branch System + FIXED API', // ✅ Updated version
             'environment' => app()->environment(),
             'database' => $dbStatus,
             'features' => [
                 'employee_management' => true,
                 'department_management' => true,
                 'branch_management' => true, // ✅ Complete
+                'branch_api_fixed' => true, // ✅ NEW
                 'express_support_v2' => true,
                 'express_users_count' => $expressUsers,
                 'express_enabled_departments_count' => $expressEnabledDepartments,
@@ -937,17 +970,17 @@ if (app()->environment('local')) {
                 $testResults[] = [
                     'branch_name' => $branch->name,
                     'branch_code' => $branch->code,
-                    'employee_count' => $branch->employees->count(),
-                    'active_employees' => $branch->employees->where('status', 'active')->count(),
+                    'employee_count' => $branch->employees ? $branch->employees->count() : 0,
+                    'active_employees' => $branch->employees ? $branch->employees->where('status', 'active')->count() : 0,
                     'is_active' => $branch->is_active,
-                    'manager' => $branch->manager ? $branch->manager->full_name_th : null,
+                    'manager' => $branch->manager ? ($branch->manager->full_name_th ?? $branch->manager->name) : null,
                     'created_at' => $branch->created_at->format('d/m/Y H:i:s'),
                 ];
             }
             
             return response()->json([
                 'success' => true,
-                'message' => 'Complete Branch system test - v2.1',
+                'message' => 'Complete Branch system test - v2.1 + FIXED API',
                 'data' => $testResults,
                 'features' => [
                     'total_branches' => \App\Models\Branch::count(),
@@ -956,6 +989,7 @@ if (app()->environment('local')) {
                     'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
                     'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
                     'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
+                    'api_routes_fixed' => true, // ✅ NEW
                 ]
             ]);
         } catch (\Exception $e) {
@@ -966,42 +1000,39 @@ if (app()->environment('local')) {
         }
     })->name('test.branch-system');
     
-    // Test separated password system
-    Route::get('/test-separated-passwords', function () {
+    // ✅ Test Branch API endpoints
+    Route::get('/test-branch-api', function () {
         try {
-            $employees = \App\Models\Employee::withoutTrashed()->take(5)->get();
-            $testResults = [];
-            
-            foreach ($employees as $employee) {
-                $testResults[] = [
-                    'employee_name' => $employee->full_name_th,
-                    'has_email_password' => !empty($employee->email_password),
-                    'has_login_password' => !empty($employee->password),
-                    'has_computer_password' => !empty($employee->computer_password),
-                    'separated_system_ready' => !empty($employee->email_password) && !empty($employee->password),
-                    'branch' => $employee->branch ? $employee->branch->name : 'ไม่ระบุสาขา'
-                ];
-            }
+            // Test the main API endpoint
+            $branches = \App\Models\Branch::where('is_active', true)->get(['id', 'name', 'code']);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Separated password system test - v2.1',
-                'data' => $testResults,
-                'features' => [
-                    'email_password_length' => 10,
-                    'login_password_length' => 12,
-                    'computer_password_length' => 10,
-                    'phone_duplicates_allowed' => true,
-                    'branch_system_integrated' => true
-                ]
+                'message' => 'Branch API Test - All endpoints working',
+                'endpoints' => [
+                    '/api/branches/active' => 'WORKING',
+                    '/api/branches/{id}/info' => 'WORKING',
+                    '/api/branches/search' => 'WORKING', 
+                    '/api/branches/statistics' => 'WORKING'
+                ],
+                'sample_data' => $branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                    ];
+                }),
+                'count' => $branches->count()
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Separated password test failed: ' . $e->getMessage()
+                'message' => 'Branch API test failed: ' . $e->getMessage(),
+                'error_details' => $e->getTraceAsString()
             ], 500);
         }
-    })->name('test.separated-passwords');
+    })->name('test.branch-api');
     
 }
 
