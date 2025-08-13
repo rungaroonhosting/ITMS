@@ -5,21 +5,32 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
     /**
-     * Handle an incoming request for role-based access control
+     * ✅ ENHANCED: Handle an incoming request for role-based access control
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // ตรวจสอบว่า login แล้วหรือยัง
+        // ✅ STEP 1: Enhanced Authentication Check
         if (!Auth::check()) {
+            Log::warning('🚫 Authentication failed - User not logged in', [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now()
+            ]);
+            
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized access - Authentication required'
+                    'message' => 'Unauthorized access - Authentication required',
+                    'error_code' => 'NOT_AUTHENTICATED',
+                    'redirect' => route('login')
                 ], 401);
             }
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
@@ -27,40 +38,55 @@ class RoleMiddleware
 
         $user = Auth::user();
 
-        // ✅ Super Admin bypass - ให้ super_admin เข้าได้ทุกอย่างเสมอ
-        if ($user->role === 'super_admin') {
-            return $next($request);
-        }
-
-        // ตรวจสอบสถานะผู้ใช้
+        // ✅ STEP 2: Enhanced User Status Check
         if (isset($user->status) && $user->status !== 'active') {
+            Log::warning('🚫 Inactive user access attempt', [
+                'user_id' => $user->id,
+                'user_status' => $user->status,
+                'user_role' => $user->role,
+                'url' => $request->fullUrl()
+            ]);
+            
             Auth::logout();
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Account is inactive'
+                    'message' => 'Account is inactive',
+                    'error_code' => 'ACCOUNT_INACTIVE'
                 ], 403);
             }
             return redirect()->route('login')->with('error', 'บัญชีของคุณถูกระงับการใช้งาน');
         }
 
-        // ตรวจสอบ role ถ้ามีการระบุ
+        // ✅ STEP 3: Super Admin Universal Access
+        if ($user->role === 'super_admin') {
+            Log::info('✅ Super Admin access granted', [
+                'user_id' => $user->id,
+                'user_name' => $user->full_name_th ?? $user->name,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'roles_required' => $roles
+            ]);
+            return $next($request);
+        }
+
+        // ✅ STEP 4: Role-based Authorization Check
         if (!empty($roles)) {
             $userRole = $user->role;
             
-            // กำหนด role hierarchy - role ที่สูงกว่าสามารถเข้าถึงระดับที่ต่ำกว่าได้
+            // ✅ Enhanced role hierarchy with explicit permissions
             $roleHierarchy = [
                 'super_admin' => ['super_admin', 'it_admin', 'hr', 'manager', 'express', 'employee'],
                 'it_admin' => ['it_admin', 'hr', 'manager', 'express', 'employee'],
                 'hr' => ['hr', 'manager', 'express', 'employee'],
                 'manager' => ['manager', 'employee'],
-                'express' => ['express', 'employee'], // Express มีสิทธิ์พิเศษในแผนกบัญชี
+                'express' => ['express', 'employee'],
                 'employee' => ['employee']
             ];
 
             $allowedRoles = $roleHierarchy[$userRole] ?? [$userRole];
             
-            // ตรวจสอบว่า user มี permission ที่ต้องการหรือไม่
+            // ✅ Check if user has required permissions
             $hasPermission = false;
             foreach ($roles as $role) {
                 if (in_array($role, $allowedRoles)) {
@@ -70,10 +96,20 @@ class RoleMiddleware
             }
 
             if (!$hasPermission) {
+                Log::warning('🚫 Role authorization failed', [
+                    'user_id' => $user->id,
+                    'user_role' => $userRole,
+                    'required_roles' => $roles,
+                    'allowed_roles' => $allowedRoles,
+                    'url' => $request->fullUrl(),
+                    'method' => $request->method()
+                ]);
+                
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Access denied. Insufficient permissions.',
+                        'error_code' => 'INSUFFICIENT_PERMISSIONS',
                         'required_roles' => $roles,
                         'user_role' => $userRole
                     ], 403);
@@ -83,11 +119,20 @@ class RoleMiddleware
             }
         }
 
+        // ✅ STEP 5: Log successful access
+        Log::info('✅ Role-based access granted', [
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'required_roles' => $roles,
+            'url' => $request->fullUrl(),
+            'method' => $request->method()
+        ]);
+
         return $next($request);
     }
 
     /**
-     * Helper methods สำหรับตรวจสอบสิทธิ์
+     * ✅ ENHANCED: Helper methods for specific permission checks
      */
     public static function canViewPasswords($user): bool
     {
@@ -110,39 +155,91 @@ class RoleMiddleware
     }
 
     /**
-     * ✅ NEW: ตรวจสอบสิทธิ์จัดการสาขา
+     * ✅ ENHANCED: Branch management permissions
      */
     public static function canManageBranches($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
     }
 
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์ดูข้อมูลสาขา
-     */
     public static function canViewBranches($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager', 'express']);
     }
 
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์แก้ไขสาขา
-     */
     public static function canEditBranches($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
     }
 
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์ลบสาขา
-     */
     public static function canDeleteBranches($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin']);
     }
 
     /**
-     * ✅ NEW: ตรวจสอบสิทธิ์จัดการพนักงานในสาขา
+     * ✅ CRITICAL: Bulk action permissions
+     */
+    public static function canPerformBulkActions($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    public static function canBulkUpdateStatus($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin']);
+    }
+
+    public static function canBulkUpdateDepartment($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    public static function canBulkSendEmail($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    public static function canBulkExport($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    /**
+     * ✅ MOST CRITICAL: Permanent delete permissions
+     */
+    public static function canPermanentDelete($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    public static function canBulkPermanentDelete($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    public static function canAccessTrash($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    public static function canForceDelete($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    public static function canRestore($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    public static function canEmptyTrash($user): bool
+    {
+        return $user->role === 'super_admin';
+    }
+
+    /**
+     * ✅ Branch-specific employee management
      */
     public static function canManageBranchEmployees($user, $branchId = null): bool
     {
@@ -150,7 +247,7 @@ class RoleMiddleware
             return true;
         }
 
-        // Manager สามารถจัดการพนักงานในสาขาของตัวเองได้
+        // Manager can manage employees in their own branch
         if ($user->role === 'manager' && $branchId && isset($user->branch_id)) {
             return $user->branch_id == $branchId;
         }
@@ -158,11 +255,9 @@ class RoleMiddleware
         return false;
     }
 
-    public static function canExportData($user): bool
-    {
-        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
-    }
-
+    /**
+     * ✅ Express system permissions
+     */
     public static function canAccessExpressFeatures($user): bool
     {
         return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'express']);
@@ -179,7 +274,7 @@ class RoleMiddleware
     }
 
     /**
-     * ✅ Updated: ตรวจสอบแผนกที่รองรับ Express (ใช้ express_enabled แทน hardcode)
+     * ✅ Enhanced department Express enablement check
      */
     public static function isDepartmentExpressEnabled($departmentId): bool
     {
@@ -187,73 +282,58 @@ class RoleMiddleware
             $department = \App\Models\Department::find($departmentId);
             return $department ? (bool) $department->express_enabled : false;
         } catch (\Exception $e) {
+            Log::error('Error checking department Express enablement: ' . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * 🔄 Backward compatibility - แผนกบัญชี
-     */
-    public static function isAccountingDepartment($departmentName): bool
-    {
-        $accountingKeywords = ['บัญชี', 'การเงิน', 'accounting', 'finance'];
-        
-        foreach ($accountingKeywords as $keyword) {
-            if (stripos($departmentName, $keyword) !== false) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    /**
-     * ✅ Updated: ตรวจสอบสิทธิ์เฉพาะ Express
+     * ✅ Enhanced Express access check
      */
     public static function canAccessExpress($user, $departmentId = null): bool
     {
-        // SuperAdmin และ IT Admin เข้าได้เสมอ
+        // SuperAdmin and IT Admin always have access
         if (in_array($user->role, ['super_admin', 'it_admin'])) {
             return true;
         }
 
-        // HR เข้าได้
+        // HR has access
         if ($user->role === 'hr') {
             return true;
         }
 
-        // Express role ต้องเป็นแผนกที่เปิด Express
+        // Express role must be in Express-enabled department
         if ($user->role === 'express') {
             if ($departmentId) {
                 return self::isDepartmentExpressEnabled($departmentId);
             }
-            return true; // ให้เข้าได้ถ้าไม่ระบุแผนก
+            return true; // Allow if no specific department check
         }
 
         return false;
     }
 
     /**
-     * ตรวจสอบว่าสามารถดูรหัสผ่าน Express ได้หรือไม่
+     * ✅ Enhanced Express credentials viewing
      */
     public static function canViewExpressCredentials($user, $employeeId = null): bool
     {
-        // SuperAdmin และ IT Admin เห็นได้เสมอ
+        // SuperAdmin and IT Admin see everything
         if (in_array($user->role, ['super_admin', 'it_admin'])) {
             return true;
         }
 
-        // HR เห็นได้ แต่รหัสผ่านจะถูกซ่อน
+        // HR can see but passwords may be masked
         if ($user->role === 'hr') {
             return true;
         }
 
-        // Express role และ Manager เห็นได้ แต่รหัสผ่านซ่อน
+        // Express role and Manager can see but passwords masked
         if (in_array($user->role, ['express', 'manager'])) {
             return true;
         }
 
-        // Employee เห็นได้เฉพาะตัวเอง
+        // Employee can see their own only
         if ($user->role === 'employee' && $employeeId) {
             return $user->id == $employeeId;
         }
@@ -262,31 +342,53 @@ class RoleMiddleware
     }
 
     /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การเข้าถึงถังขยะ
+     * ✅ Photo management permissions
      */
-    public static function canAccessTrash($user): bool
+    public static function canManagePhotos($user): bool
     {
-        return $user->role === 'super_admin';
+        return in_array($user->role, ['super_admin', 'it_admin']);
+    }
+
+    public static function canUploadPhotos($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
+    }
+
+    public static function canDeletePhotos($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin']);
+    }
+
+    public static function canViewPhotoReports($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
     }
 
     /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การลบอย่างถาวร
+     * ✅ Export and reporting permissions
      */
-    public static function canForceDelete($user): bool
+    public static function canExportData($user): bool
     {
-        return $user->role === 'super_admin';
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    public static function canExportEmployees($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    public static function canViewReports($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
+    }
+
+    public static function canViewPhoneDuplicates($user): bool
+    {
+        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
     }
 
     /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การกู้คืน
-     */
-    public static function canRestore($user): bool
-    {
-        return $user->role === 'super_admin';
-    }
-
-    /**
-     * Get role display name in Thai
+     * ✅ Enhanced role display name
      */
     public static function getRoleDisplayName($role): string
     {
@@ -299,11 +401,11 @@ class RoleMiddleware
             'employee' => 'พนักงาน'
         ];
 
-        return $roleNames[$role] ?? 'ไม่ระบุ';
+        return $roleNames[$role] ?? ucfirst(str_replace('_', ' ', $role));
     }
 
     /**
-     * Get role permissions
+     * ✅ Enhanced role permissions mapping
      */
     public static function getRolePermissions($role): array
     {
@@ -315,7 +417,7 @@ class RoleMiddleware
                 'delete_employees',
                 'view_all_passwords',
                 'manage_departments',
-                'manage_branches', // ✅ NEW
+                'manage_branches',
                 'manage_users',
                 'view_reports',
                 'export_data',
@@ -326,7 +428,11 @@ class RoleMiddleware
                 'access_trash',
                 'force_delete',
                 'restore_employees',
-                'manage_soft_deletes'
+                'manage_soft_deletes',
+                'bulk_permanent_delete', // ✅ Critical permission
+                'bulk_actions',
+                'photo_management',
+                'view_debug_info'
             ],
             'it_admin' => [
                 'view_all_employees',
@@ -334,37 +440,42 @@ class RoleMiddleware
                 'edit_employees',
                 'view_all_passwords',
                 'manage_departments',
-                'manage_branches', // ✅ NEW
+                'manage_branches',
                 'view_reports',
                 'export_data',
                 'access_express',
                 'view_express_passwords',
-                'manage_express_users'
+                'manage_express_users',
+                'bulk_actions',
+                'photo_management'
             ],
             'hr' => [
                 'view_all_employees',
                 'create_employees',
                 'edit_employees',
-                'view_branches', // ✅ NEW
-                'manage_branches', // ✅ NEW
+                'view_branches',
+                'manage_branches',
                 'view_reports',
                 'export_data',
-                'access_express'
+                'access_express',
+                'bulk_actions',
+                'photo_upload'
             ],
             'manager' => [
                 'view_department_employees',
                 'create_employees',
                 'edit_department_employees',
-                'view_branches', // ✅ NEW
-                'manage_branch_employees', // ✅ NEW
+                'view_branches',
+                'manage_branch_employees',
                 'view_reports',
-                'access_express'
+                'access_express',
+                'export_data'
             ],
             'express' => [
                 'view_accounting_employees',
                 'create_accounting_employees',
                 'edit_accounting_employees',
-                'view_branches', // ✅ NEW
+                'view_branches',
                 'access_express',
                 'create_express_users'
             ],
@@ -378,7 +489,7 @@ class RoleMiddleware
     }
 
     /**
-     * Check if user has specific permission
+     * ✅ Enhanced permission checking
      */
     public static function hasPermission($user, $permission): bool
     {
@@ -387,7 +498,126 @@ class RoleMiddleware
     }
 
     /**
-     * Middleware สำหรับตรวจสอบ Express permissions
+     * ✅ Get user's accessible departments
+     */
+    public static function getAccessibleDepartments($user): array
+    {
+        switch ($user->role) {
+            case 'super_admin':
+            case 'it_admin':
+            case 'hr':
+                return ['all'];
+                
+            case 'manager':
+                return isset($user->department_id) ? [$user->department_id] : [];
+                
+            case 'express':
+                return ['express_enabled'];
+                
+            case 'employee':
+            default:
+                return isset($user->department_id) ? [$user->department_id] : [];
+        }
+    }
+
+    /**
+     * ✅ Get user's accessible branches
+     */
+    public static function getAccessibleBranches($user): array
+    {
+        switch ($user->role) {
+            case 'super_admin':
+            case 'it_admin':
+            case 'hr':
+                return ['all'];
+                
+            case 'manager':
+                return isset($user->branch_id) ? [$user->branch_id] : [];
+                
+            case 'express':
+                return ['express_branches'];
+                
+            case 'employee':
+            default:
+                return isset($user->branch_id) ? [$user->branch_id] : [];
+        }
+    }
+
+    /**
+     * ✅ Enhanced feature flags for frontend
+     */
+    public static function getFeatureFlags($user): array
+    {
+        return [
+            'can_view_passwords' => self::canViewPasswords($user),
+            'can_view_express_passwords' => self::canViewExpressPasswords($user),
+            'can_manage_employees' => self::canManageEmployees($user),
+            'can_manage_departments' => self::canManageDepartments($user),
+            'can_manage_branches' => self::canManageBranches($user),
+            'can_view_branches' => self::canViewBranches($user),
+            'can_edit_branches' => self::canEditBranches($user),
+            'can_delete_branches' => self::canDeleteBranches($user),
+            'can_export_data' => self::canExportData($user),
+            'can_access_express' => self::canAccessExpressFeatures($user),
+            'can_create_express_users' => self::canCreateExpressUsers($user),
+            'can_view_express_reports' => self::canViewExpressReports($user),
+            'can_access_trash' => self::canAccessTrash($user),
+            'can_force_delete' => self::canForceDelete($user),
+            'can_restore' => self::canRestore($user),
+            'can_permanent_delete' => self::canPermanentDelete($user),
+            'can_bulk_permanent_delete' => self::canBulkPermanentDelete($user), // ✅ Critical flag
+            'can_view_phone_duplicates' => self::canViewPhoneDuplicates($user),
+            'can_perform_bulk_actions' => self::canPerformBulkActions($user),
+            'can_export_employees' => self::canExportEmployees($user),
+            'can_view_reports' => self::canViewReports($user),
+            'can_manage_photos' => self::canManagePhotos($user),
+            'can_upload_photos' => self::canUploadPhotos($user),
+            'can_delete_photos' => self::canDeletePhotos($user),
+        ];
+    }
+
+    /**
+     * ✅ Middleware for permanent delete operations
+     */
+    public static function permanentDeleteMiddleware(Request $request, Closure $next)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            Log::critical('🚨 Permanent delete attempt without authentication', [
+                'ip' => $request->ip(),
+                'url' => $request->fullUrl(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'ไม่ได้เข้าสู่ระบบ',
+                'error_code' => 'NOT_AUTHENTICATED'
+            ], 401);
+        }
+
+        if (!self::canBulkPermanentDelete($user)) {
+            Log::critical('🚨 Unauthorized permanent delete attempt', [
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'user_name' => $user->full_name_th ?? $user->name,
+                'ip' => $request->ip(),
+                'url' => $request->fullUrl()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'ไม่มีสิทธิ์ในการลบถาวร (เฉพาะ Super Admin)',
+                'error_code' => 'INSUFFICIENT_PERMISSIONS'
+            ], 403);
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * ✅ Enhanced middleware for Express operations
      */
     public static function expressMiddleware(Request $request, Closure $next)
     {
@@ -406,7 +636,7 @@ class RoleMiddleware
     }
 
     /**
-     * ✅ NEW: Middleware สำหรับตรวจสอบสิทธิ์ถังขยะ
+     * ✅ Enhanced middleware for trash operations
      */
     public static function trashMiddleware(Request $request, Closure $next)
     {
@@ -425,7 +655,7 @@ class RoleMiddleware
     }
 
     /**
-     * ✅ NEW: Middleware สำหรับตรวจสอบสิทธิ์สาขา
+     * ✅ Enhanced middleware for branch operations
      */
     public static function branchMiddleware(Request $request, Closure $next)
     {
@@ -441,119 +671,5 @@ class RoleMiddleware
         }
 
         return $next($request);
-    }
-
-    /**
-     * Get user's accessible departments
-     */
-    public static function getAccessibleDepartments($user): array
-    {
-        switch ($user->role) {
-            case 'super_admin':
-            case 'it_admin':
-            case 'hr':
-                // เข้าถึงทุกแผนก
-                return ['all'];
-                
-            case 'manager':
-                // เข้าถึงแผนกของตัวเอง (ต้องมี department_id ใน user record)
-                return isset($user->department_id) ? [$user->department_id] : [];
-                
-            case 'express':
-                // เข้าถึงเฉพาะแผนกที่เปิด Express
-                return ['express_enabled'];
-                
-            case 'employee':
-            default:
-                // เข้าถึงแผนกของตัวเองเท่านั้น
-                return isset($user->department_id) ? [$user->department_id] : [];
-        }
-    }
-
-    /**
-     * ✅ NEW: Get user's accessible branches
-     */
-    public static function getAccessibleBranches($user): array
-    {
-        switch ($user->role) {
-            case 'super_admin':
-            case 'it_admin':
-            case 'hr':
-                // เข้าถึงทุกสาขา
-                return ['all'];
-                
-            case 'manager':
-                // เข้าถึงสาขาของตัวเอง
-                return isset($user->branch_id) ? [$user->branch_id] : [];
-                
-            case 'express':
-                // เข้าถึงสาขาที่มีแผนก Express enabled
-                return ['express_branches'];
-                
-            case 'employee':
-            default:
-                // เข้าถึงสาขาของตัวเองเท่านั้น
-                return isset($user->branch_id) ? [$user->branch_id] : [];
-        }
-    }
-
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การดู Phone Duplicates
-     */
-    public static function canViewPhoneDuplicates($user): bool
-    {
-        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
-    }
-
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การจัดการ Bulk Actions
-     */
-    public static function canPerformBulkActions($user): bool
-    {
-        return in_array($user->role, ['super_admin', 'it_admin', 'hr']);
-    }
-
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การส่งออกข้อมูล
-     */
-    public static function canExportEmployees($user): bool
-    {
-        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
-    }
-
-    /**
-     * ✅ NEW: ตรวจสอบสิทธิ์การดูรายงาน
-     */
-    public static function canViewReports($user): bool
-    {
-        return in_array($user->role, ['super_admin', 'it_admin', 'hr', 'manager']);
-    }
-
-    /**
-     * ✅ NEW: Get feature flags based on user role
-     */
-    public static function getFeatureFlags($user): array
-    {
-        return [
-            'can_view_passwords' => self::canViewPasswords($user),
-            'can_view_express_passwords' => self::canViewExpressPasswords($user),
-            'can_manage_employees' => self::canManageEmployees($user),
-            'can_manage_departments' => self::canManageDepartments($user),
-            'can_manage_branches' => self::canManageBranches($user), // ✅ NEW
-            'can_view_branches' => self::canViewBranches($user), // ✅ NEW
-            'can_edit_branches' => self::canEditBranches($user), // ✅ NEW
-            'can_delete_branches' => self::canDeleteBranches($user), // ✅ NEW
-            'can_export_data' => self::canExportData($user),
-            'can_access_express' => self::canAccessExpressFeatures($user),
-            'can_create_express_users' => self::canCreateExpressUsers($user),
-            'can_view_express_reports' => self::canViewExpressReports($user),
-            'can_access_trash' => self::canAccessTrash($user),
-            'can_force_delete' => self::canForceDelete($user),
-            'can_restore' => self::canRestore($user),
-            'can_view_phone_duplicates' => self::canViewPhoneDuplicates($user),
-            'can_perform_bulk_actions' => self::canPerformBulkActions($user),
-            'can_export_employees' => self::canExportEmployees($user),
-            'can_view_reports' => self::canViewReports($user),
-        ];
     }
 }

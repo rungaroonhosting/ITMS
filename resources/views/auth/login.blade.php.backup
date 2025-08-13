@@ -395,17 +395,6 @@
             font-size: 0.9rem;
         }
 
-        .form-control.is-invalid {
-            border-color: #dc3545;
-        }
-
-        .invalid-feedback {
-            color: #dc3545;
-            font-size: 0.875rem;
-            margin-top: 5px;
-            display: block;
-        }
-
         .password-toggle {
             position: relative;
         }
@@ -421,7 +410,6 @@
             cursor: pointer;
             font-size: 1.1rem;
             transition: color 0.3s ease;
-            z-index: 10;
         }
 
         .password-toggle-btn:hover {
@@ -529,11 +517,6 @@
 
         .alert-success {
             background: #d1edff;
-            color: #0c5460;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
             color: #0c5460;
         }
 
@@ -701,10 +684,10 @@
                 <div class="login-form-container">
                     <div class="login-header">
                         <h2>เข้าสู่ระบบ</h2>
-                        <p>IT Management System v2.1</p>
+                        <p>IT Management System</p>
                     </div>
 
-                    <!-- ✅ Enhanced Alerts with proper styling -->
+                    <!-- Alerts -->
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle"></i>
@@ -726,15 +709,8 @@
                         </div>
                     @endif
 
-                    @if (session('info'))
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span>{{ session('info') }}</span>
-                        </div>
-                    @endif
-
-                    <!-- ✅ Fixed Login Form with proper action route -->
-                    <form method="POST" action="{{ route('login.store') }}" id="loginForm" autocomplete="on">
+                    <!-- Login Form -->
+                    <form method="POST" action="{{ route('login.store') }}" id="loginForm">
                         @csrf
                         
                         <div class="form-group">
@@ -746,8 +722,7 @@
                                    value="{{ old('email') }}" 
                                    placeholder="กรุณากรอกอีเมล" 
                                    required 
-                                   autofocus
-                                   autocomplete="email">
+                                   autofocus>
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -761,8 +736,7 @@
                                        id="password" 
                                        name="password" 
                                        placeholder="กรุณากรอกรหัสผ่าน" 
-                                       required
-                                       autocomplete="current-password">
+                                       required>
                                 <button type="button" class="password-toggle-btn" onclick="togglePassword()">
                                     <i class="fas fa-eye" id="passwordIcon"></i>
                                 </button>
@@ -774,10 +748,9 @@
 
                         <div class="remember-forgot">
                             <label class="remember-me">
-                                <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                                <input type="checkbox" name="remember" id="remember">
                                 <span>จดจำการเข้าสู่ระบบ</span>
                             </label>
-                            <a href="{{ route('password.request') }}" class="forgot-password">ลืมรหัสผ่าน?</a>
                         </div>
 
                         <button type="submit" class="btn-login" id="submitBtn">
@@ -787,13 +760,7 @@
 
                     <div class="footer-info">
                         <p>© {{ date('Y') }} <span class="brand">IT Management System</span></p>
-                        <p>System By Rungaroon <em>"Solution"</em> - Version 2.1</p>
-                        @if(app()->environment('local'))
-                            <p style="color: #dc3545; font-size: 0.75rem;">
-                                <i class="fas fa-code"></i> Development Mode
-                                - <a href="{{ route('auth.debug', absolute: false) }}" target="_blank" style="color: #dc3545;">Debug Info</a>
-                            </p>
-                        @endif
+                        <p>System By Rungaroon <em>"Solution"</em></p>
                     </div>
                 </div>
             </div>
@@ -804,7 +771,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // ✅ Enhanced JavaScript functionality
+        // Password toggle functionality
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const passwordIcon = document.getElementById('passwordIcon');
@@ -824,25 +791,14 @@
             const form = document.getElementById('loginForm');
             const submitBtn = document.getElementById('submitBtn');
             
-            // ✅ Enhanced form submission with better UX
-            form.addEventListener('submit', function(e) {
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value.trim();
-                
-                // Basic validation
-                if (!email || !password) {
-                    e.preventDefault();
-                    showAlert('กรุณากรอกอีเมลและรหัสผ่าน', 'danger');
-                    return;
-                }
-                
-                // Show loading state
+            // Handle form submission
+            form.addEventListener('submit', function() {
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ...';
             });
             
-            // ✅ Auto-hide alerts after 5 seconds
+            // Auto-hide alerts after 5 seconds
             setTimeout(() => {
                 const alerts = document.querySelectorAll('.alert');
                 alerts.forEach(alert => {
@@ -857,89 +813,17 @@
                 });
             }, 5000);
 
-            // ✅ Enhanced focus effects
+            // Add focus effects
             const inputs = document.querySelectorAll('.form-control');
             inputs.forEach(input => {
                 input.addEventListener('focus', function() {
                     this.parentElement.style.transform = 'translateY(-2px)';
-                    this.parentElement.style.transition = 'transform 0.3s ease';
                 });
                 
                 input.addEventListener('blur', function() {
                     this.parentElement.style.transform = 'translateY(0)';
                 });
             });
-
-            // ✅ Real-time validation feedback
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            
-            emailInput.addEventListener('input', function() {
-                if (this.value && !this.value.includes('@')) {
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-invalid');
-                }
-            });
-
-            passwordInput.addEventListener('input', function() {
-                if (this.value && this.value.length < 6) {
-                    this.classList.add('is-invalid');
-                } else {
-                    this.classList.remove('is-invalid');
-                }
-            });
-
-            // ✅ Console log for debugging
-            console.log('🔐 IT Management System Login v2.1');
-            console.log('📍 Current URL:', window.location.href);
-            console.log('🔧 CSRF Token:', document.querySelector('meta[name="csrf-token"]')?.content ? 'Present' : 'Missing');
-            console.log('📝 Form Action:', form.action);
-            
-            @if(app()->environment('local'))
-                console.log('🚀 Development Mode Active');
-                console.log('🐛 Debug URL: {{ route("auth.debug", absolute: false) }}');
-            @endif
-        });
-
-        // ✅ Enhanced alert function
-        function showAlert(message, type = 'info') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = `
-                <i class="fas fa-${type === 'danger' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            
-            const form = document.getElementById('loginForm');
-            form.insertBefore(alertDiv, form.firstChild);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        }
-
-        // ✅ Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Alt + L to focus on login
-            if (e.altKey && e.key === 'l') {
-                e.preventDefault();
-                document.getElementById('email').focus();
-            }
-            
-            // Enter on email field focuses password
-            if (e.key === 'Enter' && e.target.id === 'email') {
-                e.preventDefault();
-                document.getElementById('password').focus();
-            }
-        });
-
-        // ✅ Enhanced error handling
-        window.addEventListener('error', function(e) {
-            console.error('JavaScript Error:', e.error);
-            if (e.error && e.error.message.includes('fetch')) {
-                showAlert('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง', 'danger');
-            }
         });
     </script>
 </body>

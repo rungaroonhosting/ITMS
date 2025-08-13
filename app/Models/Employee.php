@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Access\Authorizable;
+use Illuminate\Foundation\Auth\Access\Authorizable as AuthorizableTrait;
 
-class Employee extends Authenticatable
+class Employee extends Model implements Authenticatable, Authorizable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, SoftDeletes, AuthenticatableTrait, AuthorizableTrait;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'employee_code',
         'keycard_id',
@@ -24,98 +24,69 @@ class Employee extends Authenticatable
         'last_name_th',
         'first_name_en',
         'last_name_en',
-        'phone',
         'nickname',
-        'username',
-        'computer_password',
-        'copier_code',
         'email',
+        'login_email',
+        'phone',
+        'username',
+        'password',
+        'computer_password',
         'email_password',
+        'login_password',
+        'copier_code',
         'express_username',
         'express_password',
         'department_id',
-        'branch_id',           // ✅ NEW: เพิ่ม branch_id
+        'branch_id',
         'position',
         'role',
         'status',
-        'login_email',
-        'password',
-        'email_verified_at',
-        'remember_token',
         'hire_date',
-        // Permission Fields
         'vpn_access',
         'color_printing',
         'remote_work',
         'admin_access',
+        'photo',
+        'photo_original_name',
+        'photo_mime_type',
+        'photo_size',
+        'photo_uploaded_at',
+        'remember_token',
+        'email_verified_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'computer_password',
         'email_password',
+        'login_password',
         'express_password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
         'hire_date' => 'date',
-        // Permission Field Casts
         'vpn_access' => 'boolean',
         'color_printing' => 'boolean',
         'remote_work' => 'boolean',
         'admin_access' => 'boolean',
+        'email_verified_at' => 'datetime',
+        'photo_uploaded_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = [
-        'full_name_th',
-        'full_name_en',
-        'full_name',
-        'employee_id',
-        'role_display',
-        'status_display',
-        'status_badge',
-        'status_thai',
-        'years_of_service',
-        'permissions_summary',
-        'branch_name',         // ✅ NEW: เพิ่ม branch_name accessor
-        'full_location',       // ✅ NEW: เพิ่ม full_location (department + branch)
-        'branch_code',         // ✅ NEW: เพิ่ม branch_code accessor
-        'location_display',    // ✅ NEW: แสดงที่ตั้งแบบสั้น
-    ];
-
-    // ===========================================
-    // AUTHENTICATION METHODS (เหมือนเดิม)
-    // ===========================================
+    // =====================================================
+    // AUTHENTICATION INTERFACE METHODS
+    // =====================================================
 
     public function getAuthIdentifierName()
     {
-        return 'email';
+        return $this->getKeyName();
     }
 
     public function getAuthIdentifier()
     {
-        return $this->getAttribute($this->getAuthIdentifierName());
+        return $this->getKey();
     }
 
     public function getAuthPassword()
@@ -138,87 +109,484 @@ class Employee extends Authenticatable
         return 'remember_token';
     }
 
-    public function getEmailForVerification()
-    {
-        return $this->email;
-    }
+    // =====================================================
+    // RELATIONSHIPS
+    // =====================================================
 
-    public function hasVerifiedEmail()
-    {
-        return ! is_null($this->email_verified_at);
-    }
-
-    public function markEmailAsVerified()
-    {
-        return $this->forceFill([
-            'email_verified_at' => $this->freshTimestamp(),
-        ])->save();
-    }
-
-    public function sendEmailVerificationNotification()
-    {
-        // You can implement email verification if needed
-    }
-
-    // ===========================================
-    // ✅ ENHANCED: RELATIONSHIPS
-    // ===========================================
-
-    /**
-     * Get the department that owns the employee.
-     */
     public function department()
     {
         return $this->belongsTo(Department::class);
     }
 
-    /**
-     * ✅ ENHANCED: Get the branch that owns the employee.
-     */
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'branch_id');
+        return $this->belongsTo(Branch::class);
+    }
+
+    // =====================================================
+    // 🔥 FIXED: ENHANCED PHOTO SYSTEM
+    // =====================================================
+
+    /**
+     * 🔥 CRITICAL FIX: Get photo URL with enhanced detection
+     */
+    public function getPhotoUrlAttribute()
+    {
+        try {
+            // 🔥 Priority 1: Check if photo exists and file is accessible
+            if ($this->photo && $this->photoFileExists()) {
+                // ✅ Use asset() instead of Storage::url() for better compatibility
+                $photoPath = 'storage/' . str_replace('employees/photos/', 'employees/photos/', $this->photo);
+                return asset($photoPath);
+            }
+
+            // 🔥 Priority 2: Try to find photo by multiple patterns
+            $foundPath = $this->findExistingPhoto();
+            if ($foundPath) {
+                // Update database with found path
+                $this->updateQuietly(['photo' => $foundPath]);
+                $photoPath = 'storage/' . str_replace('employees/photos/', 'employees/photos/', $foundPath);
+                return asset($photoPath);
+            }
+
+            // Priority 3: Generate consistent avatar
+            return $this->generateAvatarUrl();
+
+        } catch (\Exception $e) {
+            Log::error("Photo URL generation failed for employee {$this->id}: " . $e->getMessage());
+            return $this->generateAvatarUrl();
+        }
     }
 
     /**
-     * Get departments managed by this employee.
+     * 🔥 ENHANCED: Check if photo file actually exists with multiple checks
      */
-    public function managedDepartments()
+    public function photoFileExists(): bool
     {
-        return $this->hasMany(Department::class, 'manager_id');
+        if (!$this->photo) return false;
+
+        try {
+            // Method 1: Storage disk check
+            if (Storage::disk('public')->exists($this->photo)) {
+                return true;
+            }
+
+            // Method 2: Direct file path check
+            $fullPath = storage_path('app/public/' . $this->photo);
+            if (file_exists($fullPath)) {
+                return true;
+            }
+
+            // Method 3: Alternative path check
+            $altPath = public_path('storage/' . str_replace('employees/photos/', 'employees/photos/', $this->photo));
+            if (file_exists($altPath)) {
+                return true;
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::warning("Photo existence check failed for employee {$this->id}: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * ✅ ENHANCED: Get branches managed by this employee.
+     * 🔥 NEW: Find existing photo with comprehensive search
      */
-    public function managedBranches()
+    private function findExistingPhoto(): ?string
     {
-        return $this->hasMany(Branch::class, 'manager_id');
+        try {
+            $photoDir = 'employees/photos';
+            
+            // Ensure directory exists
+            if (!Storage::disk('public')->exists($photoDir)) {
+                Storage::disk('public')->makeDirectory($photoDir, 0755, true);
+                return null;
+            }
+
+            // Search patterns based on employee data
+            $searchPatterns = [
+                // Current ID-based patterns
+                "emp_{$this->id}",
+                "employee_{$this->id}",
+                
+                // Employee code patterns
+                $this->employee_code,
+                strtolower($this->employee_code),
+                
+                // Name-based patterns (if available)
+                ($this->first_name_en && $this->last_name_en) 
+                    ? strtolower($this->first_name_en . '_' . $this->last_name_en) 
+                    : null,
+                
+                // Simple ID
+                (string)$this->id,
+            ];
+
+            // Remove null patterns
+            $searchPatterns = array_filter($searchPatterns);
+
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+            // Search through all files in photos directory
+            $files = Storage::disk('public')->files($photoDir);
+            
+            foreach ($files as $file) {
+                $filename = basename($file);
+                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+                $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                
+                // Check if extension is allowed
+                if (!in_array($extension, $allowedExtensions)) {
+                    continue;
+                }
+                
+                // Check against all patterns
+                foreach ($searchPatterns as $pattern) {
+                    if (str_contains($nameWithoutExt, $pattern) || str_starts_with($nameWithoutExt, $pattern)) {
+                        Log::info("Found photo for employee {$this->id}: {$file} (pattern: {$pattern})");
+                        return $file;
+                    }
+                }
+            }
+
+            Log::info("No photo found for employee {$this->id} after comprehensive search");
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error("Photo search failed for employee {$this->id}: " . $e->getMessage());
+            return null;
+        }
     }
 
     /**
-     * ✅ NEW: Get colleagues in the same branch.
+     * 🔥 ENHANCED: Generate avatar with consistent colors
      */
-    public function branchColleagues()
+    private function generateAvatarUrl(): string
     {
-        return $this->hasMany(Employee::class, 'branch_id', 'branch_id')
-                    ->where('id', '!=', $this->id)
-                    ->where('status', 'active');
+        $initials = $this->getInitials();
+        
+        // Use employee ID for consistent color
+        $colors = ['B54544', 'E6952A', '0d6efd', '198754', '6f42c1', 'dc3545', 'fd7e14', '20c997'];
+        $colorIndex = abs(crc32((string)$this->id)) % count($colors);
+        $bgColor = $colors[$colorIndex];
+
+        return "https://ui-avatars.com/api/?name=" . urlencode($initials) . 
+               "&background=" . $bgColor . "&color=ffffff&size=400&font-size=0.33&bold=true&format=png";
     }
 
     /**
-     * ✅ NEW: Get colleagues in the same department.
+     * 🔥 ENHANCED: Check if employee has valid photo
      */
-    public function departmentColleagues()
+    public function getHasPhotoAttribute()
     {
-        return $this->hasMany(Employee::class, 'department_id', 'department_id')
-                    ->where('id', '!=', $this->id)
-                    ->where('status', 'active');
+        return !empty($this->photo) && $this->photoFileExists();
     }
 
-    // ===========================================
-    // ✅ ENHANCED: ACCESSORS & MUTATORS (เหมือนเดิม + เพิ่มใหม่)
-    // ===========================================
+    /**
+     * 🔥 ENHANCED: Upload photo with better error handling
+     */
+    public function uploadPhoto($file)
+    {
+        try {
+            if (!$file || !$file->isValid()) {
+                throw new \Exception('Invalid file provided');
+            }
+
+            // Validate file
+            $this->validatePhotoFile($file);
+
+            // Ensure directories exist
+            $this->ensurePhotoDirectoryExists();
+
+            // Generate filename
+            $filename = $this->generatePhotoFilename($file);
+            $directory = 'employees/photos';
+            $relativePath = $directory . '/' . $filename;
+
+            // Delete old photo before uploading new one
+            $this->deletePhotoFile();
+
+            // Store the file
+            $storedPath = $file->storeAs($directory, $filename, 'public');
+            
+            if (!$storedPath) {
+                throw new \Exception('Failed to store photo file');
+            }
+
+            // Verify file was actually stored
+            if (!Storage::disk('public')->exists($storedPath)) {
+                throw new \Exception('Photo was not saved properly');
+            }
+
+            // Update database
+            $this->update([
+                'photo' => $storedPath,
+                'photo_original_name' => $file->getClientOriginalName(),
+                'photo_mime_type' => $file->getMimeType(),
+                'photo_size' => $file->getSize(),
+                'photo_uploaded_at' => now(),
+            ]);
+
+            Log::info("Photo uploaded successfully for employee {$this->id}: {$storedPath}");
+            
+            return $storedPath;
+
+        } catch (\Exception $e) {
+            Log::error("Photo upload failed for employee {$this->id}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * 🔥 ENHANCED: Delete photo with better cleanup
+     */
+    public function deletePhoto()
+    {
+        try {
+            if (!$this->photo) {
+                return true;
+            }
+
+            $photoPath = $this->photo;
+            
+            // Delete file from storage (multiple attempts)
+            if (Storage::disk('public')->exists($photoPath)) {
+                Storage::disk('public')->delete($photoPath);
+            }
+
+            // Also try direct file deletion
+            $fullPath = storage_path('app/public/' . $photoPath);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+
+            // Update database
+            $this->update([
+                'photo' => null,
+                'photo_original_name' => null,
+                'photo_mime_type' => null,
+                'photo_size' => null,
+                'photo_uploaded_at' => null,
+            ]);
+
+            Log::info("Photo deleted successfully for employee {$this->id}: {$photoPath}");
+            
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Photo deletion failed for employee {$this->id}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 🔥 ENHANCED: Get comprehensive photo information
+     */
+    public function getPhotoInfo()
+    {
+        $info = [
+            'exists' => $this->has_photo,
+            'photo_url' => $this->photo_url,
+            'default_photo_url' => $this->generateAvatarUrl(),
+            'photo_path' => $this->photo,
+            'file_size' => $this->photo_size,
+            'file_size_human' => $this->photo_size ? $this->formatBytes($this->photo_size) : '0 B',
+            'mime_type' => $this->photo_mime_type,
+            'original_name' => $this->photo_original_name,
+            'uploaded_at' => $this->photo_uploaded_at,
+            'file_exists' => $this->photoFileExists(),
+        ];
+
+        // Add file system info if photo exists
+        if ($this->photo) {
+            $fullPath = storage_path('app/public/' . $this->photo);
+            $publicPath = public_path('storage/' . str_replace('employees/photos/', 'employees/photos/', $this->photo));
+            
+            $info['storage_path'] = $fullPath;
+            $info['public_path'] = $publicPath;
+            $info['storage_exists'] = file_exists($fullPath);
+            $info['public_exists'] = file_exists($publicPath);
+            
+            if (file_exists($fullPath)) {
+                $info['real_file_size'] = filesize($fullPath);
+                $info['last_modified'] = date('d/m/Y H:i:s', filemtime($fullPath));
+                
+                // Get image dimensions
+                $imageInfo = @getimagesize($fullPath);
+                if ($imageInfo !== false) {
+                    $info['dimensions'] = [
+                        'width' => $imageInfo[0],
+                        'height' => $imageInfo[1]
+                    ];
+                    $info['width'] = $imageInfo[0];
+                    $info['height'] = $imageInfo[1];
+                    $info['real_mime_type'] = $imageInfo['mime'];
+                }
+            }
+        }
+
+        return $info;
+    }
+
+    /**
+     * 🔥 CRITICAL: Ensure storage setup is correct
+     */
+    private function ensurePhotoDirectoryExists()
+    {
+        try {
+            $directory = 'employees/photos';
+            
+            // Create directory in storage/app/public
+            if (!Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory, 0755, true);
+                Log::info("Created photo directory: {$directory}");
+            }
+
+            // Ensure symlink exists
+            $this->ensureStorageSymlink();
+
+            // Test write permission
+            $testFile = $directory . '/.test_write_' . time();
+            Storage::disk('public')->put($testFile, 'test');
+            
+            if (Storage::disk('public')->exists($testFile)) {
+                Storage::disk('public')->delete($testFile);
+                Log::info("Photo directory write test passed");
+            } else {
+                throw new \Exception("Cannot write to photo directory");
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Photo directory setup failed: " . $e->getMessage());
+            throw new \Exception("Photo storage setup failed: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * 🔥 CRITICAL: Ensure storage symlink exists
+     */
+    private function ensureStorageSymlink()
+    {
+        $publicPath = public_path('storage');
+        $storagePath = storage_path('app/public');
+        
+        if (!file_exists($publicPath)) {
+            try {
+                if (function_exists('symlink')) {
+                    symlink($storagePath, $publicPath);
+                    Log::info("Created storage symlink: {$publicPath} -> {$storagePath}");
+                } else {
+                    Log::warning("Symlink function not available. Please run: php artisan storage:link");
+                    throw new \Exception("Storage symlink missing. Please run: php artisan storage:link");
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to create symlink: " . $e->getMessage());
+                throw new \Exception("Storage symlink creation failed. Please run: php artisan storage:link");
+            }
+        }
+    }
+
+    /**
+     * 🔥 ENHANCED: Generate unique photo filename
+     */
+    private function generatePhotoFilename($file)
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $timestamp = now()->format('YmdHis');
+        $random = Str::random(6);
+        
+        return "emp_{$this->id}_{$timestamp}_{$random}.{$extension}";
+    }
+
+    /**
+     * Validate photo file
+     */
+    private function validatePhotoFile($file)
+    {
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+        if ($file->getSize() > $maxSize) {
+            throw new \Exception('File size exceeds 2MB limit');
+        }
+
+        if (!in_array($file->getMimeType(), $allowedMimes)) {
+            throw new \Exception('Invalid file type. Only JPEG, PNG, and GIF are allowed');
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension());
+        if (!in_array($extension, $allowedExtensions)) {
+            throw new \Exception('Invalid file extension');
+        }
+
+        $imageInfo = @getimagesize($file->getPathname());
+        if ($imageInfo === false) {
+            throw new \Exception('File is not a valid image');
+        }
+
+        if ($imageInfo[0] < 50 || $imageInfo[1] < 50) {
+            throw new \Exception('Image too small. Minimum size is 50x50 pixels');
+        }
+
+        if ($imageInfo[0] > 2000 || $imageInfo[1] > 2000) {
+            throw new \Exception('Image too large. Maximum size is 2000x2000 pixels');
+        }
+    }
+
+    /**
+     * Delete photo file only
+     */
+    private function deletePhotoFile()
+    {
+        if ($this->photo && Storage::disk('public')->exists($this->photo)) {
+            Storage::disk('public')->delete($this->photo);
+            Log::info("Deleted old photo: {$this->photo}");
+        }
+    }
+
+    /**
+     * Format bytes to human readable
+     */
+    private function formatBytes($bytes, $precision = 2)
+    {
+        if ($bytes === 0) return '0 B';
+        $units = ['B', 'KB', 'MB', 'GB'];
+        
+        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+            $bytes /= 1024;
+        }
+        
+        return round($bytes, $precision) . ' ' . $units[$i];
+    }
+
+    // =====================================================
+    // MODEL EVENTS
+    // =====================================================
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($employee) {
+            if ($employee->isForceDeleting()) {
+                $employee->deletePhotoFile();
+                Log::info("Photo deleted on force delete for employee: {$employee->id}");
+            }
+        });
+
+        static::creating(function ($employee) {
+            if (!Storage::disk('public')->exists('employees/photos')) {
+                Storage::disk('public')->makeDirectory('employees/photos', 0755, true);
+            }
+        });
+    }
+
+    // =====================================================
+    // ACCESSORS & MUTATORS
+    // =====================================================
 
     public function getFullNameThAttribute()
     {
@@ -230,166 +598,32 @@ class Employee extends Authenticatable
         return trim($this->first_name_en . ' ' . $this->last_name_en);
     }
 
-    public function getFullNameAttribute()
+    public function getInitialsAttribute()
     {
-        return $this->full_name_th ?: $this->full_name_en;
-    }
-
-    public function getEmployeeIdAttribute()
-    {
-        return $this->employee_code;
-    }
-
-    public function getEnglishNameAttribute()
-    {
-        return $this->full_name_en;
-    }
-
-    public function getDepartmentNameAttribute()
-    {
-        return $this->department ? $this->department->name : 'ไม่ระบุแผนก';
-    }
-
-    /**
-     * ✅ ENHANCED: Get branch name.
-     */
-    public function getBranchNameAttribute()
-    {
-        return $this->branch ? $this->branch->name : 'ไม่ระบุสาขา';
-    }
-
-    /**
-     * ✅ NEW: Get branch code.
-     */
-    public function getBranchCodeAttribute()
-    {
-        return $this->branch ? ($this->branch->code ?? $this->branch->branch_code ?? 'N/A') : 'N/A';
-    }
-
-    /**
-     * ✅ ENHANCED: Get full location (Department + Branch).
-     */
-    public function getFullLocationAttribute()
-    {
-        $department = $this->department_name;
-        $branch = $this->branch_name;
-        
-        if ($department === 'ไม่ระบุแผนก' && $branch === 'ไม่ระบุสาขา') {
-            return 'ไม่ระบุ';
-        } elseif ($department === 'ไม่ระบุแผนก') {
-            return $branch;
-        } elseif ($branch === 'ไม่ระบุสาขา') {
-            return $department;
-        } else {
-            return "{$department} - {$branch}";
-        }
-    }
-
-    /**
-     * ✅ NEW: Get location display (short version).
-     */
-    public function getLocationDisplayAttribute()
-    {
-        $department = $this->department ? $this->department->name : null;
-        $branch = $this->branch ? $this->branch->name : null;
-        
-        if ($department && $branch) {
-            return $branch . ' (' . $department . ')';
-        } elseif ($branch) {
-            return $branch;
-        } elseif ($department) {
-            return $department;
-        } else {
-            return 'ไม่ระบุ';
-        }
-    }
-
-    /**
-     * ✅ ENHANCED: Get branch code with name.
-     */
-    public function getBranchFullNameAttribute()
-    {
-        return $this->branch ? $this->branch->full_name : 'ไม่ระบุสาขา';
-    }
-
-    public function getIsAccountingDepartmentAttribute()
-    {
-        $dept = $this->department()->first();
-        return $dept && ($dept->name === 'บัญชี' || $dept->express_enabled);
-    }
-
-    public function getYearsOfServiceAttribute()
-    {
-        if (!$this->hire_date) {
-            return 0;
+        if ($this->first_name_th && $this->last_name_th) {
+            return strtoupper(
+                mb_substr($this->first_name_th, 0, 1) . 
+                mb_substr($this->last_name_th, 0, 1)
+            );
         }
         
-        return $this->hire_date->diffInYears(now());
+        if ($this->first_name_en && $this->last_name_en) {
+            return strtoupper(
+                substr($this->first_name_en, 0, 1) . 
+                substr($this->last_name_en, 0, 1)
+            );
+        }
+        
+        if ($this->employee_code) {
+            return strtoupper(substr($this->employee_code, 0, 2));
+        }
+        
+        return 'NN';
     }
 
-    public function getPermissionsSummaryAttribute()
+    public function getInitials()
     {
-        $permissions = [];
-        
-        if ($this->vpn_access) {
-            $permissions[] = 'VPN';
-        }
-        if ($this->color_printing) {
-            $permissions[] = 'Print Color';
-        }
-        if ($this->remote_work) {
-            $permissions[] = 'Remote Work';
-        }
-        if ($this->admin_access) {
-            $permissions[] = 'Admin Panel';
-        }
-        
-        return empty($permissions) ? 'Basic Access' : implode(', ', $permissions);
-    }
-
-    public function getStatusBadgeAttribute()
-    {
-        return $this->status === 'active' ? 'success' : 'secondary';
-    }
-
-    public function getStatusThaiAttribute()
-    {
-        return $this->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
-    }
-
-    public function getDisplayEmailPasswordAttribute()
-    {
-        $currentUser = auth()->user();
-        
-        if (!$currentUser) {
-            return '[ซ่อน]';
-        }
-        
-        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
-            return $this->email_password ?: '[ไม่มี]';
-        }
-        
-        return '[ซ่อน]';
-    }
-
-    public function getDisplayComputerPasswordAttribute()
-    {
-        $currentUser = auth()->user();
-        
-        if (!$currentUser) {
-            return '[ซ่อน]';
-        }
-        
-        if (in_array($currentUser->role, ['super_admin', 'it_admin'])) {
-            return $this->computer_password ?: '[ไม่มี]';
-        }
-        
-        return '[ซ่อน]';
-    }
-
-    public function getDisplayNameAttribute()
-    {
-        return $this->full_name_th ?: $this->full_name_en;
+        return $this->initials;
     }
 
     public function getRoleDisplayAttribute()
@@ -403,7 +637,7 @@ class Employee extends Authenticatable
             'employee' => 'Employee',
         ];
 
-        return $roles[$this->role] ?? 'Employee';
+        return $roles[$this->role] ?? $this->role;
     }
 
     public function getStatusDisplayAttribute()
@@ -411,218 +645,28 @@ class Employee extends Authenticatable
         return $this->status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน';
     }
 
-    public function getInitialsAttribute()
+    public function getNameAttribute()
     {
-        $firstInitial = $this->first_name_en ? strtoupper(substr($this->first_name_en, 0, 1)) : '';
-        $lastInitial = $this->last_name_en ? strtoupper(substr($this->last_name_en, 0, 1)) : '';
-        
-        return $firstInitial . $lastInitial;
+        return $this->full_name_th ?: $this->full_name_en ?: $this->email;
     }
 
-    // ===========================================
-    // PERMISSION ACCESSORS (เหมือนเดิม)
-    // ===========================================
-
-    public function getVpnAccessDisplayAttribute()
-    {
-        return $this->vpn_access 
-            ? '<span class="badge bg-success"><i class="fas fa-shield-alt me-1"></i>อนุญาต</span>'
-            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
-    }
-
-    public function getColorPrintingDisplayAttribute()
-    {
-        return $this->color_printing
-            ? '<span class="badge bg-warning text-dark"><i class="fas fa-palette me-1"></i>อนุญาต</span>'
-            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
-    }
-
-    public function getRemoteWorkDisplayAttribute()
-    {
-        return $this->remote_work
-            ? '<span class="badge bg-info"><i class="fas fa-home me-1"></i>อนุญาต</span>'
-            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
-    }
-
-    public function getAdminAccessDisplayAttribute()
-    {
-        return $this->admin_access
-            ? '<span class="badge bg-danger"><i class="fas fa-user-shield me-1"></i>อนุญาต</span>'
-            : '<span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>ไม่อนุญาต</span>';
-    }
-
-    // ===========================================
-    // ✅ ENHANCED: METHODS (เหมือนเดิม + เพิ่มใหม่)
-    // ===========================================
-
-    public function canBeManaged($user = null)
-    {
-        $currentUser = $user ?: auth()->user();
-        
-        if (!$currentUser) {
-            return false;
-        }
-        
-        if ($currentUser->role === 'super_admin') {
-            return true;
-        }
-        
-        if ($currentUser->role === 'it_admin' && $this->role !== 'super_admin') {
-            return true;
-        }
-        
-        if ($currentUser->role === 'hr' && in_array($this->role, ['employee', 'express'])) {
-            return true;
-        }
-        
-        if ($currentUser->role === 'manager' && $currentUser->department_id === $this->department_id) {
-            return true;
-        }
-        
-        return false;
-    }
-
-    /**
-     * ✅ ENHANCED: Check if employee can be managed in the same branch.
-     */
-    public function canBeManagedInBranch($user = null)
-    {
-        $currentUser = $user ?: auth()->user();
-        
-        if (!$currentUser) {
-            return false;
-        }
-        
-        // Super admin can manage everyone
-        if ($currentUser->role === 'super_admin') {
-            return true;
-        }
-        
-        // IT admin can manage non-super-admin
-        if ($currentUser->role === 'it_admin' && $this->role !== 'super_admin') {
-            return true;
-        }
-        
-        // HR can manage employee, express
-        if ($currentUser->role === 'hr' && in_array($this->role, ['employee', 'express'])) {
-            return true;
-        }
-        
-        // Branch manager can manage same branch
-        if ($currentUser->role === 'manager' && 
-            $currentUser->branch_id && 
-            $currentUser->branch_id === $this->branch_id) {
-            return true;
-        }
-        
-        // Department manager can manage same department
-        if ($currentUser->role === 'manager' && 
-            $currentUser->department_id && 
-            $currentUser->department_id === $this->department_id) {
-            return true;
-        }
-        
-        return false;
-    }
-
-    public function hasPermission($permission)
-    {
-        switch ($permission) {
-            case 'vpn':
-                return $this->vpn_access;
-            case 'color_printing':
-                return $this->color_printing;
-            case 'remote_work':
-                return $this->remote_work;
-            case 'admin_access':
-                return $this->admin_access;
-            default:
-                return false;
-        }
-    }
-
-    public function grantPermission($permission)
-    {
-        switch ($permission) {
-            case 'vpn':
-                $this->vpn_access = true;
-                break;
-            case 'color_printing':
-                $this->color_printing = true;
-                break;
-            case 'remote_work':
-                $this->remote_work = true;
-                break;
-            case 'admin_access':
-                $this->admin_access = true;
-                break;
-        }
-        
-        return $this->save();
-    }
-
-    public function revokePermission($permission)
-    {
-        switch ($permission) {
-            case 'vpn':
-                $this->vpn_access = false;
-                break;
-            case 'color_printing':
-                $this->color_printing = false;
-                break;
-            case 'remote_work':
-                $this->remote_work = false;
-                break;
-            case 'admin_access':
-                $this->admin_access = false;
-                break;
-        }
-        
-        return $this->save();
-    }
-
-    public function getAllPermissions()
-    {
-        return [
-            'vpn_access' => $this->vpn_access,
-            'color_printing' => $this->color_printing,
-            'remote_work' => $this->remote_work,
-            'admin_access' => $this->admin_access,
-        ];
-    }
-
-    public function setEmailAttribute($value)
-    {
-        $this->attributes['email'] = $value;
-        
-        if (!isset($this->attributes['login_email']) || empty($this->attributes['login_email'])) {
-            $this->attributes['login_email'] = $value;
-        }
-    }
-
-    public function setPhoneAttribute($value)
-    {
-        $phone = preg_replace('/\D/', '', $value);
-        
-        if (strlen($phone) === 10) {
-            $phone = substr($phone, 0, 3) . '-' . substr($phone, 3, 3) . '-' . substr($phone, 6);
-        }
-        
-        $this->attributes['phone'] = $phone;
-    }
-
-    // ===========================================
-    // ✅ ENHANCED: SCOPES (เหมือนเดิม + เพิ่มใหม่)
-    // ===========================================
+    // =====================================================
+    // SCOPES
+    // =====================================================
 
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
     }
 
-    public function scopeInactive($query)
+    public function scopeWithPhoto($query)
     {
-        return $query->where('status', 'inactive');
+        return $query->whereNotNull('photo');
+    }
+
+    public function scopeWithoutPhoto($query)
+    {
+        return $query->whereNull('photo');
     }
 
     public function scopeByDepartment($query, $departmentId)
@@ -630,44 +674,9 @@ class Employee extends Authenticatable
         return $query->where('department_id', $departmentId);
     }
 
-    /**
-     * ✅ ENHANCED: Scope by branch.
-     */
     public function scopeByBranch($query, $branchId)
     {
         return $query->where('branch_id', $branchId);
-    }
-
-    /**
-     * ✅ ENHANCED: Scope by branch and department.
-     */
-    public function scopeByLocation($query, $branchId = null, $departmentId = null)
-    {
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
-        
-        if ($departmentId) {
-            $query->where('department_id', $departmentId);
-        }
-        
-        return $query;
-    }
-
-    /**
-     * ✅ NEW: Scope employees without branch.
-     */
-    public function scopeWithoutBranch($query)
-    {
-        return $query->whereNull('branch_id');
-    }
-
-    /**
-     * ✅ NEW: Scope employees with branch.
-     */
-    public function scopeWithBranch($query)
-    {
-        return $query->whereNotNull('branch_id');
     }
 
     public function scopeByRole($query, $role)
@@ -675,384 +684,122 @@ class Employee extends Authenticatable
         return $query->where('role', $role);
     }
 
-    public function scopeWithVpnAccess($query)
-    {
-        return $query->where('vpn_access', true);
-    }
-
-    public function scopeWithColorPrinting($query)
-    {
-        return $query->where('color_printing', true);
-    }
-
-    public function scopeWithRemoteWork($query)
-    {
-        return $query->where('remote_work', true);
-    }
-
-    public function scopeWithAdminAccess($query)
-    {
-        return $query->where('admin_access', true);
-    }
-
-    public function scopeSearch($query, $search)
-    {
-        return $query->where(function($q) use ($search) {
-            $q->where('employee_code', 'LIKE', "%{$search}%")
-              ->orWhere('first_name_th', 'LIKE', "%{$search}%")
-              ->orWhere('last_name_th', 'LIKE', "%{$search}%")
-              ->orWhere('first_name_en', 'LIKE', "%{$search}%")
-              ->orWhere('last_name_en', 'LIKE', "%{$search}%")
-              ->orWhere('email', 'LIKE', "%{$search}%")
-              ->orWhere('phone', 'LIKE', "%{$search}%")
-              ->orWhere('username', 'LIKE', "%{$search}%");
-        });
-    }
-
-    public function scopeWithExpress($query)
+    public function scopeExpressUsers($query)
     {
         return $query->whereNotNull('express_username');
     }
 
-    public function scopeOrderByName($query, $direction = 'asc')
-    {
-        return $query->orderBy('first_name_th', $direction)
-                    ->orderBy('last_name_th', $direction);
-    }
+    // =====================================================
+    // HELPER METHODS
+    // =====================================================
 
-    // ===========================================
-    // ✅ ENHANCED: ADDITIONAL METHODS (เหมือนเดิม + เพิ่มใหม่)
-    // ===========================================
-
-    public function hasRole($role)
+    public function hasRole($roles)
     {
-        if (is_array($role)) {
-            return in_array($this->role, $role);
+        if (is_string($roles)) {
+            return $this->role === $roles;
         }
-        
-        return $this->role === $role;
+
+        if (is_array($roles)) {
+            return in_array($this->role, $roles);
+        }
+
+        return false;
     }
 
-    public function isAdmin()
+    public function canEdit($employee)
     {
-        return $this->hasRole(['super_admin', 'it_admin']);
+        if ($this->role === 'super_admin') {
+            return true;
+        }
+
+        if ($this->role === 'it_admin' && $employee->role !== 'super_admin') {
+            return true;
+        }
+
+        if ($this->role === 'hr' && in_array($employee->role, ['employee', 'express'])) {
+            return true;
+        }
+
+        return $this->id === $employee->id;
     }
 
-    public function isSuperAdmin()
+    public function canAccess($employee)
     {
-        return $this->role === 'super_admin';
-    }
+        if ($this->role === 'super_admin') {
+            return true;
+        }
 
-    /**
-     * ✅ ENHANCED: Check if employee is branch manager.
-     */
-    public function isBranchManager()
-    {
-        return $this->managedBranches()->exists();
-    }
+        if ($this->role === 'it_admin' && $employee->role !== 'super_admin') {
+            return true;
+        }
 
-    /**
-     * ✅ ENHANCED: Check if employee is manager of specific branch.
-     */
-    public function isManagerOfBranch($branchId)
-    {
-        return $this->managedBranches()->where('id', $branchId)->exists();
-    }
+        if ($this->role === 'hr' && in_array($employee->role, ['employee', 'express'])) {
+            return true;
+        }
 
-    public function canManageEmployees()
-    {
-        return $this->hasRole(['super_admin', 'it_admin', 'hr', 'manager']);
-    }
-
-    public function hasExpressAccess()
-    {
-        return !empty($this->express_username);
-    }
-
-    public function isInAccounting()
-    {
-        return $this->department && $this->department->name === 'บัญชี';
+        return $this->id === $employee->id;
     }
 
     /**
-     * ✅ ENHANCED: Check if employee is in specific branch.
+     * 🔥 NEW: Debug photo system
      */
-    public function isInBranch($branchId)
+    public function debugPhotoSystem()
     {
-        return $this->branch_id == $branchId;
-    }
-
-    /**
-     * ✅ NEW: Check if employee is in same branch as another employee.
-     */
-    public function isInSameBranchAs(Employee $otherEmployee)
-    {
-        return $this->branch_id && $this->branch_id === $otherEmployee->branch_id;
-    }
-
-    /**
-     * ✅ ENHANCED: Get employee's location information.
-     */
-    public function getLocationInfo()
-    {
-        return [
-            'branch' => $this->branch ? [
-                'id' => $this->branch->id,
-                'name' => $this->branch->name,
-                'code' => $this->branch->branch_code_compat,
-                'full_name' => $this->branch->full_name,
-                'is_active' => $this->branch->is_active,
-            ] : null,
-            'department' => $this->department ? [
-                'id' => $this->department->id,
-                'name' => $this->department->name,
-                'express_enabled' => $this->department->express_enabled ?? false,
-            ] : null,
-            'full_location' => $this->full_location,
-            'location_display' => $this->location_display,
-        ];
-    }
-
-    public function getContactInfo()
-    {
-        return [
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'department' => $this->department->name ?? null,
-            'branch' => $this->branch->name ?? null,          // ✅ ENHANCED: เพิ่ม branch
-            'position' => $this->position,
-            'location_display' => $this->location_display,    // ✅ NEW: เพิ่ม location_display
-        ];
-    }
-
-    public function getSystemAccess()
-    {
-        return [
+        $debug = [
+            'employee_id' => $this->id,
             'employee_code' => $this->employee_code,
-            'username' => $this->username,
-            'email' => $this->email,
-            'keycard_id' => $this->keycard_id,
-            'copier_code' => $this->copier_code,
-            'express_username' => $this->express_username,
-            'role' => $this->role,
-            'status' => $this->status,
-            'permissions' => $this->getAllPermissions(),
-            'branch' => $this->branch ? $this->branch->name : null, // ✅ NEW: เพิ่ม branch
+            'photo_in_db' => $this->photo,
+            'has_photo_attribute' => $this->has_photo,
+            'photo_url_attribute' => $this->photo_url,
         ];
-    }
 
-    public function generateNewPassword($length = 10)
-    {
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        $password = '';
-        
-        for ($i = 0; $i < $length; $i++) {
-            $password .= $chars[random_int(0, strlen($chars) - 1)];
+        if ($this->photo) {
+            $debug['storage_exists'] = Storage::disk('public')->exists($this->photo);
+            $debug['file_path'] = storage_path('app/public/' . $this->photo);
+            $debug['file_exists'] = file_exists(storage_path('app/public/' . $this->photo));
+            $debug['public_path'] = public_path('storage/' . str_replace('employees/photos/', 'employees/photos/', $this->photo));
+            $debug['public_exists'] = file_exists(public_path('storage/' . str_replace('employees/photos/', 'employees/photos/', $this->photo)));
         }
-        
-        $this->password = bcrypt($password);
-        $this->save();
-        
-        return $password;
-    }
 
-    public function sendWelcomeEmail()
-    {
-        // You can implement email sending logic here
-    }
+        $debug['search_result'] = $this->findExistingPhoto();
+        $debug['avatar_url'] = $this->generateAvatarUrl();
 
-    public function deactivate()
-    {
-        $this->update(['status' => 'inactive']);
-        return $this;
-    }
-
-    public function activate()
-    {
-        $this->update(['status' => 'active']);
-        return $this;
-    }
-
-    public function transferTo($departmentId, $newPosition = null)
-    {
-        $updateData = ['department_id' => $departmentId];
-        
-        if ($newPosition) {
-            $updateData['position'] = $newPosition;
-        }
-        
-        $this->update($updateData);
-        
-        return $this;
+        return $debug;
     }
 
     /**
-     * ✅ ENHANCED: Transfer employee to new branch.
+     * 🔥 NEW: Fix missing photos for all employees
      */
-    public function transferToBranch($branchId, $departmentId = null, $newPosition = null)
+    public static function fixAllMissingPhotos()
     {
-        $updateData = ['branch_id' => $branchId];
-        
-        if ($departmentId) {
-            $updateData['department_id'] = $departmentId;
-        }
-        
-        if ($newPosition) {
-            $updateData['position'] = $newPosition;
-        }
-        
-        $this->update($updateData);
-        
-        return $this;
-    }
+        $employees = self::whereNotNull('photo')->get();
+        $fixed = 0;
+        $errors = 0;
 
-    /**
-     * ✅ NEW: Transfer employee with full location change.
-     */
-    public function transferToLocation($branchId = null, $departmentId = null, $newPosition = null, $reason = null)
-    {
-        $updateData = [];
-        $changes = [];
-        
-        if ($branchId !== null) {
-            $updateData['branch_id'] = $branchId;
-            $oldBranch = $this->branch ? $this->branch->name : 'ไม่ระบุ';
-            $newBranch = Branch::find($branchId)->name ?? 'ไม่ระบุ';
-            $changes[] = "สาขา: {$oldBranch} → {$newBranch}";
-        }
-        
-        if ($departmentId !== null) {
-            $updateData['department_id'] = $departmentId;
-            $oldDept = $this->department ? $this->department->name : 'ไม่ระบุ';
-            $newDept = Department::find($departmentId)->name ?? 'ไม่ระบุ';
-            $changes[] = "แผนก: {$oldDept} → {$newDept}";
-        }
-        
-        if ($newPosition) {
-            $updateData['position'] = $newPosition;
-            $changes[] = "ตำแหน่ง: {$this->position} → {$newPosition}";
-        }
-        
-        if (!empty($updateData)) {
-            $this->update($updateData);
-            
-            \Log::info("Employee location transfer completed", [
-                'employee_id' => $this->id,
-                'employee_name' => $this->full_name_th,
-                'changes' => $changes,
-                'reason' => $reason ?? 'ไม่ระบุ'
-            ]);
-        }
-        
-        return $this;
-    }
-
-    // ===========================================
-    // ✅ ENHANCED: VALIDATION RULES (อัพเดตเพิ่ม branch_id)
-    // ===========================================
-
-    public static function getCreateRules()
-    {
-        return [
-            'employee_code' => 'required|string|max:20|unique:employees,employee_code',
-            'keycard_id' => 'required|string|max:20|unique:employees,keycard_id',
-            'first_name_th' => 'required|string|max:100',
-            'last_name_th' => 'required|string|max:100',
-            'first_name_en' => 'required|string|max:100',
-            'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20',
-            'nickname' => 'nullable|string|max:50',
-            'username' => 'required|string|max:100|unique:employees,username',
-            'computer_password' => 'nullable|string|min:6',
-            'copier_code' => 'nullable|string|max:10',
-            'email' => 'required|email|max:255|unique:employees,email',
-            'email_password' => 'nullable|string|min:6',
-            'express_username' => 'nullable|string|max:7',
-            'express_password' => 'nullable|string|max:4',
-            'department_id' => 'required|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',           // ✅ ENHANCED: branch validation
-            'position' => 'required|string|max:100',
-            'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
-            'status' => 'required|in:active,inactive',
-            'password' => 'required|string|min:6',
-            'hire_date' => 'nullable|date',
-            // Permission Fields
-            'vpn_access' => 'nullable|boolean',
-            'color_printing' => 'nullable|boolean',
-            'remote_work' => 'nullable|boolean',
-            'admin_access' => 'nullable|boolean',
-        ];
-    }
-
-    public static function getUpdateRules($id)
-    {
-        return [
-            'employee_code' => "required|string|max:20|unique:employees,employee_code,{$id}",
-            'keycard_id' => "required|string|max:20|unique:employees,keycard_id,{$id}",
-            'first_name_th' => 'required|string|max:100',
-            'last_name_th' => 'required|string|max:100',
-            'first_name_en' => 'required|string|max:100',
-            'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20',
-            'nickname' => 'nullable|string|max:50',
-            'username' => "required|string|max:100|unique:employees,username,{$id}",
-            'computer_password' => 'nullable|string|min:6',
-            'copier_code' => 'nullable|string|max:10',
-            'email' => "required|email|max:255|unique:employees,email,{$id}",
-            'email_password' => 'nullable|string|min:6',
-            'express_username' => 'nullable|string|max:7',
-            'express_password' => 'nullable|string|max:4',
-            'department_id' => 'required|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',           // ✅ ENHANCED: branch validation
-            'position' => 'required|string|max:100',
-            'role' => 'required|in:super_admin,it_admin,hr,manager,express,employee',
-            'status' => 'required|in:active,inactive',
-            'password' => 'nullable|string|min:6',
-            'hire_date' => 'nullable|date',
-            // Permission Fields
-            'vpn_access' => 'nullable|boolean',
-            'color_printing' => 'nullable|boolean',
-            'remote_work' => 'nullable|boolean',
-            'admin_access' => 'nullable|boolean',
-        ];
-    }
-
-    public static function getStatuses()
-    {
-        return [
-            'active' => 'ใช้งาน',
-            'inactive' => 'ไม่ใช้งาน'
-        ];
-    }
-
-    public static function getRoles()
-    {
-        return [
-            'super_admin' => 'Super Admin',
-            'it_admin' => 'IT Admin',
-            'hr' => 'HR',
-            'manager' => 'Manager',
-            'express' => 'Express',
-            'employee' => 'Employee'
-        ];
-    }
-
-    public static function getPermissions()
-    {
-        return [
-            'vpn_access' => 'การใช้งาน VPN',
-            'color_printing' => 'การปริ้นสี', 
-            'remote_work' => 'ทำงานจากที่บ้าน',
-            'admin_access' => 'เข้าถึงแผงควบคุม'
-        ];
-    }
-
-    protected static function booted()
-    {
-        static::saving(function ($employee) {
-            if ($employee->isDirty('email')) {
-                $employee->login_email = $employee->email;
+        foreach ($employees as $employee) {
+            try {
+                if (!$employee->photoFileExists()) {
+                    $found = $employee->findExistingPhoto();
+                    if ($found) {
+                        $employee->update(['photo' => $found]);
+                        $fixed++;
+                        Log::info("Fixed photo for employee {$employee->id}: {$found}");
+                    } else {
+                        // Clear invalid photo reference
+                        $employee->update(['photo' => null]);
+                        Log::info("Cleared invalid photo for employee {$employee->id}");
+                    }
+                }
+            } catch (\Exception $e) {
+                $errors++;
+                Log::error("Failed to fix photo for employee {$employee->id}: " . $e->getMessage());
             }
-        });
+        }
+
+        return [
+            'processed' => $employees->count(),
+            'fixed' => $fixed,
+            'errors' => $errors
+        ];
     }
 }

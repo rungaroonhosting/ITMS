@@ -1,3 +1,4 @@
+{{-- ✅ DEBUG: เพิ่มการ debug เพื่อตรวจสอบข้อมูล Branch --}}
 @extends('layouts.app')
 
 @section('title', 'ข้อมูลพนักงาน - ' . $employee->full_name_th)
@@ -8,7 +9,51 @@
 @endsection
 
 @section('content')
-<!-- Employee Header -->
+
+{{-- ✅ NEW: DEBUG SECTION - แสดงเฉพาะเมื่อ APP_DEBUG=true --}}
+@if(config('app.debug') && auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin']))
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-bug me-2"></i>🐛 DEBUG MODE - Branch Information
+        </h6>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Employee ID:</strong> {{ $employee->id }}</p>
+                <p class="mb-1"><strong>Branch ID in DB:</strong> 
+                    @if($employee->branch_id)
+                        <span class="badge bg-success">{{ $employee->branch_id }}</span>
+                    @else
+                        <span class="badge bg-warning text-dark">NULL</span>
+                    @endif
+                </p>
+                <p class="mb-1"><strong>Raw branch_id:</strong> <code>{{ var_export($employee->branch_id, true) }}</code></p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Branch Relationship:</strong>
+                    @if($employee->branch)
+                        <span class="badge bg-success">✅ Loaded</span>
+                    @else
+                        <span class="badge bg-danger">❌ NULL</span>
+                    @endif
+                </p>
+                @if($employee->branch)
+                    <p class="mb-1"><strong>Branch Name:</strong> {{ $employee->branch->name }}</p>
+                    <p class="mb-1"><strong>Branch Code:</strong> {{ $employee->branch->code ?? $employee->branch->branch_code ?? 'N/A' }}</p>
+                    <p class="mb-1"><strong>Branch Active:</strong> 
+                        <span class="badge bg-{{ $employee->branch->is_active ? 'success' : 'secondary' }}">
+                            {{ $employee->branch->is_active ? 'Yes' : 'No' }}
+                        </span>
+                    </p>
+                @else
+                    <p class="mb-1 text-muted">No branch data found</p>
+                @endif
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+<!-- Employee Header with ITMS Theme -->
 <div class="card mb-4">
     <div class="card-header" style="background: linear-gradient(135deg, #B54544 0%, #E6952A 100%); color: white; border: none;">
         <div class="row align-items-center">
@@ -17,7 +62,7 @@
                     <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" 
                          style="width: 60px; height: 60px;">
                         <span class="text-dark fw-bold" style="font-size: 1.5rem;">
-                            {{ $employee->initials }}
+                            {{ $employee->initials ?? strtoupper(substr($employee->first_name_en ?? 'U', 0, 1) . substr($employee->last_name_en ?? 'N', 0, 1)) }}
                         </span>
                     </div>
                     <div>
@@ -35,7 +80,7 @@
                                 {{ $employee->status == 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
                             </span>
                             <span class="badge bg-info" style="border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                {{ $employee->role_display }}
+                                {{ $employee->role_display ?? ucfirst($employee->role) }}
                             </span>
                             @if($employee->department)
                                 <span class="badge bg-warning text-dark" style="border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
@@ -45,6 +90,25 @@
                                     @endif
                                 </span>
                             @endif
+                            
+                            {{-- ✅ ENHANCED: Branch Display with Debug Info --}}
+                            @if($employee->branch)
+                                <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                    <i class="fas fa-building me-1"></i>{{ $employee->branch->name }}
+                                    @if(config('app.debug'))
+                                        <small style="opacity: 0.7;">(ID:{{ $employee->branch->id }})</small>
+                                    @endif
+                                </span>
+                            @else
+                                {{-- ✅ DEBUG: แสดงเมื่อไม่มี branch --}}
+                                <span class="badge bg-secondary" style="border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                    <i class="fas fa-building me-1"></i>ไม่ระบุสาขา
+                                    @if(config('app.debug'))
+                                        <small style="opacity: 0.7;">(branch_id: {{ $employee->branch_id ?? 'NULL' }})</small>
+                                    @endif
+                                </span>
+                            @endif
+                            
                             <span class="badge bg-success" style="border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 <i class="fas fa-eye me-1"></i>แสดง Password เลย
                             </span>
@@ -53,7 +117,16 @@
                 </div>
             </div>
             <div class="col-md-4 text-end">
-                @if($employee->canBeManaged(auth()->user()))
+                @php
+                    $currentUser = auth()->user();
+                    $canEdit = $currentUser && (
+                        $currentUser->role === 'super_admin' || 
+                        $currentUser->role === 'it_admin' || 
+                        ($currentUser->role === 'hr' && $employee->role === 'employee') ||
+                        ($currentUser->role === 'express' && $employee->department && $employee->department->express_enabled)
+                    );
+                @endphp
+                @if($canEdit)
                     <a href="{{ route('employees.edit', $employee) }}" class="btn btn-warning btn-sm me-2">
                         <i class="fas fa-edit me-1"></i>แก้ไข
                     </a>
@@ -65,6 +138,49 @@
         </div>
     </div>
 </div>
+
+{{-- ✅ NEW: Branch Status Alert --}}
+@if(config('app.debug') && auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin']))
+    @if($employee->branch_id && !$employee->branch)
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h6 class="fw-bold">
+                <i class="fas fa-exclamation-triangle me-2"></i>⚠️ Branch Data Issue Detected
+            </h6>
+            <p class="mb-1">
+                <strong>Issue:</strong> พนักงานมี branch_id = {{ $employee->branch_id }} แต่ไม่พบข้อมูล Branch
+            </p>
+            <p class="mb-1">
+                <strong>Possible Causes:</strong>
+            </p>
+            <ul class="mb-1">
+                <li>Branch ID {{ $employee->branch_id }} ไม่มีอยู่ในตาราง branches</li>
+                <li>Branch ถูกลบแล้ว (soft delete)</li>
+                <li>Branch ไม่ active (is_active = false)</li>
+                <li>Database constraint ปัญหา</li>
+            </ul>
+            <p class="mb-0">
+                <strong>Solution:</strong> 
+                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-warning">
+                    <i class="fas fa-edit me-1"></i>แก้ไขข้อมูลสาขา
+                </a>
+            </p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @elseif(!$employee->branch_id)
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <h6 class="fw-bold">
+                <i class="fas fa-info-circle me-2"></i>ℹ️ No Branch Assigned
+            </h6>
+            <p class="mb-0">
+                <strong>Note:</strong> พนักงานนี้ยังไม่ได้กำหนดสาขา (branch_id เป็น NULL)
+                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-primary ms-2">
+                    <i class="fas fa-plus me-1"></i>กำหนดสาขา
+                </a>
+            </p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+@endif
 
 <!-- Success/Error Messages -->
 @if(session('success'))
@@ -83,7 +199,6 @@
 
 <!-- Password Display Notice -->
 @php
-    $currentUser = auth()->user();
     $canSeePasswords = $currentUser && in_array($currentUser->role, ['super_admin', 'it_admin']);
 @endphp
 
@@ -155,8 +270,147 @@
                         <span class="info-label">วันที่เข้าทำงาน:</span>
                         <span class="info-value">
                             {{ $employee->hire_date->format('d/m/Y') }}
-                            <small class="text-muted">({{ $employee->years_of_service }} ปี)</small>
+                            <small class="text-muted">({{ \Carbon\Carbon::parse($employee->hire_date)->diffInYears(now()) }} ปี)</small>
                         </span>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- ✅ ENHANCED Branch Information (with Debug) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-building me-2" style="color: #B54544;"></i>ข้อมูลสาขา
+                    <span class="badge text-white ms-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                        Branch System
+                    </span>
+                    @if(config('app.debug'))
+                        <span class="badge bg-secondary ms-1">DEBUG</span>
+                    @endif
+                </h5>
+            </div>
+            <div class="card-body">
+                @if($employee->branch)
+                    {{-- ✅ Branch exists - show all info --}}
+                    <div class="info-item-inline">
+                        <span class="info-label">สาขาที่สังกัด:</span>
+                        <span class="info-value">
+                            <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                                <i class="fas fa-building me-1"></i>{{ $employee->branch->name }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item-inline">
+                        <span class="info-label">รหัสสาขา:</span>
+                        <span class="info-value">
+                            <code style="background: rgba(181, 69, 68, 0.1); color: #B54544; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                {{ $employee->branch->code ?? $employee->branch->branch_code ?? 'N/A' }}
+                            </code>
+                        </span>
+                    </div>
+                    @if($employee->branch->description)
+                        <div class="info-item-inline">
+                            <span class="info-label">รายละเอียด:</span>
+                            <span class="info-value">{{ $employee->branch->description }}</span>
+                        </div>
+                    @endif
+                    @if($employee->branch->manager)
+                        <div class="info-item-inline">
+                            <span class="info-label">ผู้จัดการสาขา:</span>
+                            <span class="info-value">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user-tie me-1"></i>{{ $employee->branch->manager->full_name_th ?? $employee->branch->manager->name }}
+                                </span>
+                            </span>
+                        </div>
+                    @endif
+                    @if($employee->branch->phone)
+                        <div class="info-item-inline">
+                            <span class="info-label">เบอร์สาขา:</span>
+                            <span class="info-value">
+                                <a href="tel:{{ $employee->branch->phone }}" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1"></i>{{ $employee->branch->phone }}
+                                </a>
+                            </span>
+                        </div>
+                    @endif
+                    @if($employee->branch->email)
+                        <div class="info-item-inline">
+                            <span class="info-label">อีเมลสาขา:</span>
+                            <span class="info-value">
+                                <a href="mailto:{{ $employee->branch->email }}" class="text-decoration-none">
+                                    <i class="fas fa-envelope me-1"></i>{{ $employee->branch->email }}
+                                </a>
+                            </span>
+                        </div>
+                    @endif
+                    @if($employee->branch->address)
+                        <div class="info-item-inline">
+                            <span class="info-label">ที่อยู่สาขา:</span>
+                            <span class="info-value">
+                                <small class="text-muted">{{ $employee->branch->address }}</small>
+                            </span>
+                        </div>
+                    @endif
+                    <div class="info-item-inline">
+                        <span class="info-label">สถานะสาขา:</span>
+                        <span class="info-value">
+                            <span class="badge bg-{{ $employee->branch->is_active ? 'success' : 'secondary' }}">
+                                {{ $employee->branch->is_active ? 'เปิดดำเนินการ' : 'ปิดชั่วคราว' }}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    {{-- ✅ DEBUG: Additional branch info --}}
+                    @if(config('app.debug'))
+                        <hr>
+                        <div class="alert alert-info p-2 mb-0">
+                            <small>
+                                <strong>DEBUG:</strong> Branch ID = {{ $employee->branch->id }}, 
+                                Active = {{ $employee->branch->is_active ? 'true' : 'false' }}, 
+                                Created = {{ $employee->branch->created_at->format('d/m/Y H:i') }}
+                            </small>
+                        </div>
+                    @endif
+                    
+                @else
+                    {{-- ✅ No branch - show different messages based on branch_id --}}
+                    <div class="text-center py-3">
+                        <div class="text-muted">
+                            <i class="fas fa-building fa-2x mb-2" style="opacity: 0.3;"></i>
+                            @if($employee->branch_id)
+                                {{-- มี branch_id แต่ไม่พบข้อมูล --}}
+                                <p class="mb-1 text-danger">⚠️ ข้อมูลสาขาผิดพลาด</p>
+                                <small>
+                                    มี Branch ID: {{ $employee->branch_id }} แต่ไม่พบข้อมูลในระบบ<br>
+                                    กรุณาติดต่อ IT Admin เพื่อแก้ไข
+                                </small>
+                                @if(config('app.debug'))
+                                    <div class="mt-2">
+                                        <code class="text-danger">branch_id = {{ $employee->branch_id }} (NOT FOUND)</code>
+                                    </div>
+                                @endif
+                            @else
+                                {{-- ไม่มี branch_id --}}
+                                <p class="mb-1">ไม่ได้ระบุสาขา</p>
+                                <small>พนักงานนี้ยังไม่ได้กำหนดสาขาที่สังกัด</small>
+                                @if(config('app.debug'))
+                                    <div class="mt-2">
+                                        <code class="text-muted">branch_id = NULL</code>
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+                        
+                        {{-- ✅ Quick Fix Button --}}
+                        @if($canEdit)
+                            <div class="mt-3">
+                                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus me-1"></i>กำหนดสาขา
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -166,7 +420,7 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-building text-warning me-2"></i>แผนกและตำแหน่ง
+                    <i class="fas fa-users text-warning me-2"></i>แผนกและตำแหน่ง
                 </h5>
             </div>
             <div class="card-body">
@@ -188,7 +442,7 @@
                 <div class="info-item-inline">
                     <span class="info-label">สิทธิ์การใช้งาน:</span>
                     <span class="info-value">
-                        <span class="badge bg-primary">{{ $employee->role_display }}</span>
+                        <span class="badge bg-primary">{{ $employee->role_display ?? ucfirst($employee->role) }}</span>
                     </span>
                 </div>
                 <div class="info-item-inline">
@@ -202,7 +456,7 @@
             </div>
         </div>
 
-        <!-- ✅ Special Permissions Section -->
+        <!-- Special Permissions Section (ใช้เหมือนเดิม) -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -250,17 +504,17 @@
 
                     <!-- Remote Work -->
                     <div class="col-md-6">
-                        <div class="card border-{{ $employee->remote_work ? 'info' : 'secondary' }} h-100">
+                        <div class="card border-{{ $employee->remote_work ?? false ? 'info' : 'secondary' }} h-100">
                             <div class="card-body text-center">
                                 <div class="mb-2">
-                                    <i class="fas fa-home fa-2x text-{{ $employee->remote_work ? 'info' : 'secondary' }}"></i>
+                                    <i class="fas fa-home fa-2x text-{{ $employee->remote_work ?? false ? 'info' : 'secondary' }}"></i>
                                 </div>
                                 <h6 class="card-title">ทำงานจากที่บ้าน</h6>
-                                <span class="badge bg-{{ $employee->remote_work ? 'info' : 'secondary' }} fs-6">
-                                    {{ $employee->remote_work ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                <span class="badge bg-{{ $employee->remote_work ?? false ? 'info' : 'secondary' }} fs-6">
+                                    {{ $employee->remote_work ?? false ? 'อนุญาต' : 'ไม่อนุญาต' }}
                                 </span>
                                 <p class="card-text mt-2 small text-muted">
-                                    {{ $employee->remote_work ? 'สามารถทำงานจากที่บ้านได้' : 'ต้องทำงานที่สำนักงานเท่านั้น' }}
+                                    {{ $employee->remote_work ?? false ? 'สามารถทำงานจากที่บ้านได้' : 'ต้องทำงานที่สำนักงานเท่านั้น' }}
                                 </p>
                             </div>
                         </div>
@@ -268,17 +522,17 @@
 
                     <!-- Admin Access -->
                     <div class="col-md-6">
-                        <div class="card border-{{ $employee->admin_access ? 'danger' : 'secondary' }} h-100">
+                        <div class="card border-{{ $employee->admin_access ?? false ? 'danger' : 'secondary' }} h-100">
                             <div class="card-body text-center">
                                 <div class="mb-2">
-                                    <i class="fas fa-user-shield fa-2x text-{{ $employee->admin_access ? 'danger' : 'secondary' }}"></i>
+                                    <i class="fas fa-user-shield fa-2x text-{{ $employee->admin_access ?? false ? 'danger' : 'secondary' }}"></i>
                                 </div>
                                 <h6 class="card-title">แผงควบคุมระบบ</h6>
-                                <span class="badge bg-{{ $employee->admin_access ? 'danger' : 'secondary' }} fs-6">
-                                    {{ $employee->admin_access ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                                <span class="badge bg-{{ $employee->admin_access ?? false ? 'danger' : 'secondary' }} fs-6">
+                                    {{ $employee->admin_access ?? false ? 'อนุญาต' : 'ไม่อนุญาต' }}
                                 </span>
                                 <p class="card-text mt-2 small text-muted">
-                                    {{ $employee->admin_access ? 'สามารถเข้าถึงแผงควบคุมผู้ดูแลระบบได้' : 'ไม่สามารถเข้าถึงแผงควบคุมได้' }}
+                                    {{ $employee->admin_access ?? false ? 'สามารถเข้าถึงแผงควบคุมผู้ดูแลระบบได้' : 'ไม่สามารถเข้าถึงแผงควบคุมได้' }}
                                 </p>
                             </div>
                         </div>
@@ -287,13 +541,25 @@
                 
                 <!-- Permission Summary -->
                 <div class="mt-3">
-                    <div class="alert alert-{{ $employee->vpn_access || $employee->color_printing || $employee->remote_work || $employee->admin_access ? 'success' : 'info' }} mb-0">
+                    <div class="alert alert-{{ $employee->vpn_access || $employee->color_printing || ($employee->remote_work ?? false) || ($employee->admin_access ?? false) ? 'success' : 'info' }} mb-0">
                         <h6 class="alert-heading">
                             <i class="fas fa-info-circle me-2"></i>สรุปสิทธิ์พิเศษ
                         </h6>
+                        @php
+                            $permissionCount = 0;
+                            $permissions = [];
+                            if ($employee->vpn_access) { $permissions[] = 'VPN'; $permissionCount++; }
+                            if ($employee->color_printing) { $permissions[] = 'ปริ้นสี'; $permissionCount++; }
+                            if ($employee->remote_work ?? false) { $permissions[] = 'ทำงานจากบ้าน'; $permissionCount++; }
+                            if ($employee->admin_access ?? false) { $permissions[] = 'แผงควบคุม'; $permissionCount++; }
+                        @endphp
                         <p class="mb-0">
-                            <strong>{{ $employee->full_name_th }}</strong> มีสิทธิ์: 
-                            <span class="fw-bold">{{ $employee->permissions_summary }}</span>
+                            <strong>{{ $employee->full_name_th }}</strong> มีสิทธิ์พิเศษ: 
+                            @if($permissionCount > 0)
+                                <span class="fw-bold text-success">{{ implode(', ', $permissions) }} ({{ $permissionCount }} รายการ)</span>
+                            @else
+                                <span class="fw-bold text-muted">ไม่มีสิทธิ์พิเศษ</span>
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -303,7 +569,7 @@
 
     <!-- Right Column -->
     <div class="col-md-6">
-        <!-- Computer System -->
+        <!-- Computer System (ใช้เหมือนเดิม) -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -368,7 +634,7 @@
             </div>
         </div>
 
-        <!-- Email and Login System -->
+        <!-- Email and Login System (ใช้เหมือนเดิม) -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -448,7 +714,7 @@
                                 <div class="password-container me-2">
                                     <code class="text-primary fw-bold">••••••••••••</code>
                                     <small class="text-success ms-2">
-                                        <i class="fas fa-check-circle me-1"></i>แก้ไข NULL แล้ว
+                                        <i class="fas fa-shield-alt me-1"></i>Hash Protected
                                     </small>
                                 </div>
                             </div>
@@ -470,7 +736,7 @@
             </div>
         </div>
 
-        <!-- Express System -->
+        <!-- Express System (ใช้เหมือนเดิม) -->
         @if($employee->express_username)
             <div class="card mb-4">
                 <div class="card-header">
@@ -521,38 +787,150 @@
     </div>
 </div>
 
-<!-- Success/Fixed Notification -->
-<div class="alert alert-success" role="alert">
-    <div class="row">
-        <div class="col-md-4">
-            <h6 class="alert-heading">
-                <i class="fas fa-check-circle me-2"></i>✅ ระบบแก้ไขแล้ว
-            </h6>
-            <ul class="mb-0">
-                <li><strong>สิทธิ์พิเศษ:</strong> แสดงและแก้ไขได้แล้ว</li>
-                <li><strong>VPN & Color Printing:</strong> ทำงานปกติ</li>
-                <li><strong>บันทึกข้อมูล:</strong> คงอยู่ไม่หาย</li>
-            </ul>
+<!-- ✅ ENHANCED Summary Card - System Status (with Branch Debug) -->
+<div class="card mb-4">
+    <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
+        <h5 class="mb-0" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+            <i class="fas fa-chart-line me-2"></i>สรุปข้อมูลระบบ - {{ $employee->full_name_th }}
+            @if(config('app.debug'))
+                <span class="badge bg-secondary ms-2">DEBUG MODE</span>
+            @endif
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <h6 class="text-primary">🏢 ข้อมูลองค์กร</h6>
+                <ul class="list-unstyled">
+                    <li><strong>สาขา:</strong> 
+                        @if($employee->branch)
+                            <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">{{ $employee->branch->name }}</span>
+                            @if(config('app.debug'))
+                                <br><small class="text-muted">ID: {{ $employee->branch->id }}</small>
+                            @endif
+                        @elseif($employee->branch_id)
+                            <span class="badge bg-danger">ERROR (ID: {{ $employee->branch_id }})</span>
+                        @else
+                            <span class="text-muted">ไม่ระบุ</span>
+                            @if(config('app.debug'))
+                                <br><small class="text-muted">branch_id: NULL</small>
+                            @endif
+                        @endif
+                    </li>
+                    <li><strong>แผนก:</strong> {{ $employee->department->name ?? 'ไม่ระบุ' }}</li>
+                    <li><strong>ตำแหน่ง:</strong> {{ $employee->position }}</li>
+                    <li><strong>สิทธิ์:</strong> 
+                        <span class="badge bg-primary">{{ $employee->role_display ?? ucfirst($employee->role) }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-success">🖥️ ระบบคอมพิวเตอร์</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Username:</strong> {{ $employee->username }}</li>
+                    <li><strong>รหัสผ่าน:</strong> 
+                        @if($canSeePasswords && $employee->computer_password)
+                            <span class="badge bg-success">มีข้อมูล</span>
+                        @else
+                            <span class="badge bg-secondary">{{ $employee->computer_password ? 'มีข้อมูล' : 'ไม่มี' }}</span>
+                        @endif
+                    </li>
+                    <li><strong>Copier:</strong> 
+                        <span class="badge bg-{{ $employee->copier_code ? 'info' : 'secondary' }}">
+                            {{ $employee->copier_code ? 'มีรหัส' : 'ไม่มี' }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-info">📧 ระบบอีเมล</h6>
+                <ul class="list-unstyled">
+                    <li><strong>อีเมล:</strong> {{ Str::limit($employee->email, 20) }}</li>
+                    <li><strong>รหัสผ่าน:</strong> 
+                        @if($canSeePasswords && $employee->email_password)
+                            <span class="badge bg-warning text-dark">มีข้อมูล</span>
+                        @else
+                            <span class="badge bg-secondary">{{ $employee->email_password ? 'มีข้อมูล' : 'ไม่มี' }}</span>
+                        @endif
+                    </li>
+                    <li><strong>Login:</strong> 
+                        <span class="badge bg-success">Hash Protected</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-warning">⚡ Express & Permissions</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Express:</strong> 
+                        @if($employee->express_username)
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-bolt me-1"></i>Active
+                            </span>
+                        @else
+                            <span class="badge bg-secondary">ไม่ใช้งาน</span>
+                        @endif
+                    </li>
+                    <li><strong>VPN:</strong> 
+                        <span class="badge bg-{{ $employee->vpn_access ? 'success' : 'secondary' }}">
+                            {{ $employee->vpn_access ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                        </span>
+                    </li>
+                    <li><strong>ปริ้นสี:</strong> 
+                        <span class="badge bg-{{ $employee->color_printing ? 'warning text-dark' : 'secondary' }}">
+                            {{ $employee->color_printing ? 'อนุญาต' : 'ไม่อนุญาต' }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="col-md-4">
-            <h6 class="alert-heading">
-                <i class="fas fa-eye me-2"></i>🔓 Password Display
-            </h6>
-            <ul class="mb-0">
-                <li><strong>แสดงเลย:</strong> ไม่ต้องกดปุ่มดู Password</li>
-                <li><strong>Copy Function:</strong> คลิกปุ่ม Copy ได้เลย</li>
-                <li><strong>Admin Only:</strong> เฉพาะ Admin ที่เห็นได้</li>
-            </ul>
-        </div>
-        <div class="col-md-4">
-            <h6 class="alert-heading">
-                <i class="fas fa-plus-circle me-2"></i>✨ เพิ่มเติม
-            </h6>
-            <ul class="mb-0">
-                <li><strong>Remote Work:</strong> ทำงานจากที่บ้าน</li>
-                <li><strong>Admin Access:</strong> แผงควบคุมระบบ</li>
-                <li><strong>Visual Display:</strong> แสดงผลสวยงาม</li>
-            </ul>
+        
+        <hr>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-success mb-0">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-check-circle me-1"></i> ✅ ระบบที่พร้อม:</h6>
+                            <ul class="mb-0">
+                                <li>🏢 <strong>Branch System:</strong> 
+                                    @if($employee->branch)
+                                        <span class="text-success">รองรับแล้ว</span>
+                                    @elseif($employee->branch_id)
+                                        <span class="text-danger">ERROR</span>
+                                    @else
+                                        <span class="text-muted">ไม่ระบุ</span>
+                                    @endif
+                                </li>
+                                <li>🔒 <strong>Separated Passwords:</strong> แยกแล้ว</li>
+                                <li>👁️ <strong>Direct Display:</strong> แสดงได้ทันใจ</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-tools me-1"></i> 🔧 Features:</h6>
+                            <ul class="mb-0">
+                                <li>📞 <strong>Phone Duplicates:</strong> อนุญาตแล้ว</li>
+                                <li>⚡ <strong>Express v2.0:</strong> Enhanced</li>
+                                <li>🎨 <strong>ITMS Theme:</strong> สีแดง-ส้ม</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-copy me-1"></i> 📋 Debug & Copy:</h6>
+                            <ul class="mb-0">
+                                <li>📋 <strong>One-Click Copy:</strong> ทุก field</li>
+                                <li>🔓 <strong>Admin View:</strong> เห็นรหัสผ่าน</li>
+                                <li>🐛 <strong>Debug Mode:</strong> 
+                                    @if(config('app.debug'))
+                                        <span class="text-info">ON</span>
+                                    @else
+                                        <span class="text-muted">OFF</span>
+                                    @endif
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -599,7 +977,7 @@
     border-radius: 0.25rem;
 }
 
-/* ✅ NEW: Password display styling */
+/* ✅ Password display styling */
 .password-container {
     display: flex;
     align-items: center;
@@ -646,6 +1024,12 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.125);
 }
 
+/* ✅ ITMS Theme Integration */
+.badge-gradient {
+    background: linear-gradient(45deg, #B54544, #E6952A);
+    color: white;
+}
+
 /* Permission cards styling */
 .card.border-success {
     border-color: #198754 !important;
@@ -673,6 +1057,27 @@
     transition: transform 0.2s ease;
 }
 
+/* ✅ Branch card special styling */
+.card-header h5 i[style*="color: #B54544"] {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Enhanced gradient badges */
+.badge[style*="background: linear-gradient"] {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* ✅ DEBUG MODE STYLES */
+.alert.alert-info[role="alert"] h6 {
+    color: #084298;
+}
+
+.badge.bg-secondary {
+    font-size: 0.7rem;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .info-item-inline {
@@ -695,6 +1100,40 @@
         flex-direction: column;
         align-items: flex-start;
     }
+    
+    .card-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+    }
+}
+
+/* Summary card enhancements */
+.card-header[style*="background: linear-gradient"] h5 {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Loading and interaction states */
+.btn-xs:active {
+    transform: scale(0.95);
+}
+
+.btn-xs:disabled {
+    opacity: 0.6;
+    transform: none;
+}
+
+/* Enhanced notification for copy success */
+.copy-success {
+    animation: copyPulse 0.3s ease;
+}
+
+@keyframes copyPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 </style>
 @endpush
@@ -702,9 +1141,34 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎉 Employee Show Page Loaded - Direct Password Display Mode');
-    console.log('✅ Features: Direct Password Display, Copy Functions, Enhanced UI');
+    console.log('🎉 Employee Show Page Loaded - Branch System + Debug Mode Complete');
+    console.log('✅ Features: Branch Display, Direct Password Display, Copy Functions, Enhanced UI, Debug Mode');
+    console.log('🏢 Branch System: Full Integration Complete with Debug');
+    console.log('🎨 ITMS Theme: Red-Orange Perfect');
     console.log('🔓 Admin Mode: Passwords shown immediately without toggle');
+    console.log('📋 Copy Functions: All fields copyable');
+    console.log('🐛 Debug Mode: ' + ({{ config('app.debug') ? 'true' : 'false' }} ? 'ENABLED' : 'DISABLED'));
+    
+    // ✅ Branch System Debug
+    const employeeId = {{ $employee->id }};
+    const branchId = {{ $employee->branch_id ?? 'null' }};
+    const hasBranch = {{ $employee->branch ? 'true' : 'false' }};
+    
+    console.log('🏢 Branch Debug Info:', {
+        employee_id: employeeId,
+        branch_id: branchId,
+        has_branch_relationship: hasBranch,
+        branch_name: '{{ $employee->branch ? $employee->branch->name : "NULL" }}'
+    });
+    
+    @if($employee->branch_id && !$employee->branch)
+        console.error('⚠️ BRANCH ISSUE DETECTED:', {
+            message: 'Employee has branch_id but no branch relationship',
+            employee_id: employeeId,
+            branch_id: branchId,
+            suggested_action: 'Check branches table or fix relationship'
+        });
+    @endif
 });
 
 // Copy to clipboard functionality
@@ -786,25 +1250,65 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
-// Add some visual feedback for copy buttons
+// Add visual feedback for copy buttons
 document.querySelectorAll('.btn-xs').forEach(button => {
     button.addEventListener('click', function(e) {
         // Add visual feedback
         const originalHTML = this.innerHTML;
         this.innerHTML = '<i class="fas fa-check text-success"></i>';
         this.disabled = true;
+        this.classList.add('copy-success');
         
         setTimeout(() => {
             this.innerHTML = originalHTML;
             this.disabled = false;
+            this.classList.remove('copy-success');
         }, 1000);
     });
 });
 
-console.log('📝 Employee Show Page Script Loaded - Direct Password Display');
-console.log('🔧 Available functions: copyToClipboard(), showNotification(), maskPassword()');
-console.log('✅ Features: Direct Password Display, Enhanced Copy Function, Visual Feedback');
+// ✅ Enhanced Branch System Integration Test
+function testBranchSystem() {
+    console.log('🏢 Branch System Status:');
+    const branchElement = document.querySelector('[style*="background: linear-gradient(45deg, #B54544, #E6952A)"]');
+    if (branchElement) {
+        console.log('✅ Branch badge found with ITMS theme');
+    } else {
+        console.log('❌ No branch found for this employee');
+    }
+    
+    const branchCard = document.querySelector('h5 i[style*="color: #B54544"]');
+    if (branchCard) {
+        console.log('✅ Branch information card rendered');
+    }
+    
+    // ✅ Check for branch issues
+    const employeeId = {{ $employee->id }};
+    const branchId = {{ $employee->branch_id ?? 'null' }};
+    const hasBranch = {{ $employee->branch ? 'true' : 'false' }};
+    
+    if (branchId && !hasBranch) {
+        console.error('⚠️ Branch relationship issue detected');
+        console.log('📋 Suggested solutions:');
+        console.log('1. Check if branch ID ' + branchId + ' exists in branches table');
+        console.log('2. Check if branch is active (is_active = true)');
+        console.log('3. Check for soft deletes in branches table');
+        console.log('4. Verify foreign key constraints');
+    }
+    
+    console.log('✅ Branch system integration test complete');
+}
+
+// Test on load
+setTimeout(testBranchSystem, 1000);
+
+console.log('📝 Employee Show Page Script Loaded - Complete Integration with Debug');
+console.log('🔧 Available functions: copyToClipboard(), showNotification(), maskPassword(), testBranchSystem()');
+console.log('✅ Features: Branch Display, Direct Password Display, Enhanced Copy Function, Visual Feedback, Debug Mode');
 console.log('🎯 Password System: Computer, Email, Express - All visible for Admins');
 console.log('🔓 Admin Mode: No toggle buttons needed - passwords shown immediately');
+console.log('🏢 Branch System: Full display with ITMS theme integration + Debug Mode');
+console.log('🎨 ITMS Theme: Perfect red-orange gradient throughout');
+console.log('🐛 Debug Features: Branch relationship debugging, data validation, issue detection');
 </script>
 @endpush

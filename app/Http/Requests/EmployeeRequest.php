@@ -157,6 +157,17 @@ class EmployeeRequest extends FormRequest
             'color_printing' => 'nullable|boolean',
             'remote_work' => 'nullable|boolean',
             'admin_access' => 'nullable|boolean',
+            
+            // ✅ NEW: Photo System Validation
+            'photo' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpeg,jpg,png,gif',
+                'max:2048', // 2MB limit
+                'dimensions:min_width=50,min_height=50,max_width=2000,max_height=2000'
+            ],
+            'remove_photo' => 'nullable|boolean', // For removing existing photo during update
         ];
     }
 
@@ -224,6 +235,14 @@ class EmployeeRequest extends FormRequest
             'color_printing.boolean' => 'สิทธิ์การปริ้นสีต้องเป็นค่า true หรือ false',
             'remote_work.boolean' => 'สิทธิ์ทำงานจากที่บ้านต้องเป็นค่า true หรือ false',
             'admin_access.boolean' => 'สิทธิ์เข้าถึงแผงควบคุมต้องเป็นค่า true หรือ false',
+            
+            // ✅ NEW: Photo System Messages
+            'photo.file' => 'รูปภาพต้องเป็นไฟล์',
+            'photo.image' => 'ไฟล์ต้องเป็นรูปภาพ',
+            'photo.mimes' => 'รูปภาพต้องเป็นไฟล์ประเภท JPEG, JPG, PNG หรือ GIF เท่านั้น',
+            'photo.max' => 'ขนาดรูปภาพต้องไม่เกิน 2 MB',
+            'photo.dimensions' => 'รูปภาพต้องมีขนาดอย่างน้อย 50x50 พิกเซล และไม่เกิน 2000x2000 พิกเซล',
+            'remove_photo.boolean' => 'การลบรูปภาพต้องเป็นค่า true หรือ false',
         ];
     }
 
@@ -259,6 +278,8 @@ class EmployeeRequest extends FormRequest
             'color_printing' => 'สิทธิ์การปริ้นสี',
             'remote_work' => 'สิทธิ์ทำงานจากที่บ้าน',
             'admin_access' => 'สิทธิ์เข้าถึงแผงควบคุม',
+            'photo' => 'รูปภาพพนักงาน', // ✅ NEW: เพิ่ม photo attribute
+            'remove_photo' => 'การลบรูปภาพ', // ✅ NEW: เพิ่ม remove_photo attribute
         ];
     }
 
@@ -282,6 +303,9 @@ class EmployeeRequest extends FormRequest
             
             // ✅ NEW: Branch validation
             $this->validateBranchConsistency($validator);
+            
+            // ✅ NEW: Photo system validation
+            $this->validatePhotoSystem($validator);
         });
     }
 
@@ -417,6 +441,82 @@ class EmployeeRequest extends FormRequest
     }
 
     /**
+     * ✅ NEW: Validate photo system consistency
+     */
+    private function validatePhotoSystem($validator)
+    {
+        $photo = $this->file('photo');
+        $removePhoto = $this->input('remove_photo');
+        $isUpdate = $this->isMethod('PUT') || $this->isMethod('PATCH');
+        
+        // Can't upload and remove photo at the same time
+        if ($photo && $removePhoto) {
+            $validator->errors()->add('photo', 
+                'ไม่สามารถอัปโหลดและลบรูปภาพพร้อมกันได้');
+        }
+        
+        // Additional photo security checks
+        if ($photo && $photo->isValid()) {
+            // Check file size manually (additional check)
+            if ($photo->getSize() > 2048 * 1024) { // 2MB in bytes
+                $validator->errors()->add('photo', 
+                    'ขนาดไฟล์รูปภาพเกิน 2 MB');
+            }
+            
+            // Check if it's really an image by trying to get image info
+            $imageInfo = @getimagesize($photo->getPathname());
+            if ($imageInfo === false) {
+                $validator->errors()->add('photo', 
+                    'ไฟล์ที่อัปโหลดไม่ใช่รูปภาพที่ถูกต้อง');
+            }
+            
+            // Check MIME type for additional security
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!in_array($photo->getMimeType(), $allowedMimes)) {
+                $validator->errors()->add('photo', 
+                    'ประเภทไฟล์รูปภาพไม่ถูกต้อง (อนุญาตเฉพาะ JPEG, PNG, GIF)');
+            }
+            
+            // Check for reasonable dimensions
+            if ($imageInfo !== false) {
+                $width = $imageInfo[0];
+                $height = $imageInfo[1];
+                
+                if ($width < 50 || $height < 50) {
+                    $validator->errors()->add('photo', 
+                        'รูปภาพมีขนาดเล็กเกินไป (ต้องมีขนาดอย่างน้อย 50x50 พิกเซล)');
+                }
+                
+                if ($width > 2000 || $height > 2000) {
+                    $validator->errors()->add('photo', 
+                        'รูปภาพมีขนาดใหญ่เกินไป (ต้องไม่เกิน 2000x2000 พิกเซล)');
+                }
+                
+                // Check aspect ratio for profile photos (optional - can be removed if not needed)
+                $aspectRatio = $width / $height;
+                if ($aspectRatio < 0.5 || $aspectRatio > 2.0) {
+                    // This is just a warning, not blocking validation
+                    // $validator->errors()->add('photo', 'รูปภาพควรมีสัดส่วนที่เหมาะสมสำหรับรูปโปรไฟล์');
+                }
+            }
+            
+            // Check file extension
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+            $extension = strtolower($photo->getClientOriginalExtension());
+            if (!in_array($extension, $allowedExtensions)) {
+                $validator->errors()->add('photo', 
+                    'นามสกุลไฟล์ไม่ถูกต้อง (อนุญาตเฉพาะ .jpg, .jpeg, .png, .gif)');
+            }
+        }
+        
+        // Validate remove_photo flag for updates only
+        if ($removePhoto && !$isUpdate) {
+            $validator->errors()->add('remove_photo', 
+                'ไม่สามารถลบรูปภาพเมื่อสร้างพนักงานใหม่');
+        }
+    }
+
+    /**
      * ✅ NEW: Get validation rules for quick validation
      */
     public static function getQuickRules($employeeId = null): array 
@@ -427,6 +527,40 @@ class EmployeeRequest extends FormRequest
             'color_printing' => 'nullable|boolean',
             'remote_work' => 'nullable|boolean',
             'admin_access' => 'nullable|boolean',
+            'photo' => 'nullable|file|image|mimes:jpeg,jpg,png,gif|max:2048|dimensions:min_width=50,min_height=50,max_width=2000,max_height=2000',
+            'remove_photo' => 'nullable|boolean',
+        ];
+    }
+
+    /**
+     * ✅ NEW: Get photo-specific validation rules
+     */
+    public static function getPhotoRules(): array
+    {
+        return [
+            'photo' => [
+                'required',
+                'file',
+                'image',
+                'mimes:jpeg,jpg,png,gif',
+                'max:2048', // 2MB
+                'dimensions:min_width=50,min_height=50,max_width=2000,max_height=2000'
+            ]
+        ];
+    }
+
+    /**
+     * ✅ NEW: Get photo validation messages
+     */
+    public static function getPhotoMessages(): array
+    {
+        return [
+            'photo.required' => 'กรุณาเลือกไฟล์รูปภาพ',
+            'photo.file' => 'รูปภาพต้องเป็นไฟล์',
+            'photo.image' => 'ไฟล์ต้องเป็นรูปภาพ',
+            'photo.mimes' => 'รูปภาพต้องเป็นไฟล์ประเภท JPEG, JPG, PNG หรือ GIF เท่านั้น',
+            'photo.max' => 'ขนาดรูปภาพต้องไม่เกิน 2 MB',
+            'photo.dimensions' => 'รูปภาพต้องมีขนาดอย่างน้อย 50x50 พิกเซล และไม่เกิน 2000x2000 พิกเซล',
         ];
     }
 
@@ -435,27 +569,74 @@ class EmployeeRequest extends FormRequest
      */
     protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
     {
-        // Log validation failures for debugging
+        // Log validation failures for debugging (excluding sensitive data)
         \Log::warning('Employee validation failed', [
             'errors' => $validator->errors()->toArray(),
-            'input' => $this->except(['password', 'computer_password', 'email_password', 'login_password', 'express_password'])
+            'input' => $this->getSafeData(),
+            'has_photo' => $this->hasFile('photo'),
+            'photo_size' => $this->hasFile('photo') ? $this->file('photo')->getSize() : null,
+            'photo_mime' => $this->hasFile('photo') ? $this->file('photo')->getMimeType() : null,
         ]);
         
         parent::failedValidation($validator);
     }
 
     /**
-     * ✅ NEW: Get sanitized data for logging/debugging
+     * ✅ ENHANCED: Get sanitized data for logging/debugging (including photo info)
      */
     public function getSafeData(): array
     {
-        return $this->except([
+        $data = $this->except([
             'password', 
             'computer_password', 
             'email_password', 
             'login_password', 
             'express_password',
-            'remember_token'
+            'remember_token',
+            'photo' // Don't log actual photo file
         ]);
+        
+        // Add photo metadata if present
+        if ($this->hasFile('photo')) {
+            $photo = $this->file('photo');
+            $data['photo_info'] = [
+                'has_photo' => true,
+                'original_name' => $photo->getClientOriginalName(),
+                'size' => $photo->getSize(),
+                'mime_type' => $photo->getMimeType(),
+                'extension' => $photo->getClientOriginalExtension(),
+            ];
+        } else {
+            $data['photo_info'] = ['has_photo' => false];
+        }
+        
+        return $data;
+    }
+
+    /**
+     * ✅ NEW: Check if photo is being uploaded
+     */
+    public function hasPhotoUpload(): bool
+    {
+        return $this->hasFile('photo') && $this->file('photo')->isValid();
+    }
+
+    /**
+     * ✅ NEW: Check if photo removal is requested
+     */
+    public function isPhotoRemovalRequested(): bool
+    {
+        return $this->boolean('remove_photo');
+    }
+
+    /**
+     * ✅ NEW: Get photo file if valid
+     */
+    public function getPhotoFile()
+    {
+        if ($this->hasPhotoUpload()) {
+            return $this->file('photo');
+        }
+        return null;
     }
 }

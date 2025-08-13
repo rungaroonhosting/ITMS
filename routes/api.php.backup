@@ -1,0 +1,733 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\BranchController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Laravel Employee Management System v2.1 + Complete Working System
+|--------------------------------------------------------------------------
+| ✅ Features: Complete Photo System, Working Bulk Actions, Status Toggle, Branch System
+| ✅ FIXED: Working Permanent Delete API with proper validation
+| ✅ NEW: Complete Branch API endpoints for frontend
+*/
+
+// Public API routes
+Route::prefix('v1')->group(function () {
+    // Authentication
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'requestPasswordReset']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    
+    // Protected API routes
+    Route::middleware(['auth:sanctum', 'session.management'])->group(function () {
+        // Authentication
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/auth/user', [AuthController::class, 'user']);
+        Route::post('/auth/refresh', [AuthController::class, 'refresh']);
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+        
+        // Employee Module API
+        Route::prefix('employees')->middleware('permission:employees.view')->group(function () {
+            Route::get('/', [EmployeeController::class, 'apiIndex']);
+            Route::post('/', [EmployeeController::class, 'store'])->middleware('permission:employees.create');
+            Route::get('/{id}', [EmployeeController::class, 'apiShow']);
+            Route::put('/{id}', [EmployeeController::class, 'update'])->middleware('permission:employees.update');
+            Route::delete('/{id}', [EmployeeController::class, 'destroy'])->middleware('permission:employees.delete');
+        });
+        
+        // Asset Module API
+        Route::prefix('assets')->middleware('permission:assets.view')->group(function () {
+            Route::get('/', function() {
+                return response()->json(['message' => 'Asset list endpoint']);
+            });
+            Route::post('/', function() {
+                return response()->json(['message' => 'Create asset endpoint']);
+            })->middleware('permission:assets.create');
+            Route::get('/{id}', function($id) {
+                return response()->json(['message' => "Asset {$id} details endpoint"]);
+            });
+            Route::put('/{id}', function($id) {
+                return response()->json(['message' => "Update asset {$id} endpoint"]);
+            })->middleware('permission:assets.update');
+            Route::delete('/{id}', function($id) {
+                return response()->json(['message' => "Delete asset {$id} endpoint"]);
+            })->middleware('permission:assets.delete');
+            Route::get('/{id}/qrcode', function($id) {
+                return response()->json(['message' => "Asset {$id} QR code endpoint"]);
+            });
+        });
+        
+        // Incident Module API
+        Route::prefix('incidents')->middleware('permission:incidents.view')->group(function () {
+            Route::get('/', function() {
+                return response()->json(['message' => 'Incident list endpoint']);
+            });
+            Route::post('/', function() {
+                return response()->json(['message' => 'Create incident endpoint']);
+            })->middleware('permission:incidents.create');
+            Route::get('/{id}', function($id) {
+                return response()->json(['message' => "Incident {$id} details endpoint"]);
+            });
+            Route::put('/{id}', function($id) {
+                return response()->json(['message' => "Update incident {$id} endpoint"]);
+            })->middleware('permission:incidents.update');
+            Route::delete('/{id}', function($id) {
+                return response()->json(['message' => "Delete incident {$id} endpoint"]);
+            })->middleware('permission:incidents.delete');
+        });
+        
+        // Service Request Module API
+        Route::prefix('service-requests')->middleware('permission:service_requests.view')->group(function () {
+            Route::get('/', function() {
+                return response()->json(['message' => 'Service request list endpoint']);
+            });
+            Route::post('/', function() {
+                return response()->json(['message' => 'Create service request endpoint']);
+            })->middleware('permission:service_requests.create');
+            Route::get('/{id}', function($id) {
+                return response()->json(['message' => "Service request {$id} details endpoint"]);
+            });
+            Route::put('/{id}', function($id) {
+                return response()->json(['message' => "Update service request {$id} endpoint"]);
+            })->middleware('permission:service_requests.update');
+            Route::delete('/{id}', function($id) {
+                return response()->json(['message' => "Delete service request {$id} endpoint"]);
+            })->middleware('permission:service_requests.delete');
+        });
+        
+        // Agreement Module API
+        Route::prefix('agreements')->middleware('permission:agreements.view')->group(function () {
+            Route::get('/', function() {
+                return response()->json(['message' => 'Agreement list endpoint']);
+            });
+            Route::post('/', function() {
+                return response()->json(['message' => 'Create agreement endpoint']);
+            })->middleware('permission:agreements.create');
+            Route::get('/{id}', function($id) {
+                return response()->json(['message' => "Agreement {$id} details endpoint"]);
+            });
+            Route::put('/{id}', function($id) {
+                return response()->json(['message' => "Update agreement {$id} endpoint"]);
+            })->middleware('permission:agreements.update');
+            Route::delete('/{id}', function($id) {
+                return response()->json(['message' => "Delete agreement {$id} endpoint"]);
+            })->middleware('permission:agreements.delete');
+        });
+        
+        // Admin only routes
+        Route::middleware('admin')->prefix('admin')->group(function () {
+            Route::get('/users', function () {
+                return response()->json(['message' => 'Admin users endpoint']);
+            });
+            
+            Route::get('/settings', function () {
+                return response()->json(['message' => 'Admin settings endpoint']);
+            });
+            
+            Route::get('/reports', function () {
+                return response()->json(['message' => 'Admin reports endpoint']);
+            });
+        });
+        
+        // Super Admin only routes
+        Route::middleware('role:super_admin')->prefix('super-admin')->group(function () {
+            Route::get('/system-logs', function () {
+                return response()->json(['message' => 'System logs endpoint']);
+            });
+            
+            Route::get('/backup', function () {
+                return response()->json(['message' => 'System backup endpoint']);
+            });
+        });
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| ✅ MAIN API Routes for Frontend (Working without auth:sanctum)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('api')->middleware('auth')->group(function () {
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ CRITICAL: Branch API Routes ที่ Frontend ต้องการ
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('branches')->name('api.branches.')->group(function () {
+        // ✅ MAIN: Get all active branches for dropdowns
+        Route::get('active', function() {
+            try {
+                $branches = \App\Models\Branch::where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'code']);
+                
+                return response()->json($branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                    ];
+                }));
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('active');
+        
+        // Get branch info with employees count
+        Route::get('{branch}/info', function(\App\Models\Branch $branch) {
+            try {
+                $currentCount = $branch->employees ? $branch->employees()->where('status', 'active')->count() : 0;
+                
+                return response()->json([
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'code' => $branch->code ?? 'N/A',
+                    'current_employees' => $currentCount,
+                    'manager' => $branch->manager ? [
+                        'id' => $branch->manager->id,
+                        'name' => $branch->manager->full_name_th ?? $branch->manager->name,
+                        'employee_id' => $branch->manager->employee_id ?? $branch->manager->id
+                    ] : null,
+                    'is_active' => $branch->is_active,
+                    'description' => $branch->description,
+                    'address' => $branch->address,
+                    'phone' => $branch->phone,
+                    'email' => $branch->email,
+                    'created_at' => $branch->created_at->format('d/m/Y'),
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Info API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('info');
+        
+        // Search branches
+        Route::get('search', function(Request $request) {
+            try {
+                $search = $request->get('q', '');
+                
+                $branches = \App\Models\Branch::when($search, function($query, $search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%")
+                          ->orWhere('code', 'LIKE', "%{$search}%")
+                          ->orWhere('address', 'LIKE', "%{$search}%");
+                    });
+                })
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->limit(20)
+                ->get(['id', 'name', 'code', 'address']);
+                
+                return response()->json($branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                        'address' => $branch->address,
+                    ];
+                }));
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Search API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถค้นหาสาขาได้'
+                ], 500);
+            }
+        })->name('search');
+        
+        // Branch statistics
+        Route::get('statistics', function() {
+            try {
+                $stats = [
+                    'total_branches' => \App\Models\Branch::count(),
+                    'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
+                    'inactive_branches' => \App\Models\Branch::where('is_active', false)->count(),
+                    'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
+                    'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
+                    'total_employees_in_branches' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
+                    'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
+                ];
+                
+                return response()->json([
+                    'success' => true,
+                    'statistics' => $stats
+                ]);
+                
+            } catch (\Exception $e) {
+                \Log::error('Branch Statistics API Error: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('statistics');
+    });
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ WORKING: Employee APIs with Complete Bulk Actions + Status Toggle
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('employees')->name('api.employees.')->group(function () {
+        Route::get('/', [EmployeeController::class, 'apiIndex'])->name('index');
+        Route::get('/search', [EmployeeController::class, 'apiSearch'])->name('search');
+        Route::get('/{employee}', [EmployeeController::class, 'apiShow'])->name('show');
+        
+        // ✅ Enhanced password management APIs
+        Route::post('/{employee}/reset-login-password', [EmployeeController::class, 'resetPassword'])
+            ->name('reset-login-password');
+        Route::post('/{employee}/reset-email-password', [EmployeeController::class, 'resetEmailPassword'])
+            ->name('reset-email-password');
+        Route::post('/{employee}/reset-computer-password', [EmployeeController::class, 'resetComputerPassword'])
+            ->name('reset-computer-password');
+        Route::post('/{employee}/reset-both-passwords', [EmployeeController::class, 'resetBothPasswords'])
+            ->name('reset-both-passwords');
+        
+        // Express management
+        Route::post('/{employee}/generate-express-credentials', [EmployeeController::class, 'generateExpressCredentials'])
+            ->name('generate-express-credentials');
+        Route::get('/{employee}/express-credentials', [EmployeeController::class, 'getExpressCredentials'])
+            ->name('express-credentials');
+        
+        // ✅ WORKING: Photo Management APIs
+        Route::post('/{employee}/photo/upload', [EmployeeController::class, 'uploadPhoto'])
+            ->name('photo.upload');
+        Route::delete('/{employee}/photo', [EmployeeController::class, 'deletePhoto'])
+            ->name('photo.delete');
+        Route::get('/{employee}/photo/info', [EmployeeController::class, 'getPhotoInfo'])
+            ->name('photo.info');
+        
+        // ✅ WORKING: Bulk Action APIs (Admin/IT Admin/HR Only)
+        Route::middleware(['role:super_admin,it_admin,hr'])->group(function () {
+            Route::prefix('bulk')->name('bulk.')->group(function () {
+                // Status management
+                Route::post('update-status', [EmployeeController::class, 'bulkUpdateStatus'])
+                     ->name('update-status');
+                
+                // Department management
+                Route::post('update-department', [EmployeeController::class, 'bulkUpdateDepartment'])
+                     ->name('update-department');
+                
+                // Communication
+                Route::post('send-email', [EmployeeController::class, 'bulkSendEmail'])
+                     ->name('send-email');
+                
+                // Export
+                Route::post('export-selected', [EmployeeController::class, 'bulkExportSelected'])
+                     ->name('export-selected');
+                
+                // Deletion (Super Admin Only)
+                Route::post('move-to-trash', [EmployeeController::class, 'bulkMoveToTrash'])
+                     ->middleware('role:super_admin')
+                     ->name('move-to-trash');
+                
+                // ✅ WORKING: Permanent deletion API (Super Admin Only)
+                Route::delete('permanent-delete', [EmployeeController::class, 'bulkPermanentDelete'])
+                     ->middleware('role:super_admin')
+                     ->name('permanent-delete');
+            });
+        });
+        
+        // ✅ WORKING: Photo Management APIs (Admin Only)
+        Route::middleware(['role:super_admin,it_admin'])->group(function () {
+            Route::prefix('photo')->name('photo.')->group(function () {
+                Route::post('mass-upload', [EmployeeController::class, 'massPhotoUpload'])
+                     ->name('mass-upload');
+                
+                Route::post('compress-all', [EmployeeController::class, 'compressAllPhotos'])
+                     ->name('compress-all');
+                
+                Route::get('export-report', [EmployeeController::class, 'exportPhotoReport'])
+                     ->name('export-report');
+                
+                Route::post('backup', [EmployeeController::class, 'photoBackup'])
+                     ->name('backup');
+            });
+        });
+        
+        // ✅ Photo Statistics
+        Route::get('/photo/statistics', function() {
+            try {
+                $stats = [
+                    'total_employees' => \App\Models\Employee::withoutTrashed()->count(),
+                    'with_photo' => \App\Models\Employee::withoutTrashed()->whereNotNull('photo')->count(),
+                    'without_photo' => \App\Models\Employee::withoutTrashed()->whereNull('photo')->count(),
+                    'photo_coverage_percentage' => 0,
+                    'estimated_storage_mb' => 0,
+                ];
+                
+                if ($stats['total_employees'] > 0) {
+                    $stats['photo_coverage_percentage'] = round(($stats['with_photo'] / $stats['total_employees']) * 100, 1);
+                }
+                
+                $stats['estimated_storage_mb'] = round($stats['with_photo'] * 0.5, 2);
+                
+                return response()->json([
+                    'success' => true,
+                    'statistics' => $stats
+                ]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('photo.statistics');
+        
+        // ✅ Employee statistics with branch + photo info
+        Route::get('/statistics/overview', function() {
+            try {
+                $stats = [
+                    'total' => \App\Models\Employee::withoutTrashed()->count(),
+                    'active' => \App\Models\Employee::withoutTrashed()->where('status', 'active')->count(),
+                    'inactive' => \App\Models\Employee::withoutTrashed()->where('status', 'inactive')->count(),
+                    'express_users' => \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(),
+                    'trash_count' => \App\Models\Employee::onlyTrashed()->count(),
+                    'with_branch' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
+                    'without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
+                    'with_photo' => \App\Models\Employee::withoutTrashed()->whereNotNull('photo')->count(),
+                    'without_photo' => \App\Models\Employee::withoutTrashed()->whereNull('photo')->count(),
+                ];
+                
+                return response()->json([
+                    'success' => true,
+                    'statistics' => $stats
+                ]);
+                
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('statistics');
+        
+        // ✅ WORKING: Employee status toggle API (Admin/IT Admin Only)
+        Route::patch('/{employee}/status', [EmployeeController::class, 'updateStatus'])
+            ->middleware(['role:super_admin,it_admin'])
+            ->name('update-status');
+        
+        // Legacy employee status toggle (for backward compatibility)
+        Route::post('/{employee}/toggle-status', function (\App\Models\Employee $employee, Request $request) {
+            try {
+                // Check permission
+                if (!in_array(auth()->user()->role, ['super_admin', 'it_admin'])) {
+                    return response()->json(['success' => false, 'message' => 'ไม่มีสิทธิ์']);
+                }
+                
+                $validated = $request->validate([
+                    'status' => 'required|in:active,inactive'
+                ]);
+                
+                $employee->update(['status' => $validated['status']]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'อัปเดตสถานะเรียบร้อยแล้ว',
+                    'status' => $validated['status']
+                ]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()]);
+            }
+        })->name('toggle-status');
+        
+        // Trash count API
+        Route::get('/trash-count', function () {
+            try {
+                $count = \App\Models\Employee::onlyTrashed()->count();
+                return response()->json(['success' => true, 'count' => $count]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'count' => 0]);
+            }
+        })->name('trash-count');
+    });
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ Enhanced Department APIs
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('departments')->name('api.departments.')->group(function () {
+        Route::get('/', [DepartmentController::class, 'apiList'])->name('list');
+        Route::get('/select-options', [DepartmentController::class, 'getSelectOptions'])->name('select-options');
+        Route::get('/express-support', [DepartmentController::class, 'checkExpressSupport'])->name('express-support');
+        Route::get('/generate-code', [DepartmentController::class, 'generateCode'])->name('generate-code');
+        
+        // Department Express Check (รองรับ backward compatibility)
+        Route::get('/is-accounting', function (Request $request) {
+            try {
+                $departmentId = $request->get('department_id');
+                
+                if (!$departmentId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'กรุณาระบุ ID ของแผนก'
+                    ], 400);
+                }
+                
+                $department = \App\Models\Department::find($departmentId);
+                
+                if (!$department) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'ไม่พบแผนกที่ระบุ'
+                    ], 404);
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'is_express_enabled' => $department->express_enabled,
+                    'is_accounting' => $department->express_enabled, // For backward compatibility
+                    'department_id' => $department->id,
+                    'department_name' => $department->name,
+                    'express_users_count' => $department->employees()->withoutTrashed()->whereNotNull('express_username')->count()
+                ]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()]);
+            }
+        })->name('is-accounting');
+        
+        // Enhanced department express check
+        Route::get('/express-enabled', function(Request $request) {
+            $departmentId = $request->get('department_id');
+            
+            if (!$departmentId) {
+                return response()->json(['error' => 'กรุณาระบุแผนก'], 400);
+            }
+            
+            try {
+                $department = \App\Models\Department::find($departmentId);
+                
+                if (!$department) {
+                    return response()->json(['error' => 'ไม่พบแผนกที่ระบุ'], 404);
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'express_enabled' => $department->express_enabled,
+                    'department_name' => $department->name,
+                    'express_users_count' => $department->employees()
+                        ->withoutTrashed()
+                        ->whereNotNull('express_username')
+                        ->count()
+                ]);
+                
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
+        })->name('express-enabled');
+    });
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ Enhanced generation APIs (แยกรหัสผ่าน)
+    |--------------------------------------------------------------------------
+    */
+    
+    Route::prefix('generate')->name('api.generate.')->group(function () {
+        // Separated password generation
+        Route::get('/email-password', function() {
+            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            $password = '';
+            for ($i = 0; $i < 10; $i++) { // Email: 10 chars
+                $password .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            return response()->json(['email_password' => $password]);
+        })->name('email-password');
+        
+        Route::get('/login-password', function() {
+            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            $password = '';
+            for ($i = 0; $i < 12; $i++) { // Login: 12 chars - more secure
+                $password .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            return response()->json(['login_password' => $password]);
+        })->name('login-password');
+        
+        Route::get('/computer-password', function() {
+            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            $password = '';
+            for ($i = 0; $i < 10; $i++) { // Computer: 10 chars
+                $password .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            return response()->json(['computer_password' => $password]);
+        })->name('computer-password');
+        
+        // Express credential generation
+        Route::get('/express-username', [EmployeeController::class, 'generateExpressUsernameApi'])
+            ->name('express-username');
+        Route::get('/express-password', [EmployeeController::class, 'generateExpressPasswordApi'])
+            ->name('express-password');
+        
+        // Other credentials
+        Route::get('/employee-code', function() {
+            do {
+                $code = 'EMP' . str_pad(random_int(1, 999), 3, '0', STR_PAD_LEFT);
+            } while (\App\Models\Employee::withoutTrashed()->where('employee_code', $code)->exists());
+            
+            return response()->json(['employee_code' => $code]);
+        })->name('employee-code');
+        
+        Route::get('/keycard-id', function() {
+            do {
+                $id = 'KC' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
+            } while (\App\Models\Employee::withoutTrashed()->where('keycard_id', $id)->exists());
+            
+            return response()->json(['keycard_id' => $id]);
+        })->name('keycard-id');
+        
+        Route::get('/copier-code', function() {
+            return response()->json([
+                'copier_code' => str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT)
+            ]);
+        })->name('copier-code');
+    });
+    
+    // ✅ Express eligibility check
+    Route::get('/check-express-eligibility', [EmployeeController::class, 'checkExpressEligibility'])
+        ->name('check-express-eligibility');
+    
+    // Express connection test
+    Route::post('/test-express-connection', [EmployeeController::class, 'testExpressConnection'])
+        ->name('test-express-connection');
+    
+    // Express usage report
+    Route::get('/express-report', [EmployeeController::class, 'getExpressReport'])
+        ->name('express-report');
+    
+    // Generate data for AJAX
+    Route::get('/generate-data', [EmployeeController::class, 'generateData'])
+        ->name('generate-data');
+});
+
+/*
+|--------------------------------------------------------------------------
+| ✅ WORKING: Direct API Routes (Without api prefix) for Frontend
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    
+    // ✅ WORKING: Branch API Routes ที่ create.blade.php ต้องการ
+    Route::prefix('branches')->name('branches.api.')->group(function () {
+        // Get all active branches for dropdowns
+        Route::get('active', function() {
+            try {
+                $branches = \App\Models\Branch::where('is_active', true)
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'code']);
+                
+                return response()->json($branches->map(function($branch) {
+                    return [
+                        'id' => $branch->id,
+                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
+                        'name' => $branch->name,
+                        'code' => $branch->code ?? 'N/A',
+                    ];
+                }));
+                
+            } catch (\Exception $e) {
+                \Log::error('Direct Branch API Error: ' . $e->getMessage());
+                return response()->json([
+                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
+                    'message' => $e->getMessage()
+                ], 500);
+            }
+        })->name('active');
+    });
+    
+    // ✅ WORKING: Employee Status Toggle (Direct Route)
+    Route::patch('/employees/{employee}/status', [EmployeeController::class, 'updateStatus'])
+        ->middleware(['role:super_admin,it_admin'])
+        ->name('employees.status.update');
+    
+    // ✅ WORKING: Bulk Action Routes (Direct Routes)
+    Route::middleware(['role:super_admin,it_admin,hr'])->group(function () {
+        // Bulk status update
+        Route::post('/employees/bulk/update-status', [EmployeeController::class, 'bulkUpdateStatus'])
+             ->name('employees.bulk.status.update');
+        
+        // Bulk department update
+        Route::post('/employees/bulk/update-department', [EmployeeController::class, 'bulkUpdateDepartment'])
+             ->name('employees.bulk.department.update');
+        
+        // Bulk send email
+        Route::post('/employees/bulk/send-email', [EmployeeController::class, 'bulkSendEmail'])
+             ->name('employees.bulk.email.send');
+        
+        // Bulk export selected
+        Route::post('/employees/bulk/export-selected', [EmployeeController::class, 'bulkExportSelected'])
+             ->name('employees.bulk.export.selected');
+        
+        // Bulk move to trash (Super Admin Only)
+        Route::post('/employees/bulk/move-to-trash', [EmployeeController::class, 'bulkMoveToTrash'])
+             ->middleware('role:super_admin')
+             ->name('employees.bulk.trash.move');
+        
+        // ✅ WORKING: Bulk permanent delete (Super Admin Only)
+        Route::delete('/employees/bulk/permanent-delete', [EmployeeController::class, 'bulkPermanentDelete'])
+             ->middleware('role:super_admin')
+             ->name('employees.bulk.permanent.delete');
+    });
+    
+});
+
+/*
+|--------------------------------------------------------------------------
+| ✅ API Health Check
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/api-health', function() {
+    try {
+        return response()->json([
+            'status' => 'ok',
+            'message' => 'API Routes are working',
+            'timestamp' => now(),
+            'version' => '2.1.0 + Complete Working API System',
+            'endpoints' => [
+                'branches_active' => '/api/branches/active',
+                'employees_bulk_permanent_delete' => '/api/employees/bulk/permanent-delete',
+                'employees_status_toggle' => '/api/employees/{id}/status',
+                'employees_photo_statistics' => '/api/employees/photo/statistics',
+                'departments_express_enabled' => '/api/departments/express-enabled',
+            ],
+            'features' => [
+                'working_bulk_permanent_delete' => true,
+                'working_status_toggle' => true,
+                'working_branch_api' => true,
+                'working_photo_api' => true,
+                'working_input_field' => true,
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'timestamp' => now()
+        ], 500);
+    }
+})->name('api.health');

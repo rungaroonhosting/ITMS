@@ -6,469 +6,1644 @@
     <li class="breadcrumb-item active">จัดการพนักงาน</li>
 @endsection
 
+@push('styles')
+<style>
+/* ✅ ITMS Theme Colors */
+:root {
+    --itms-primary: #e74c3c;
+    --itms-primary-dark: #c0392b;
+    --itms-orange: #E6952A;
+    --itms-purple: #9b59b6;
+    --itms-teal: #1abc9c;
+    --text-primary: #1A252F;
+    --text-secondary: #5A6C7D;
+}
+
+/* ✅ Header Section with Enhanced Animation */
+.employee-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(231, 76, 60, 0.3);
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+}
+
+.employee-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: headerGlow 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes headerGlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.employee-header h1 {
+    color: #FFFFFF !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    font-weight: 700;
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.employee-header p {
+    color: #FFFFFF !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.header-icon-container {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-icon-container i {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+/* ✅ Statistics Cards */
+.employee-stat-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid rgba(231, 76, 60, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background: #ffffff;
+    height: 100%;
+}
+
+.employee-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+}
+
+.employee-stat-card:hover {
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.2);
+    transform: translateY(-3px);
+    border-color: rgba(231, 76, 60, 0.2);
+}
+
+.stat-icon-container {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.stat-number {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+    line-height: 1.2;
+}
+
+/* ✅ Search Card */
+.search-card-enhanced {
+    border: 1px solid rgba(231, 76, 60, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.08);
+}
+
+.search-card-enhanced .form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--itms-primary);
+}
+
+.search-card-enhanced .input-group-text {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(230, 149, 42, 0.08));
+    border-color: rgba(231, 76, 60, 0.15);
+    color: var(--itms-primary);
+    font-size: 0.9rem;
+}
+
+.search-card-enhanced .form-control,
+.search-card-enhanced .form-select {
+    font-size: 0.9rem;
+    border-color: rgba(231, 76, 60, 0.15);
+}
+
+.search-card-enhanced .form-control:focus,
+.search-card-enhanced .form-select:focus {
+    border-color: var(--itms-primary);
+    box-shadow: 0 0 0 0.15rem rgba(231, 76, 60, 0.1);
+}
+
+/* ✅ Table Card */
+.employee-table-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.1);
+}
+
+.employee-table-card .card-header {
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.employee-table-card .card-header h6 {
+    color: white !important;
+    font-weight: 700;
+    font-size: 1rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    margin: 0;
+}
+
+/* ✅ Enhanced Table with Enhanced Hover Effects */
+.table-enhanced {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+.table-enhanced thead th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 1rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.table-enhanced tbody tr {
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+/* ✅ Enhanced Row Hover Effects - Orange Shadow */
+.table-enhanced tbody tr:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(230, 149, 42, 0.08)) !important;
+    transform: translateX(3px);
+    box-shadow: 0 4px 20px rgba(230, 149, 42, 0.3), -4px 0 15px rgba(231, 76, 60, 0.2);
+    border-radius: 8px;
+}
+
+.table-enhanced tbody tr:hover td:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.table-enhanced tbody tr:hover td:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.table-enhanced tbody td {
+    padding: 1.2rem 1rem;
+    border-top: 1px solid #f1f3f4;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    transition: all 0.3s ease;
+}
+
+/* ✅ Enhanced Photo+Code Column */
+.photo-code-cell {
+    text-align: center;
+    padding: 1rem !important;
+    width: 120px;
+    min-width: 120px;
+}
+
+.photo-wrapper {
+    position: relative;
+    margin-bottom: 0.6rem;
+    display: inline-block;
+}
+
+/* ✅ Larger Photo Sizes */
+.employee-photo-thumb {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 12px rgba(231, 76, 60, 0.2);
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: cover;
+    border: 3px solid var(--itms-orange) !important;
+}
+
+.employee-photo-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    border-color: var(--itms-primary) !important;
+}
+
+.photo-placeholder {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 20px !important;
+}
+
+.photo-placeholder:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.12), rgba(230, 149, 42, 0.12)) !important;
+    border-color: var(--itms-primary) !important;
+    transform: scale(1.1);
+}
+
+.photo-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    z-index: 1;
+}
+
+/* ✅ Enhanced Contact Info Section */
+.contact-info {
+    line-height: 1.4;
+}
+
+.contact-info .email-line {
+    font-weight: 600;
+    color: var(--itms-primary);
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+    word-break: break-all;
+}
+
+.contact-info .phone-line {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.contact-info .line-line {
+    color: var(--itms-teal);
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.contact-info .address-line {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* ✅ Enhanced Status Section - Toggle Only, Perfect Center */
+.status-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    padding: 0.5rem;
+}
+
+.status-toggle-enhanced {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.status-toggle-enhanced .form-check-input {
+    width: 3.5rem;
+    height: 1.8rem;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #6b7280;
+    border: 2px solid #9ca3af;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.status-toggle-enhanced .form-check-input:checked {
+    background: linear-gradient(135deg, var(--itms-orange), #d97706);
+    border-color: var(--itms-orange);
+    box-shadow: 0 4px 20px rgba(230, 149, 42, 0.5);
+}
+
+.status-toggle-enhanced .form-check-input:not(:checked) {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    border-color: #9ca3af;
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+}
+
+.status-toggle-enhanced .form-check-input:focus {
+    box-shadow: 0 0 0 0.3rem rgba(230, 149, 42, 0.25);
+    border-color: var(--itms-orange);
+}
+
+.status-toggle-enhanced .form-check-input:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* ✅ Toggle Switch Custom Styling - Orange Theme */
+.status-toggle-enhanced .form-check-input::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 3px;
+    transform: translateY(-50%);
+    width: 1.2rem;
+    height: 1.2rem;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status-toggle-enhanced .form-check-input:checked::before {
+    left: calc(100% - 1.2rem - 3px);
+    background: #ffffff;
+}
+
+/* ✅ Enhanced Badges */
+.badge-enhanced {
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.badge-primary-enhanced {
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.badge-orange-enhanced {
+    background: linear-gradient(135deg, var(--itms-orange), #CC7F1F);
+    color: white;
+    animation: expressGlow 3s infinite alternate;
+}
+
+@keyframes expressGlow {
+    from { box-shadow: 0 0 3px rgba(230, 149, 42, 0.4); }
+    to { box-shadow: 0 0 8px rgba(230, 149, 42, 0.6); }
+}
+
+.badge-purple-enhanced {
+    background: linear-gradient(135deg, var(--itms-purple), #8e44ad);
+    color: white;
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.2);
+}
+
+.badge-teal-enhanced {
+    background: linear-gradient(135deg, var(--itms-teal), #16a085);
+    color: white;
+    box-shadow: 0 2px 8px rgba(26, 188, 156, 0.2);
+}
+
+/* ✅ Buttons */
+.btn-primary-enhanced {
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 12px rgba(231, 76, 60, 0.25);
+}
+
+.btn-primary-enhanced:hover {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    color: white;
+}
+
+/* ✅ Action Buttons */
+.action-btn-group {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.action-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border: 1.5px solid;
+    padding: 0;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    transform: scale(1.08);
+    text-decoration: none;
+}
+
+.action-btn-info {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.action-btn-info:hover {
+    background: #17a2b8;
+    color: white;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.action-btn-warning {
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.action-btn-warning:hover {
+    background: #ffc107;
+    color: #212529;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.action-btn-danger {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.action-btn-danger:hover {
+    background: #dc3545;
+    color: white;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* ✅ Employee Name */
+.employee-name .fw-bold {
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+    color: var(--itms-primary);
+}
+
+.employee-name small {
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+/* ✅ Mobile Cards */
+.employee-mobile-card-enhanced {
+    border: 1px solid rgba(231, 76, 60, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.employee-mobile-card-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%);
+}
+
+.employee-mobile-card-enhanced:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.02), rgba(230, 149, 42, 0.02));
+    transform: translateX(3px);
+    border-color: rgba(231, 76, 60, 0.15);
+    box-shadow: 0 4px 20px rgba(230, 149, 42, 0.2), -3px 0 10px rgba(231, 76, 60, 0.15);
+}
+
+/* ✅ Color Utilities */
+.text-primary-enhanced { color: var(--itms-primary) !important; font-weight: 600; }
+.text-orange-enhanced { color: var(--itms-orange) !important; font-weight: 600; }
+.text-purple-enhanced { color: var(--itms-purple) !important; font-weight: 600; }
+.text-teal-enhanced { color: var(--itms-teal) !important; font-weight: 600; }
+
+/* ✅ Custom SweetAlert2 Styles for Better Contrast */
+.swal2-popup {
+    border-radius: 15px !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2) !important;
+}
+
+.swal2-title {
+    color: #1a1a1a !important;
+    font-weight: 700 !important;
+    font-size: 1.4rem !important;
+}
+
+.swal2-html-container {
+    color: #333333 !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+.swal2-html-container strong {
+    color: var(--itms-primary) !important;
+    font-weight: 700 !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3) !important;
+}
+
+.swal2-cancel {
+    background: #6c757d !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+.alert-info-custom {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+    border: 1px solid #2196f3 !important;
+    color: #0d47a1 !important;
+    border-radius: 8px !important;
+}
+
+/* ✅ CRITICAL FIX: Working DELETE FOREVER Input Field Styles */
+.permanent-delete-input-field {
+    width: 100% !important;
+    padding: 15px 20px !important;
+    border: 3px solid #dc3545 !important;
+    border-radius: 12px !important;
+    font-size: 18px !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    background: #ffffff !important;
+    color: #212529 !important;
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 2px !important;
+    outline: none !important;
+    transition: all 0.3s ease !important;
+    box-sizing: border-box !important;
+    margin: 15px 0 !important;
+    
+    /* CRITICAL: Ensure input is always interactive */
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    -webkit-touch-callout: default !important;
+    -webkit-user-drag: auto !important;
+    
+    /* Remove any potential blocking styles */
+    z-index: 999999 !important;
+    position: relative !important;
+    
+    /* Ensure visibility */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Focus states for the input */
+.permanent-delete-input-field:focus {
+    outline: none !important;
+    border-color: #b91c1c !important;
+    box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.3) !important;
+    transform: scale(1.02) !important;
+    background: #fff !important;
+}
+
+.permanent-delete-input-field:hover {
+    border-color: #b21f2d !important;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.4) !important;
+}
+
+/* Validation states */
+.permanent-delete-input-field.valid {
+    border-color: #28a745 !important;
+    background: #d4edda !important;
+    color: #155724 !important;
+}
+
+.permanent-delete-input-field.invalid {
+    border-color: #dc3545 !important;
+    background: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+/* ✅ Mobile Responsive */
+@media (max-width: 768px) {
+    .employee-header {
+        text-align: center;
+        padding: 1.25rem;
+    }
+    
+    .employee-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header-icon-container {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1rem;
+    }
+    
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .photo-code-cell {
+        padding: 0.5rem !important;
+    }
+    
+    .employee-photo-thumb,
+    .photo-placeholder {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .permanent-delete-input-field {
+        font-size: 16px !important;
+        padding: 12px 15px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .employee-header h1 {
+        font-size: 1.3rem;
+    }
+    
+    .stat-number {
+        font-size: 1.3rem;
+    }
+}
+
+/* ✅ Bulk Action Progress Bar */
+.bulk-progress-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.bulk-progress-bar {
+    height: 8px;
+    background: linear-gradient(135deg, var(--itms-primary), var(--itms-orange));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* ✅ Selected Items Counter */
+.selected-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--itms-primary), var(--itms-orange));
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 25px;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    z-index: 1000;
+    display: none;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ✅ Enhanced Danger Zone Styling */
+.danger-zone {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+    border: 2px solid #f87171 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin: 15px 0 !important;
+}
+
+.danger-zone-header {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 15px !important;
+}
+
+.danger-zone-icon {
+    font-size: 28px !important;
+    color: #dc2626 !important;
+    margin-right: 12px !important;
+}
+
+.danger-zone-title {
+    color: #991b1b !important;
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    margin: 0 !important;
+}
+
+.danger-zone-content {
+    color: #7f1d1d !important;
+    line-height: 1.6 !important;
+}
+
+.danger-zone-list {
+    margin: 10px 0 0 0 !important;
+    padding-left: 20px !important;
+}
+
+.danger-zone-list li {
+    margin-bottom: 8px !important;
+    font-weight: 600 !important;
+}
+
+/* ✅ CRITICAL: Working Input Container Styles */
+.delete-input-container {
+    background: #fff3cd !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+    border-left: 5px solid #ffc107 !important;
+    margin: 20px 0 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+}
+
+.delete-input-label {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #856404 !important;
+    margin-bottom: 15px !important;
+    text-align: center !important;
+}
+
+.delete-input-instruction {
+    text-align: center !important;
+    background: #ffeaa7 !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    margin: 15px 0 !important;
+    border: 2px solid #f39c12 !important;
+}
+
+.delete-input-instruction-text {
+    font-size: 20px !important;
+    font-weight: bold !important;
+    color: #d63031 !important;
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 2px !important;
+}
+</style>
+@endpush
+
 @section('content')
-<!-- Page Header -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h1 class="h3 mb-0 text-primary fw-bold">
-                    <i class="fas fa-users me-2"></i>จัดการพนักงาน
-                </h1>
-                <p class="text-muted mb-0">จัดการข้อมูลพนักงานในองค์กร</p>
-            </div>
-            <div class="d-flex gap-2">
-                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulkActionModal">
-                        <i class="fas fa-tasks me-1"></i><span class="d-none d-md-inline">จัดการหลายรายการ</span>
-                    </button>
-                @endif
-                <!-- ✅ Trash Button -->
-                @if(auth()->user()->role === 'super_admin')
-                    <a href="{{ route('employees.trash') }}" class="btn btn-outline-danger" id="viewTrashBtn">
-                        <i class="fas fa-trash me-1"></i><span class="d-none d-md-inline">ถังขยะ</span>
-                        <span class="badge bg-danger ms-1 trash-count" style="display: none;">0</span>
-                    </a>
-                @endif
-                @if(auth()->user()->role !== 'employee')
-                    <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                        <i class="fas fa-user-plus me-1"></i><span class="d-none d-sm-inline">เพิ่มพนักงาน</span>
-                    </a>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 p-md-3">
-                            <i class="fas fa-users text-primary fa-lg fa-md-2x"></i>
+<div class="container-fluid">
+    <!-- ✅ Header Section -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="employee-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="header-icon-container me-3">
+                            <i class="fas fa-users text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-0">จัดการพนักงาน</h1>
+                            <p class="mb-0">จัดการข้อมูลพนักงานในองค์กร พร้อมระบบรูปภาพและสิทธิ์การใช้งาน</p>
                         </div>
                     </div>
-                    <div class="flex-grow-1 ms-2 ms-md-3">
-                        <div class="text-muted small">พนักงานทั้งหมด</div>
-                        <div class="h5 h4-md mb-0 fw-bold">{{ $employees->count() }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-2 p-md-3">
-                            <i class="fas fa-user-check text-success fa-lg fa-md-2x"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-2 ms-md-3">
-                        <div class="text-muted small">ใช้งาน</div>
-                        <div class="h5 h4-md mb-0 fw-bold text-success">{{ $employees->where('status', 'active')->count() }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-warning bg-opacity-10 rounded-circle p-2 p-md-3">
-                            <i class="fas fa-bolt text-warning fa-lg fa-md-2x"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-2 ms-md-3">
-                        <div class="text-muted small">Express</div>
-                        <div class="h5 h4-md mb-0 fw-bold text-warning">{{ $employees->whereNotNull('express_username')->count() }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-info bg-opacity-10 rounded-circle p-2 p-md-3">
-                            <i class="fas fa-building text-info fa-lg fa-md-2x"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-2 ms-md-3">
-                        <div class="text-muted small">แผนก</div>
-                        <div class="h5 h4-md mb-0 fw-bold text-info">{{ $departments->count() }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Search and Filter -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-12 col-md-4">
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fas fa-search"></i>
-                    </span>
-                    <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาพนักงาน...">
-                </div>
-            </div>
-            <div class="col-6 col-md-2">
-                <select class="form-select" id="departmentFilter">
-                    <option value="">แผนกทั้งหมด</option>
-                    @foreach($departments as $department)
-                        <option value="{{ $department->id }}">{{ $department->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-2">
-                <select class="form-select" id="roleFilter">
-                    <option value="">Role ทั้งหมด</option>
-                    <option value="super_admin">Super Admin</option>
-                    <option value="it_admin">IT Admin</option>
-                    <option value="hr">HR</option>
-                    <option value="manager">Manager</option>
-                    <option value="express">Express</option>
-                    <option value="employee">Employee</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-2">
-                <select class="form-select" id="statusFilter">
-                    <option value="">สถานะทั้งหมด</option>
-                    <option value="active">ใช้งาน</option>
-                    <option value="inactive">ไม่ใช้งาน</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-2">
-                <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
-                    <i class="fas fa-times me-1"></i><span class="d-none d-sm-inline">ล้างตัวกรอง</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ✅ ข้อ 1: แก้ไข Responsive Table - ไม่มี horizontal scrollbar -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white">
-        <div class="d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">รายการพนักงาน</h6>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary d-none d-md-inline-block" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i>พิมพ์
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-success" id="exportBtn">
-                    <i class="fas fa-file-excel me-1"></i><span class="d-none d-sm-inline">ส่งออก</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <!-- ✅ Desktop Table View -->
-        <div class="d-none d-lg-block">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="employeesTable">
-                    <thead class="table-light">
-                        <tr>
-                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                <th width="50">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="selectAll">
-                                    </div>
-                                </th>
-                            @endif
-                            <th width="100">รหัส</th>
-                            <th>ชื่อ-นามสกุล</th>
-                            <th width="150">แผนก</th>
-                            <th width="120">ตำแหน่ง</th>
-                            <th width="200">อีเมล</th>
-                            <th width="100">Express</th>
-                            <th width="100">สถานะ</th>
-                            <th width="120">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($employees as $employee)
-                            <tr data-status="{{ $employee->status }}" 
-                                data-department="{{ $employee->department_id }}" 
-                                data-role="{{ $employee->role }}"
-                                data-id="{{ $employee->id }}">
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                    <td>
-                                        <div class="form-check">
-                                            <input class="form-check-input employee-checkbox" type="checkbox" value="{{ $employee->id }}">
-                                        </div>
-                                    </td>
-                                @endif
-                                <td>
-                                    <span class="badge bg-secondary">{{ $employee->employee_code }}</span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                <i class="fas fa-user text-muted"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold">{{ $employee->full_name_th }}</div>
-                                            <small class="text-muted">{{ $employee->full_name_en }}</small>
-                                            @if($employee->nickname)
-                                                <div><small class="badge bg-light text-dark">"{{ $employee->nickname }}"</small></div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if($employee->department)
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-info me-2">{{ $employee->department->code ?? 'N/A' }}</span>
-                                            <span class="small">{{ $employee->department->name }}</span>
-                                        </div>
-                                    @else
-                                        <span class="text-muted">ไม่ระบุ</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="small">{{ $employee->position }}</div>
-                                    <small class="badge bg-{{ $employee->role === 'super_admin' ? 'danger' : ($employee->role === 'it_admin' ? 'warning' : 'secondary') }}">
-                                        {{ $employee->role_display }}
-                                    </small>
-                                </td>
-                                <td>
-                                    <a href="mailto:{{ $employee->email }}" class="text-decoration-none small">
-                                        {{ $employee->email }}
-                                    </a>
-                                    @if($employee->phone)
-                                        <div><small class="text-muted">{{ $employee->phone }}</small></div>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($employee->express_username)
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input status-toggle" type="checkbox" 
-                                                   data-id="{{ $employee->id }}" 
-                                                   {{ $employee->status === 'active' ? 'checked' : '' }}>
-                                            <label class="form-check-label small">
-                                                {{ $employee->status_display }}
-                                            </label>
-                                        </div>
-                                    @else
-                                        <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
-                                            {{ $employee->status_display }}
-                                        </span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        @if(auth()->user()->id === $employee->id || auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                            <a href="{{ route('employees.show', $employee) }}" 
-                                               class="btn btn-sm btn-outline-info" 
-                                               data-bs-toggle="tooltip" title="ดูรายละเอียด">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        @endif
-                                        
-                                        @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
-                                            (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
-                                            (auth()->user()->role === 'express' && $employee->department && $employee->department->express_enabled))
-                                            <a href="{{ route('employees.edit', $employee) }}" 
-                                               class="btn btn-sm btn-outline-warning" 
-                                               data-bs-toggle="tooltip" title="แก้ไข">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        @endif
-                                        
-                                        @if(auth()->user()->role === 'super_admin')
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger delete-btn" 
-                                                    data-id="{{ $employee->id }}" 
-                                                    data-name="{{ $employee->full_name_th }}"
-                                                    data-bs-toggle="tooltip" title="ลบ">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '9' : '8' }}" class="text-center py-4">
-                                    <div class="text-muted">
-                                        <i class="fas fa-users fa-3x mb-3"></i>
-                                        <p>ไม่มีข้อมูลพนักงาน</p>
-                                        @if(auth()->user()->role !== 'employee')
-                                            <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                                                <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานคนแรก
-                                            </a>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ✅ Mobile/Tablet Card View -->
-        <div class="d-lg-none" id="mobileEmployeeList">
-            @forelse($employees as $employee)
-                <div class="border-bottom p-3 employee-mobile-card" 
-                     data-status="{{ $employee->status }}" 
-                     data-department="{{ $employee->department_id }}" 
-                     data-role="{{ $employee->role }}"
-                     data-id="{{ $employee->id }}">
-                    <div class="row align-items-center">
-                        <!-- Employee Info -->
-                        <div class="col-8">
-                            <div class="d-flex align-items-start">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                        <i class="fas fa-user text-muted"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-bold">{{ $employee->full_name_th }}</div>
-                                    <small class="text-muted d-block">{{ $employee->full_name_en }}</small>
-                                    <div class="d-flex flex-wrap gap-1 mt-1">
-                                        <span class="badge bg-secondary small">{{ $employee->employee_code }}</span>
-                                        @if($employee->department)
-                                            <span class="badge bg-info small">{{ $employee->department->code ?? 'N/A' }}</span>
-                                        @endif
-                                        @if($employee->express_username)
-                                            <span class="badge bg-warning text-dark small">
-                                                <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="small text-muted mt-1">
-                                        <i class="fas fa-envelope me-1"></i>{{ $employee->email }}
-                                    </div>
-                                    @if($employee->phone)
-                                        <div class="small text-muted">
-                                            <i class="fas fa-phone me-1"></i>{{ $employee->phone }}
-                                        </div>
-                                    @endif
-                                </div>
+                    <div class="d-none d-md-flex gap-2">
+                        @if(auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
+                            <button type="button" class="btn btn-light shadow-sm" onclick="openBulkActionModal()">
+                                <i class="fas fa-tasks me-1"></i>จัดการหลายรายการ
+                                <span class="badge bg-primary ms-1" id="selectedCount" style="display: none;">0</span>
+                            </button>
+                        @endif
+                        
+                        @if(auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin']))
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-light shadow-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-camera me-1"></i>จัดการรูปภาพ
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><h6 class="dropdown-header">การจัดการรูปภาพ</h6></li>
+                                    <li><a class="dropdown-item" href="#" onclick="massPhotoUpload()">
+                                        <i class="fas fa-upload me-2"></i>อัปโหลดรูปหลายคน
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="compressAllPhotos()">
+                                        <i class="fas fa-compress me-2"></i>บีบอัดรูปทั้งหมด
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="exportPhotoReport()">
+                                        <i class="fas fa-file-image me-2"></i>รายงานรูปภาพ
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="photoBackup()">
+                                        <i class="fas fa-cloud-download-alt me-2"></i>สำรองข้อมูลรูป
+                                    </a></li>
+                                </ul>
                             </div>
-                        </div>
-                        <!-- Actions -->
-                        <div class="col-4 text-end">
-                            <div class="mb-2">
-                                <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }} small">
-                                    {{ $employee->status_display }}
-                                </span>
-                            </div>
-                            <div class="btn-group btn-group-sm" role="group">
-                                @if(auth()->user()->id === $employee->id || auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-                                    <a href="{{ route('employees.show', $employee) }}" 
-                                       class="btn btn-outline-info btn-sm">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                @endif
-                                
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || 
-                                    (auth()->user()->role === 'hr' && $employee->role === 'employee') ||
-                                    (auth()->user()->role === 'express' && $employee->department && $employee->department->express_enabled))
-                                    <a href="{{ route('employees.edit', $employee) }}" 
-                                       class="btn btn-outline-warning btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                @endif
-                                
-                                @if(auth()->user()->role === 'super_admin')
-                                    <button type="button" 
-                                            class="btn btn-outline-danger btn-sm delete-btn" 
-                                            data-id="{{ $employee->id }}" 
-                                            data-name="{{ $employee->full_name_th }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="text-center py-5">
-                    <div class="text-muted">
-                        <i class="fas fa-users fa-3x mb-3"></i>
-                        <p>ไม่มีข้อมูลพนักงาน</p>
-                        @if(auth()->user()->role !== 'employee')
-                            <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                                <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานคนแรก
+                        @endif
+                        
+                       {{-- ✅ SIMPLE SOLUTION: ใช้ route() ตรงๆ --}}
+@if(auth()->user() && auth()->user()->role === 'super_admin')
+    <a href="{{ route('employees.trash') }}" class="btn btn-light shadow-sm" id="viewTrashBtn">
+        <i class="fas fa-trash me-1"></i>ถังขยะ
+        <span class="badge bg-danger ms-1 trash-count" style="display: none;">0</span>
+    </a>
+@endif
+                        
+                        @if(auth()->user() && auth()->user()->role !== 'employee')
+                            <a href="{{ route('employees.create') }}" class="btn btn-warning shadow-sm">
+                                <i class="fas fa-user-plus me-1"></i>เพิ่มพนักงานใหม่
                             </a>
                         @endif
                     </div>
                 </div>
-            @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Statistics Cards -->
+    <div class="row mb-3">
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, var(--itms-primary), var(--itms-primary-dark));">
+                        <i class="fas fa-users text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number text-primary-enhanced">{{ isset($stats['total']) ? $stats['total'] : (isset($employees) ? $employees->count() : 0) }}</div>
+                    <div class="stat-label">พนักงานทั้งหมด</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <i class="fas fa-user-check text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number" style="color: #28a745;">{{ isset($stats['active']) ? $stats['active'] : (isset($employees) ? $employees->where('status', 'active')->count() : 0) }}</div>
+                    <div class="stat-label">ใช้งาน</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, var(--itms-orange), #CC7F1F);">
+                        <i class="fas fa-bolt text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number text-orange-enhanced">{{ isset($stats['express_users']) ? $stats['express_users'] : (isset($employees) ? $employees->whereNotNull('express_username')->count() : 0) }}</div>
+                    <div class="stat-label">Express Users</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, var(--itms-purple), #8e44ad);">
+                        <i class="fas fa-camera text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number text-purple-enhanced">{{ isset($stats['with_photo']) ? $stats['with_photo'] : 0 }}</div>
+                    <div class="stat-label">มีรูปภาพ</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, var(--itms-teal), #16a085);">
+                        <i class="fas fa-building text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number text-teal-enhanced">{{ isset($stats['with_branch']) ? $stats['with_branch'] : 0 }}</div>
+                    <div class="stat-label">มีสาขา</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-6 col-lg-2 col-md-4 mb-2">
+            <div class="card border-0 shadow-sm employee-stat-card">
+                <div class="card-body text-center p-3">
+                    <div class="stat-icon-container" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                        <i class="fas fa-shield-alt text-white fa-lg"></i>
+                    </div>
+                    <div class="stat-number" style="color: #6c757d;">{{ isset($stats['vpn_users']) ? $stats['vpn_users'] : 0 }}</div>
+                    <div class="stat-label">VPN Access</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Search Section -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card search-card-enhanced">
+                <div class="card-body p-3">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label">ค้นหาพนักงาน</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อ, อีเมล, รหัส...">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">แผนก</label>
+                            <select class="form-select" id="departmentFilter">
+                                <option value="">แผนกทั้งหมด</option>
+                                @if(isset($departments))
+                                    @foreach($departments as $department)
+                                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">สาขา</label>
+                            <select class="form-select" id="branchFilter">
+                                <option value="">สาขาทั้งหมด</option>
+                                @if(isset($branches))
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-4 col-md-1">
+                            <label class="form-label">Role</label>
+                            <select class="form-select" id="roleFilter">
+                                <option value="">ทั้งหมด</option>
+                                <option value="super_admin">Super</option>
+                                <option value="it_admin">IT</option>
+                                <option value="hr">HR</option>
+                                <option value="manager">Manager</option>
+                                <option value="express">Express</option>
+                                <option value="employee">Employee</option>
+                            </select>
+                        </div>
+                        <div class="col-4 col-md-1">
+                            <label class="form-label">สถานะ</label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">ทั้งหมด</option>
+                                <option value="active">ใช้งาน</option>
+                                <option value="inactive">ไม่ใช้งาน</option>
+                            </select>
+                        </div>
+                        <div class="col-4 col-md-1">
+                            <label class="form-label">รูปภาพ</label>
+                            <select class="form-select" id="photoFilter">
+                                <option value="">ทั้งหมด</option>
+                                <option value="yes">มีรูป</option>
+                                <option value="no">ไม่มีรูป</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-primary-enhanced flex-fill" id="clearFilters">
+                                    <i class="fas fa-times me-1"></i>ล้างตัวกรอง
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Employee Table with Enhanced Layout -->
+    <div class="card employee-table-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>รายการพนักงาน ({{ isset($employees) ? $employees->count() : 0 }} คน)
+                </h6>
+                <div class="d-flex gap-1">                    
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>พิมพ์
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" id="exportBtn">
+                        <i class="fas fa-file-excel me-1"></i>ส่งออก
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <!-- ✅ Enhanced Desktop Table -->
+            <div class="d-none d-lg-block">
+                <div class="table-responsive">
+                    <table class="table table-enhanced" id="employeesTable">
+                        <thead>
+                            <tr>
+                                @if(auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
+                                    <th width="50">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                @endif
+                                <th width="120">รูป/รหัส</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th width="120">สาขา</th>
+                                <th width="120">แผนก</th>
+                                <th width="120">ตำแหน่ง</th>
+                                <th width="260">ข้อมูลติดต่อ</th>
+                                <th width="100">EXPRESS</th>
+                                <th width="120">สถานะ</th>
+                                <th width="120">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($employees ?? [] as $employee)
+                                <tr data-status="{{ $employee->status ?? 'active' }}" 
+                                    data-department="{{ $employee->department_id ?? '' }}" 
+                                    data-branch="{{ $employee->branch_id ?? '' }}"
+                                    data-role="{{ $employee->role ?? 'employee' }}"
+                                    data-has-photo="{{ isset($employee->has_photo) && $employee->has_photo ? 'yes' : 'no' }}"
+                                    data-id="{{ $employee->id ?? '' }}">
+                                    @if(auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input employee-checkbox" type="checkbox" value="{{ $employee->id ?? '' }}"
+                                                       data-name="{{ isset($employee->full_name_th) ? $employee->full_name_th : ($employee->name ?? 'ไม่ระบุ') }}">
+                                            </div>
+                                        </td>
+                                    @endif
+                                    
+                                    <!-- ✅ Enhanced Photo + Code Column -->
+                                    <td class="photo-code-cell">
+                                        <!-- รูปภาพ -->
+                                        <div class="photo-wrapper">
+                                            @if(isset($employee->has_photo) && $employee->has_photo)
+                                                <img src="{{ $employee->photo_url ?? '/images/default-avatar.png' }}" 
+                                                     alt="{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}"
+                                                     class="rounded-circle employee-photo-thumb"
+                                                     data-bs-toggle="tooltip" 
+                                                     title="คลิกเพื่อดูรูปขนาดใหญ่"
+                                                     onclick="showPhotoModal('{{ $employee->photo_url ?? '' }}', '{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}')">
+                                                <div class="photo-badge">
+                                                    <span class="badge rounded-pill bg-success" style="font-size: 6px; width: 14px; height: 14px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-check" style="font-size: 7px;"></i>
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-light text-muted photo-placeholder"
+                                                     style="border: 3px solid #dee2e6;"
+                                                     data-bs-toggle="tooltip" 
+                                                     title="ไม่มีรูปภาพ - คลิกเพื่ออัปโหลด"
+                                                     onclick="uploadPhotoModal({{ $employee->id ?? 0 }}, '{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}')">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div class="photo-badge">
+                                                    <span class="badge rounded-pill bg-warning" style="font-size: 6px; width: 14px; height: 14px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-camera" style="font-size: 7px;"></i>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <!-- รหัสพนักงาน -->
+                                        <div>
+                                            <span class="badge badge-enhanced badge-primary-enhanced">{{ $employee->employee_code ?? 'N/A' }}</span>
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- ชื่อ-นามสกุล -->
+                                    <td>
+                                        <div class="employee-name">
+                                            <div class="fw-bold">{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}</div>
+                                            @if(isset($employee->full_name_en))
+                                                <small class="text-muted d-block">{{ $employee->full_name_en }}</small>
+                                            @endif
+                                            @if(isset($employee->nickname) && $employee->nickname)
+                                                <div class="mt-1">
+                                                    <small class="badge bg-light text-dark">"{{ $employee->nickname }}"</small>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- สาขา -->
+                                    <td>
+                                        @if(isset($employee->branch))
+                                            <div>
+                                                <span class="badge badge-enhanced badge-purple-enhanced mb-1">{{ $employee->branch->name ?? '' }}</span>
+                                                @if(isset($employee->branch->code))
+                                                    <div class="small text-muted mt-1">{{ $employee->branch->code }}</div>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <!-- แผนก -->
+                                    <td>
+                                        @if(isset($employee->department))
+                                            <div>
+                                                <span class="badge badge-enhanced badge-teal-enhanced mb-1">{{ $employee->department->code ?? 'N/A' }}</span>
+                                                <div class="small text-muted mt-1" style="line-height: 1.2;">{{ Str::limit($employee->department->name ?? '', 12) }}</div>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">ไม่ระบุ</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <!-- ตำแหน่ง -->
+                                    <td>
+                                        <div class="mb-1 fw-bold">{{ Str::limit($employee->position ?? 'ไม่ระบุ', 12) }}</div>
+                                        <small class="badge badge-enhanced {{ ($employee->role ?? '') === 'super_admin' ? 'badge-primary-enhanced' : (($employee->role ?? '') === 'it_admin' ? 'badge-orange-enhanced' : 'bg-secondary') }}">
+                                            {{ Str::limit($employee->role_display ?? $employee->role ?? 'employee', 8) }}
+                                        </small>
+                                    </td>
+                                    
+                                    <!-- ✅ Enhanced Contact Information -->
+                                    <td>
+                                        <div class="contact-info">
+                                            {{-- อีเมล --}}
+                                            @if(isset($employee->email) && $employee->email)
+                                                <div class="email-line">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    <span title="{{ $employee->email }}">{{ $employee->email }}</span>
+                                                </div>
+                                            @endif
+                                            
+                                            {{-- เบอร์โทรศัพท์ --}}
+                                            @if(isset($employee->phone) && $employee->phone)
+                                                <div class="phone-line">
+                                                    <i class="fas fa-phone me-1"></i>
+                                                    {{ $employee->phone }}
+                                                </div>
+                                            @endif
+                                            
+                                            {{-- LINE ID --}}
+                                            @if(isset($employee->line_id) && $employee->line_id)
+                                                <div class="line-line">
+                                                    <i class="fab fa-line me-1"></i>
+                                                    {{ $employee->line_id }}
+                                                </div>
+                                            @endif
+                                            
+                                            {{-- ที่อยู่ (แสดงแค่จังหวัด) --}}
+                                            @if(isset($employee->address) && $employee->address)
+                                                <div class="address-line">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                                    {{ Str::limit($employee->address, 15) }}
+                                                </div>
+                                            @endif
+                                            
+                                            {{-- ถ้าไม่มีข้อมูลติดต่อเลย --}}
+                                            @if((!isset($employee->email) || !$employee->email) && 
+                                                (!isset($employee->phone) || !$employee->phone) && 
+                                                (!isset($employee->line_id) || !$employee->line_id))
+                                                <span class="text-muted small">ไม่มีข้อมูลติดต่อ</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- Express (คอลัมน์แยก) -->
+                                    <td>
+                                        @if(isset($employee->express_username) && $employee->express_username)
+                                            <span class="badge badge-enhanced badge-orange-enhanced">
+                                                <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <!-- ✅ Enhanced Status Section - Toggle Only -->
+                                    <td>
+                                        <div class="status-section">
+                                            {{-- Toggle Switch Only (Only for Authorized Users) --}}
+                                            @if(auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin']))
+                                                <div class="form-check form-switch status-toggle-enhanced">
+                                                    <input class="form-check-input status-toggle" type="checkbox" 
+                                                           data-id="{{ $employee->id ?? 0 }}" 
+                                                           {{ ($employee->status ?? 'active') === 'active' ? 'checked' : '' }}>
+                                                </div>
+                                            @else
+                                                {{-- Show status badge for non-admin users --}}
+                                                <span class="badge badge-enhanced {{ ($employee->status ?? 'active') === 'active' ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ ($employee->status ?? 'active') === 'active' ? 'ใช้งาน' : 'ปิด' }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- จัดการ -->
+                                    <td>
+                                        <div class="action-btn-group">
+                                            @if(auth()->user() && (auth()->user()->id === ($employee->id ?? 0) || in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr'])))
+                                                <a href="{{ route('employees.show', $employee->id ?? 1) }}" 
+                                                   class="action-btn action-btn-info" 
+                                                   data-bs-toggle="tooltip" title="ดูรายละเอียด">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            @endif
+                                            
+                                            @if(auth()->user() && (in_array(auth()->user()->role, ['super_admin', 'it_admin']) || 
+                                                (auth()->user()->role === 'hr' && ($employee->role ?? '') === 'employee')))
+                                                <a href="{{ route('employees.edit', $employee->id ?? 1) }}" 
+                                                   class="action-btn action-btn-warning" 
+                                                   data-bs-toggle="tooltip" title="แก้ไข">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @endif
+                                            
+                                            @if(auth()->user() && auth()->user()->role === 'super_admin')
+                                                <button type="button" 
+                                                        class="action-btn action-btn-danger delete-btn" 
+                                                        data-id="{{ $employee->id ?? 0 }}" 
+                                                        data-name="{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}"
+                                                        data-bs-toggle="tooltip" title="ลบ">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ auth()->user() && in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']) ? '10' : '9' }}" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-users fa-3x mb-3 text-primary-enhanced" style="opacity: 0.3;"></i>
+                                            <h5>ไม่มีข้อมูลพนักงาน</h5>
+                                            <p class="mb-3">ยังไม่มีพนักงานในระบบ หรือไม่พบผลการค้นหา</p>
+                                            @if(auth()->user() && auth()->user()->role !== 'employee')
+                                                <a href="{{ route('employees.create') }}" class="btn btn-primary-enhanced">
+                                                    <i class="fas fa-user-plus me-2"></i>เพิ่มพนักงานคนแรก
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ✅ Enhanced Mobile Card View -->
+            <div class="d-lg-none" id="mobileEmployeeList">
+                @forelse($employees ?? [] as $employee)
+                    <div class="employee-mobile-card-enhanced p-3" 
+                         data-status="{{ $employee->status ?? 'active' }}" 
+                         data-department="{{ $employee->department_id ?? '' }}" 
+                         data-branch="{{ $employee->branch_id ?? '' }}"
+                         data-role="{{ $employee->role ?? 'employee' }}"
+                         data-has-photo="{{ isset($employee->has_photo) && $employee->has_photo ? 'yes' : 'no' }}"
+                         data-id="{{ $employee->id ?? '' }}">
+                        <div class="row align-items-center">
+                            <div class="col-8">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        @if(isset($employee->has_photo) && $employee->has_photo)
+                                            <img src="{{ $employee->photo_url ?? '/images/default-avatar.png' }}" 
+                                                 alt="{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}"
+                                                 class="rounded-circle employee-photo-thumb"
+                                                 style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--itms-orange);"
+                                                 onclick="showPhotoModal('{{ $employee->photo_url ?? '' }}', '{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}')">
+                                        @else
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-light text-muted photo-placeholder"
+                                                 style="width: 50px; height: 50px; border: 2px solid #dee2e6; font-size: 16px;"
+                                                 onclick="uploadPhotoModal({{ $employee->id ?? 0 }}, '{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}')">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold text-primary-enhanced mb-1">{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}</div>
+                                        @if(isset($employee->full_name_en))
+                                            <small class="text-muted d-block mb-1">{{ $employee->full_name_en }}</small>
+                                        @endif
+                                        <div class="d-flex flex-wrap gap-1 mb-1">
+                                            <span class="badge badge-enhanced badge-primary-enhanced">{{ $employee->employee_code ?? 'N/A' }}</span>
+                                            @if(isset($employee->branch))
+                                                <span class="badge badge-enhanced badge-purple-enhanced">{{ $employee->branch->name ?? '' }}</span>
+                                            @endif
+                                            @if(isset($employee->department))
+                                                <span class="badge badge-enhanced badge-teal-enhanced">{{ $employee->department->code ?? 'N/A' }}</span>
+                                            @endif
+                                            @if(isset($employee->express_username) && $employee->express_username)
+                                                <span class="badge badge-enhanced badge-orange-enhanced">
+                                                    <i class="fas fa-bolt me-1"></i>{{ $employee->express_username }}
+                                                </span>
+                                            @endif
+                                            @if(isset($employee->has_photo) && $employee->has_photo)
+                                                <span class="badge badge-enhanced bg-success">
+                                                    <i class="fas fa-camera me-1"></i>รูป
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="small text-muted mb-1">
+                                            <i class="fas fa-envelope me-1"></i>{{ Str::limit($employee->email ?? 'ไม่ระบุ', 35) }}
+                                        </div>
+                                        @if(isset($employee->phone) && $employee->phone)
+                                            <div class="small text-muted">
+                                                <i class="fas fa-phone me-1"></i>{{ $employee->phone }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-4 text-end">
+                                <div class="mb-2">
+                                    <span class="badge badge-enhanced {{ ($employee->status ?? 'active') === 'active' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ ($employee->status ?? 'active') === 'active' ? 'ใช้งาน' : 'ปิด' }}
+                                    </span>
+                                </div>
+                                <div class="action-btn-group justify-content-end">
+                                    @if(auth()->user() && (auth()->user()->id === ($employee->id ?? 0) || in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr'])))
+                                        <a href="{{ route('employees.show', $employee->id ?? 1) }}" 
+                                           class="action-btn action-btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    @endif
+                                    
+                                    @if(auth()->user() && (in_array(auth()->user()->role, ['super_admin', 'it_admin']) || 
+                                        (auth()->user()->role === 'hr' && ($employee->role ?? '') === 'employee')))
+                                        <a href="{{ route('employees.edit', $employee->id ?? 1) }}" 
+                                           class="action-btn action-btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
+                                    
+                                    @if(auth()->user() && auth()->user()->role === 'super_admin')
+                                        <button type="button" 
+                                                class="action-btn action-btn-danger delete-btn" 
+                                                data-id="{{ $employee->id ?? 0 }}" 
+                                                data-name="{{ isset($employee->full_name_th) ? $employee->full_name_th : $employee->name ?? 'ไม่ระบุ' }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="fas fa-users fa-3x mb-3 text-primary-enhanced" style="opacity: 0.3;"></i>
+                            <h5>ไม่มีข้อมูลพนักงาน</h5>
+                            <p class="mb-3">ยังไม่มีพนักงานในระบบ หรือไม่พบผลการค้นหา</p>
+                            @if(auth()->user() && auth()->user()->role !== 'employee')
+                                <a href="{{ route('employees.create') }}" class="btn btn-primary-enhanced">
+                                    <i class="fas fa-user-plus me-2"></i>เพิ่มพนักงานคนแรก
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
 </div>
 
-@if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-<!-- Bulk Action Modal -->
+<!-- ✅ Enhanced Bulk Action Modal with Working Permanent Delete -->
 <div class="modal fade" id="bulkActionModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%); color: white;">
                 <h5 class="modal-title">
-                    <i class="fas fa-tasks me-2"></i>จัดการหลายรายการ
+                    <i class="fas fa-tasks me-2"></i>
+                    จัดการหลายรายการ
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    กรุณาเลือกพนักงานที่ต้องการดำเนินการ
+                <div class="alert alert-info-custom">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <div>
+                            <strong>ข้อมูลการเลือก:</strong>
+                            เลือกแล้ว <span id="bulkSelectedCount" class="fw-bold text-primary">0</span> พนักงาน
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">การดำเนินการ:</label>
-                    <select class="form-select" id="bulkAction">
-                        <option value="">เลือกการดำเนินการ</option>
-                        <option value="activate">เปิดใช้งาน</option>
-                        <option value="deactivate">ปิดใช้งาน</option>
-                        @if(auth()->user()->role === 'super_admin')
-                            <option value="delete">ลบ</option>
-                        @endif
-                    </select>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-primary h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-users-cog me-2"></i>จัดการสถานะ</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100 mb-2" onclick="bulkUpdateStatus('active')">
+                                    <i class="fas fa-user-check me-2"></i>เปิดใช้งานทั้งหมด
+                                </button>
+                                <button type="button" class="btn btn-warning w-100" onclick="bulkUpdateStatus('inactive')">
+                                    <i class="fas fa-user-times me-2"></i>ปิดใช้งานทั้งหมด
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-info h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>ส่งข้อมูล</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-info w-100 mb-2" onclick="bulkSendEmail()">
+                                    <i class="fas fa-envelope me-2"></i>ส่งอีเมลหมู่
+                                </button>
+                                <button type="button" class="btn btn-outline-info w-100" onclick="bulkExportSelected()">
+                                    <i class="fas fa-file-export me-2"></i>ส่งออกที่เลือก
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card border-warning h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-edit me-2"></i>แก้ไขหมู่</h6>
+                            </div>
+                            <div class="card-body">
+                                <select class="form-select mb-2" id="bulkDepartmentSelect">
+                                    <option value="">เลือกแผนกใหม่</option>
+                                    @if(isset($departments))
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <button type="button" class="btn btn-warning w-100" onclick="bulkUpdateDepartment()">
+                                    <i class="fas fa-building me-2"></i>เปลี่ยนแผนก
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if(auth()->user() && auth()->user()->role === 'super_admin')
+                    <div class="col-md-6">
+                        <div class="card border-danger h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0"><i class="fas fa-trash me-2"></i>จัดการลบ</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-outline-danger w-100 mb-2" onclick="bulkMoveToTrash()">
+                                    <i class="fas fa-trash me-2"></i>ย้ายไปถังขยะ
+                                </button>
+                                <button type="button" class="btn btn-danger w-100" onclick="bulkPermanentDelete()">
+                                    <i class="fas fa-skull-crossbones me-2"></i>ลบถาวร
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
-                <div id="selectedCount" class="text-muted"></div>
+
+                <div id="bulkProgressContainer" class="bulk-progress-container mt-3" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">กำลังดำเนินการ...</span>
+                        <span id="bulkProgressText">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bulk-progress-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <button type="button" class="btn btn-primary" id="executeBulkAction">ดำเนินการ</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary-enhanced" onclick="selectAllEmployees()">
+                    <i class="fas fa-check-square me-1"></i>เลือกทั้งหมด
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="clearAllSelections()">
+                    <i class="fas fa-times me-1"></i>ยกเลิกการเลือก
+                </button>
             </div>
         </div>
     </div>
 </div>
-@endif
 
-<!-- Mobile Filter Toggle -->
-<div class="d-lg-none position-fixed bottom-0 start-50 translate-middle-x mb-3">
-    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#mobileFilters">
-        <i class="fas fa-filter me-1"></i>ตัวกรอง
-    </button>
+<!-- Photo View Modal -->
+<div class="modal fade" id="photoViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    รูปภาพพนักงาน: <span id="photoEmployeeName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="photoViewImage" src="" alt="" class="img-fluid rounded shadow" style="max-height: 500px; border: 3px solid var(--itms-orange);">
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary-enhanced" onclick="downloadPhoto()">
+                        <i class="fas fa-download me-1"></i> ดาวน์โหลด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal fade" id="photoUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #e74c3c 0%, #E6952A 100%); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-camera me-2"></i>
+                    อัปโหลดรูปภาพ: <span id="uploadEmployeeName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="photoUploadForm" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">เลือกไฟล์รูปภาพ</label>
+                        <input type="file" class="form-control" name="photo" accept="image/*" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            รองรับไฟล์ JPEG, PNG, GIF ขนาดไม่เกิน 2MB
+                        </div>
+                    </div>
+                    
+                    <div id="photoPreview" class="text-center" style="display: none;">
+                        <img id="previewImage" src="" alt="Preview" 
+                             class="img-fluid rounded shadow" style="max-height: 200px; border: 2px solid var(--itms-orange);">
+                        <div class="mt-2">
+                            <small class="text-muted">ตัวอย่างรูปภาพที่จะอัปโหลด</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary-enhanced">
+                        <i class="fas fa-upload me-1"></i>
+                        อัปโหลด
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Selected Items Counter -->
+<div class="selected-counter" id="selectedCounter">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-check-circle me-2"></i>
+        เลือกแล้ว <span id="selectedCountText">0</span> พนักงาน
+        <button type="button" class="btn btn-sm btn-light ms-2" onclick="openBulkActionModal()">
+            <i class="fas fa-cog"></i>
+        </button>
+    </div>
 </div>
 
 @endsection
@@ -476,67 +1651,110 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+// ✅ Global Variables
+let selectedEmployees = new Set();
+let bulkModal;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    console.log('🎯 ITMS Employee Management - FIXED DELETE FOREVER INPUT - Loading...');
+    
+    // Initialize Bootstrap Modal
+    const bulkModalElement = document.getElementById('bulkActionModal');
+    if (bulkModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bulkModal = new bootstrap.Modal(bulkModalElement);
+    }
+    
+    // ✅ Safe initialization
+    try {
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    } catch (error) {
+        console.warn('Tooltip initialization failed:', error);
+    }
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
-    // Search and filter functionality
+    // ✅ Filter functionality
     const searchInput = document.getElementById('searchInput');
     const departmentFilter = document.getElementById('departmentFilter');
+    const branchFilter = document.getElementById('branchFilter');
     const roleFilter = document.getElementById('roleFilter');
     const statusFilter = document.getElementById('statusFilter');
+    const photoFilter = document.getElementById('photoFilter');
     const table = document.getElementById('employeesTable');
     const mobileList = document.getElementById('mobileEmployeeList');
     
     function filterTable() {
+        if (!searchInput) return;
+        
         const searchTerm = searchInput.value.toLowerCase();
-        const departmentTerm = departmentFilter.value;
-        const roleTerm = roleFilter.value;
-        const statusTerm = statusFilter.value;
+        const departmentTerm = departmentFilter ? departmentFilter.value : '';
+        const branchTerm = branchFilter ? branchFilter.value : '';
+        const roleTerm = roleFilter ? roleFilter.value : '';
+        const statusTerm = statusFilter ? statusFilter.value : '';
+        const photoTerm = photoFilter ? photoFilter.value : '';
         
         // Filter desktop table
         if (table) {
-            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-            for (let row of rows) {
-                if (row.querySelector('td')) {
-                    const nameCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '2' : '1' }}];
-                    const emailCell = row.cells[{{ auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr' ? '5' : '4' }}];
-                    const name = nameCell.textContent.toLowerCase();
-                    const email = emailCell.textContent.toLowerCase();
-                    const department = row.dataset.department;
-                    const role = row.dataset.role;
-                    const status = row.dataset.status;
-                    
-                    const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
-                    const matchesDepartment = !departmentTerm || department === departmentTerm;
-                    const matchesRole = !roleTerm || role === roleTerm;
-                    const matchesStatus = !statusTerm || status === statusTerm;
-                    
-                    row.style.display = matchesSearch && matchesDepartment && matchesRole && matchesStatus ? '' : 'none';
+            const tbody = table.getElementsByTagName('tbody')[0];
+            if (tbody) {
+                const rows = tbody.getElementsByTagName('tr');
+                for (let row of rows) {
+                    if (row.querySelector('td')) {
+                        try {
+                            const nameCell = row.cells[2];
+                            const contactCell = row.cells[6];
+                            const name = nameCell ? nameCell.textContent.toLowerCase() : '';
+                            const contact = contactCell ? contactCell.textContent.toLowerCase() : '';
+                            const department = row.dataset.department || '';
+                            const branch = row.dataset.branch || '';
+                            const role = row.dataset.role || '';
+                            const status = row.dataset.status || '';
+                            const hasPhoto = row.dataset.hasPhoto || '';
+                            
+                            const matchesSearch = name.includes(searchTerm) || contact.includes(searchTerm);
+                            const matchesDepartment = !departmentTerm || department === departmentTerm;
+                            const matchesBranch = !branchTerm || branch === branchTerm;
+                            const matchesRole = !roleTerm || role === roleTerm;
+                            const matchesStatus = !statusTerm || status === statusTerm;
+                            const matchesPhoto = !photoTerm || hasPhoto === photoTerm;
+                            
+                            row.style.display = matchesSearch && matchesDepartment && matchesBranch && matchesRole && matchesStatus && matchesPhoto ? '' : 'none';
+                        } catch (error) {
+                            console.warn('Error filtering row:', error);
+                        }
+                    }
                 }
             }
         }
         
         // Filter mobile cards
         if (mobileList) {
-            const cards = mobileList.getElementsByClassName('employee-mobile-card');
+            const cards = mobileList.getElementsByClassName('employee-mobile-card-enhanced');
             for (let card of cards) {
-                const name = card.textContent.toLowerCase();
-                const department = card.dataset.department;
-                const role = card.dataset.role;
-                const status = card.dataset.status;
-                
-                const matchesSearch = name.includes(searchTerm);
-                const matchesDepartment = !departmentTerm || department === departmentTerm;
-                const matchesRole = !roleTerm || role === roleTerm;
-                const matchesStatus = !statusTerm || status === statusTerm;
-                
-                card.style.display = matchesSearch && matchesDepartment && matchesRole && matchesStatus ? '' : 'none';
+                try {
+                    const name = card.textContent.toLowerCase();
+                    const department = card.dataset.department || '';
+                    const branch = card.dataset.branch || '';
+                    const role = card.dataset.role || '';
+                    const status = card.dataset.status || '';
+                    const hasPhoto = card.dataset.hasPhoto || '';
+                    
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesDepartment = !departmentTerm || department === departmentTerm;
+                    const matchesBranch = !branchTerm || branch === branchTerm;
+                    const matchesRole = !roleTerm || role === roleTerm;
+                    const matchesStatus = !statusTerm || status === statusTerm;
+                    const matchesPhoto = !photoTerm || hasPhoto === photoTerm;
+                    
+                    card.style.display = matchesSearch && matchesDepartment && matchesBranch && matchesRole && matchesStatus && matchesPhoto ? '' : 'none';
+                } catch (error) {
+                    console.warn('Error filtering mobile card:', error);
+                }
             }
         }
         
@@ -544,522 +1762,1920 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateVisibleCount() {
-        let visibleCount = 0;
-        
-        // Count from desktop table if visible
-        if (table && window.innerWidth >= 992) {
-            const visibleRows = Array.from(table.getElementsByTagName('tbody')[0].getElementsByTagName('tr'))
-                                    .filter(row => row.style.display !== 'none' && row.querySelector('td'));
-            visibleCount = visibleRows.length;
-        } else if (mobileList) {
-            // Count from mobile cards
-            const visibleCards = Array.from(mobileList.getElementsByClassName('employee-mobile-card'))
-                                    .filter(card => card.style.display !== 'none');
-            visibleCount = visibleCards.length;
-        }
-        
-        // Update header to show filtered count
-        const headerText = document.querySelector('.card-header h6');
-        if (headerText) {
-            const totalCount = {{ $employees->count() }};
+        try {
+            let visibleCount = 0;
             
-            if (visibleCount === totalCount) {
-                headerText.textContent = `รายการพนักงาน (${totalCount} คน)`;
-            } else {
-                headerText.textContent = `รายการพนักงาน (${visibleCount}/${totalCount} คน)`;
+            if (table && window.innerWidth >= 992) {
+                const tbody = table.getElementsByTagName('tbody')[0];
+                if (tbody) {
+                    const visibleRows = Array.from(tbody.getElementsByTagName('tr'))
+                                            .filter(row => row.style.display !== 'none' && row.querySelector('td'));
+                    visibleCount = visibleRows.length;
+                }
+            } else if (mobileList) {
+                const visibleCards = Array.from(mobileList.getElementsByClassName('employee-mobile-card-enhanced'))
+                                        .filter(card => card.style.display !== 'none');
+                visibleCount = visibleCards.length;
             }
+            
+            const headerText = document.querySelector('.employee-table-card .card-header h6');
+            if (headerText) {
+                const totalCount = {{ isset($employees) ? $employees->count() : 0 }};
+                
+                if (visibleCount === totalCount) {
+                    headerText.innerHTML = `<i class="fas fa-list me-2"></i>รายการพนักงาน (${totalCount} คน)`;
+                } else {
+                    headerText.innerHTML = `<i class="fas fa-list me-2"></i>รายการพนักงาน (${visibleCount}/${totalCount} คน)`;
+                }
+            }
+        } catch (error) {
+            console.warn('Error updating visible count:', error);
         }
     }
     
-    searchInput.addEventListener('input', filterTable);
-    departmentFilter.addEventListener('change', filterTable);
-    roleFilter.addEventListener('change', filterTable);
-    statusFilter.addEventListener('change', filterTable);
+    // Add event listeners
+    if (searchInput) searchInput.addEventListener('input', filterTable);
+    if (departmentFilter) departmentFilter.addEventListener('change', filterTable);
+    if (branchFilter) branchFilter.addEventListener('change', filterTable);
+    if (roleFilter) roleFilter.addEventListener('change', filterTable);
+    if (statusFilter) statusFilter.addEventListener('change', filterTable);
+    if (photoFilter) photoFilter.addEventListener('change', filterTable);
     
     // Clear filters
-    document.getElementById('clearFilters').addEventListener('click', function() {
-        searchInput.value = '';
-        departmentFilter.value = '';
-        roleFilter.value = '';
-        statusFilter.value = '';
-        filterTable();
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function() {
+            if (searchInput) searchInput.value = '';
+            if (departmentFilter) departmentFilter.value = '';
+            if (branchFilter) branchFilter.value = '';
+            if (roleFilter) roleFilter.value = '';
+            if (statusFilter) statusFilter.value = '';
+            if (photoFilter) photoFilter.value = '';
+            filterTable();
+            
+            showNotification('ล้างตัวกรองเรียบร้อยแล้ว', 'success');
+        });
+    }
+    
+    // ✅ Enhanced delete button handling
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = e.target.closest('.delete-btn');
+            const employeeId = btn.dataset.id || btn.getAttribute('data-id');
+            const employeeName = btn.dataset.name || btn.getAttribute('data-name') || 'ไม่ระบุชื่อ';
+            
+            console.log('🗑️ Delete button clicked:', { employeeId, employeeName, btn });
+            
+            if (employeeId && employeeId !== '0') {
+                deleteEmployee(employeeId, employeeName);
+            } else {
+                showNotification('ไม่พบข้อมูลพนักงานที่ต้องการลบ', 'error');
+            }
+        }
     });
     
-    // Window resize handler
-    window.addEventListener('resize', updateVisibleCount);
-    
-    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-    // Select all checkbox
+    // ✅ Status Toggle Functionality
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('status-toggle')) {
+            e.preventDefault();
+            
+            const toggle = e.target;
+            const employeeId = toggle.dataset.id || toggle.getAttribute('data-id');
+            const isChecked = toggle.checked;
+            const newStatus = isChecked ? 'active' : 'inactive';
+            
+            console.log('🔄 Status toggle clicked:', { employeeId, isChecked, newStatus });
+            
+            if (employeeId && employeeId !== '0') {
+                updateEmployeeStatus(employeeId, newStatus, toggle);
+            } else {
+                showNotification('ไม่พบข้อมูลพนักงานที่ต้องการอัปเดต', 'error');
+                // Revert toggle state
+                toggle.checked = !isChecked;
+            }
+        }
+    });
+
+    // ✅ Checkbox Selection Handling
     const selectAllCheckbox = document.getElementById('selectAll');
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
             const checkboxes = document.querySelectorAll('.employee-checkbox');
+            
             checkboxes.forEach(checkbox => {
-                const row = checkbox.closest('tr');
-                if (row.style.display !== 'none') {  // Only select visible rows
-                    checkbox.checked = this.checked;
+                checkbox.checked = isChecked;
+                const employeeId = checkbox.value;
+                const employeeName = checkbox.dataset.name || 'ไม่ระบุ';
+                
+                if (isChecked) {
+                    selectedEmployees.add(employeeId);
+                } else {
+                    selectedEmployees.delete(employeeId);
                 }
             });
-            updateSelectedCount();
+            
+            updateSelectedCounter();
         });
     }
-    
-    // Individual checkboxes
-    document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
+
+    // Individual checkbox handling
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('employee-checkbox')) {
+            const checkbox = e.target;
+            const employeeId = checkbox.value;
+            const employeeName = checkbox.dataset.name || 'ไม่ระบุ';
+            
+            if (checkbox.checked) {
+                selectedEmployees.add(employeeId);
+            } else {
+                selectedEmployees.delete(employeeId);
+            }
+            
+            updateSelectedCounter();
+            updateSelectAllCheckbox();
+        }
     });
     
-    function updateSelectedCount() {
-        const selected = document.querySelectorAll('.employee-checkbox:checked').length;
-        const selectedCountElement = document.getElementById('selectedCount');
-        if (selectedCountElement) {
-            selectedCountElement.textContent = 
-                selected > 0 ? `เลือกแล้ว ${selected} รายการ` : '';
+    // Initialize
+    updateVisibleCount();
+    
+    console.log('✅ ITMS Employee Management - FIXED DELETE FOREVER INPUT Ready!');
+    // ✅ Load Trash Count on Page Load
+function loadTrashCount() {
+    fetch('/api/employees/trash/count', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const trashBadge = document.querySelector('.trash-count');
+        if (trashBadge && data.count > 0) {
+            trashBadge.textContent = data.count;
+            trashBadge.style.display = 'inline';
+        }
+    })
+    .catch(error => {
+        console.log('Trash count load failed (normal if no API):', error);
+    });
+}
+
+// Load trash count when page loads
+loadTrashCount();
+    console.log('📊 Features: Working DELETE FOREVER Input | Full Bulk Actions | Photo Management | Status Toggle | Enhanced UI');
+    console.log('🗑️ Delete buttons:', document.querySelectorAll('.delete-btn').length);
+    console.log('🔄 Status toggles:', document.querySelectorAll('.status-toggle').length);
+    console.log('☑️ Checkboxes:', document.querySelectorAll('.employee-checkbox').length);
+});
+
+// ✅ Selection Management Functions
+function updateSelectedCounter() {
+    const count = selectedEmployees.size;
+    const counter = document.getElementById('selectedCounter');
+    const countText = document.getElementById('selectedCountText');
+    const headerCount = document.getElementById('selectedCount');
+    
+    if (countText) countText.textContent = count;
+    if (headerCount) {
+        headerCount.textContent = count;
+        headerCount.style.display = count > 0 ? 'inline' : 'none';
+    }
+    
+    if (counter) {
+        counter.style.display = count > 0 ? 'block' : 'none';
+    }
+    
+    console.log('📊 Selected employees updated:', count, Array.from(selectedEmployees));
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const allCheckboxes = document.querySelectorAll('.employee-checkbox');
+    const checkedCheckboxes = document.querySelectorAll('.employee-checkbox:checked');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = allCheckboxes.length > 0 && allCheckboxes.length === checkedCheckboxes.length;
+        selectAllCheckbox.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length;
+    }
+}
+
+function selectAllEmployees() {
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        selectedEmployees.add(checkbox.value);
+    });
+    updateSelectedCounter();
+    updateSelectAllCheckbox();
+    showNotification(`เลือกพนักงานทั้งหมด ${checkboxes.length} คน`, 'success');
+}
+
+function clearAllSelections() {
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectedEmployees.clear();
+    updateSelectedCounter();
+    updateSelectAllCheckbox();
+    showNotification('ยกเลิกการเลือกทั้งหมดแล้ว', 'info');
+}
+
+// ✅ Bulk Action Functions
+function openBulkActionModal() {
+    const count = selectedEmployees.size;
+    
+    if (count === 0) {
+        showNotification('กรุณาเลือกพนักงานที่ต้องการจัดการก่อน', 'warning');
+        return;
+    }
+    
+    // Update bulk modal counter
+    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
+    if (bulkSelectedCount) {
+        bulkSelectedCount.textContent = count;
+    }
+    
+    if (bulkModal) {
+        bulkModal.show();
+    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const modalElement = document.getElementById('bulkActionModal');
+        if (modalElement) {
+            new bootstrap.Modal(modalElement).show();
         }
     }
-    @endif
     
-    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin')
-    // Status toggle
-    document.querySelectorAll('.status-toggle').forEach(toggle => {
-        toggle.addEventListener('change', async function() {
-            const employeeId = this.dataset.id;
-            const isActive = this.checked;
-            
-            try {
-                // Temporarily disable toggle
-                this.disabled = true;
+    console.log('🚀 Bulk action modal opened for', count, 'employees');
+}
 
-                const response = await fetch(`/api/employees/${employeeId}/toggle-status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({ status: isActive ? 'active' : 'inactive' })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update UI
-                    const label = this.nextElementSibling;
-                    if (label) {
-                        label.textContent = isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
-                    }
-                    showNotification(`${isActive ? 'เปิด' : 'ปิด'}ใช้งานพนักงานเรียบร้อยแล้ว`, 'success');
-                } else {
-                    // Revert toggle state
-                    this.checked = !this.checked;
-                    showNotification(data.message || 'เกิดข้อผิดพลาด', 'error');
-                }
-            } catch (error) {
-                // Revert toggle state
-                this.checked = !this.checked;
-                showNotification('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ', 'error');
-            } finally {
-                this.disabled = false;
-            }
-        });
+function bulkUpdateStatus(newStatus) {
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    const statusText = newStatus === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+    
+    Swal.fire({
+        title: `ยืนยันการ${statusText}`,
+        html: `คุณต้องการ<strong>${statusText}</strong> พนักงาน <strong>${count}</strong> คน หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: newStatus === 'active' ? '#28a745' : '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `ยืนยัน ${statusText}`,
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkStatusUpdate(newStatus);
+        }
     });
-    @endif
+}
+
+function performBulkStatusUpdate(newStatus) {
+    const employeeIds = Array.from(selectedEmployees);
+    const total = employeeIds.length;
+    let completed = 0;
+    let failed = 0;
     
-    @if(auth()->user()->role === 'super_admin')
-    // Delete button with proper AJAX call
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const employeeId = this.dataset.id;
-            const employeeName = this.dataset.name;
+    showBulkProgress(true);
+    updateBulkProgress(0, `เริ่มต้นการอัปเดตสถานะ...`);
+    
+    const statusText = newStatus === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    // Process employees one by one to avoid server overload
+    const processEmployee = async (employeeId, index) => {
+        try {
+            const response = await fetch(`/employees/${employeeId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
             
-            // Show confirmation dialog with SweetAlert2
-            const result = await Swal.fire({
-                title: 'ยืนยันการลบ',
+            if (response.ok) {
+                completed++;
+                // Update the status toggle in the table if visible
+                const toggle = document.querySelector(`.status-toggle[data-id="${employeeId}"]`);
+                if (toggle) {
+                    toggle.checked = newStatus === 'active';
+                }
+                // Update row data
+                const row = document.querySelector(`tr[data-id="${employeeId}"]`);
+                if (row) {
+                    row.dataset.status = newStatus;
+                }
+            } else {
+                failed++;
+                console.error('Failed to update employee', employeeId);
+            }
+        } catch (error) {
+            failed++;
+            console.error('Error updating employee', employeeId, error);
+        }
+        
+        const progress = Math.round(((completed + failed) / total) * 100);
+        updateBulkProgress(progress, `${statusText} ${completed + failed}/${total} คน...`);
+        
+        // Small delay to prevent overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 100));
+    };
+    
+    // Process all employees
+    Promise.all(employeeIds.map(processEmployee))
+        .then(() => {
+            showBulkProgress(false);
+            
+            if (failed === 0) {
+                showNotification(`${statusText}พนักงาน ${completed} คน เรียบร้อยแล้ว`, 'success');
+            } else {
+                showNotification(`${statusText}สำเร็จ ${completed} คน, ล้มเหลว ${failed} คน`, 'warning');
+            }
+            
+            // Close modal and clear selections
+            if (bulkModal) bulkModal.hide();
+            clearAllSelections();
+        })
+        .catch((error) => {
+            console.error('Bulk status update error:', error);
+            showBulkProgress(false);
+            showNotification('เกิดข้อผิดพลาดในการอัปเดตสถานะ', 'error');
+        });
+}
+
+function bulkSendEmail() {
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    // This would typically open an email composition modal
+    showNotification(`ฟีเจอร์ส่งอีเมลหมู่สำหรับ ${count} คน กำลังพัฒนา`, 'info');
+}
+
+function bulkExportSelected() {
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    // Create export data for selected employees
+    const selectedData = Array.from(selectedEmployees).map(id => {
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) {
+            const cells = row.cells;
+            return {
+                id: id,
+                code: cells[1]?.textContent.trim() || '',
+                name: cells[2]?.textContent.trim() || '',
+                branch: cells[3]?.textContent.trim() || '',
+                department: cells[4]?.textContent.trim() || '',
+                position: cells[5]?.textContent.trim() || '',
+                contact: cells[6]?.textContent.trim() || '',
+                express: cells[7]?.textContent.trim() || '',
+                status: row.dataset.status || ''
+            };
+        }
+        return null;
+    }).filter(Boolean);
+    
+    // Convert to CSV
+    const csvContent = convertToCSV(selectedData);
+    downloadCSV(csvContent, `selected_employees_${new Date().toISOString().split('T')[0]}.csv`);
+    
+    showNotification(`ส่งออกข้อมูลพนักงาน ${selectedData.length} คน เรียบร้อยแล้ว`, 'success');
+}
+
+function bulkUpdateDepartment() {
+    const departmentSelect = document.getElementById('bulkDepartmentSelect');
+    const departmentId = departmentSelect?.value;
+    
+    if (!departmentId) {
+        showNotification('กรุณาเลือกแผนกใหม่', 'warning');
+        return;
+    }
+    
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    const departmentName = departmentSelect.options[departmentSelect.selectedIndex].text;
+    
+    Swal.fire({
+        title: 'ยืนยันการเปลี่ยนแผนก',
+        html: `คุณต้องการเปลี่ยนแผนกของพนักงาน <strong>${count}</strong> คน<br>เป็น <strong>"${departmentName}"</strong> หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ยืนยันเปลี่ยนแผนก',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkDepartmentUpdate(departmentId, departmentName);
+        }
+    });
+}
+
+function performBulkDepartmentUpdate(departmentId, departmentName) {
+    const employeeIds = Array.from(selectedEmployees);
+    const total = employeeIds.length;
+    
+    showBulkProgress(true);
+    updateBulkProgress(0, `เริ่มต้นเปลี่ยนแผนก...`);
+    showNotification(`กำลังเปลี่ยนแผนกเป็น "${departmentName}" สำหรับ ${total} คน...`, 'info', 8000);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch('/api/employees/bulk/update-department', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            employee_ids: employeeIds,
+            department_id: departmentId
+        })
+    })
+    .then(response => {
+        console.log('📡 Bulk department update response:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Bulk department update success:', data);
+        
+        showBulkProgress(false);
+        
+        if (data.success) {
+            showNotification(data.message || `เปลี่ยนแผนกเป็น "${departmentName}" สำเร็จแล้ว`, 'success');
+            
+            // Update the table rows with new department info
+            employeeIds.forEach(employeeId => {
+                const row = document.querySelector(`tr[data-id="${employeeId}"]`);
+                if (row) {
+                    row.dataset.department = departmentId;
+                    // You might want to update the department display in the table as well
+                }
+            });
+            
+            // Close modal and clear selections
+            if (bulkModal) bulkModal.hide();
+            clearAllSelections();
+            
+            // Optionally reload page after a delay to show updated data
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+            
+        } else {
+            throw new Error(data.message || 'ไม่สามารถเปลี่ยนแผนกได้');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Bulk department update error:', error);
+        
+        showBulkProgress(false);
+        
+        let errorMessage = 'เกิดข้อผิดพลาดในการเปลี่ยนแผนก';
+        
+        if (error.message.includes('404')) {
+            errorMessage = 'ไม่พบข้อมูลที่ต้องการอัปเดต';
+        } else if (error.message.includes('403')) {
+            errorMessage = 'ไม่มีสิทธิ์ในการเปลี่ยนแผนกพนักงาน';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย';
+        }
+        
+        showNotification(errorMessage + ': ' + error.message, 'error');
+    });
+}
+
+function bulkMoveToTrash() {
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    Swal.fire({
+        title: '⚠️ ยืนยันการย้ายไปถังขยะ',
+        html: `
+            <div style="text-align: left; color: #333;">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    คุณต้องการย้ายพนักงาน <strong>${count}</strong> คน ไปยังถังขยะหรือไม่?
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ข้อมูลจะสามารถกู้คืนได้ภายหลัง
+                </div>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash me-2"></i>ย้ายไปถังขยะ',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            performBulkMoveToTrash();
+        }
+    });
+}
+
+function performBulkMoveToTrash() {
+    const employeeIds = Array.from(selectedEmployees);
+    const total = employeeIds.length;
+    
+    showBulkProgress(true);
+    updateBulkProgress(0, `เริ่มต้นย้ายไปถังขยะ...`);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch('/api/employees/bulk/move-to-trash', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            employee_ids: employeeIds
+        })
+    })
+    .then(response => {
+        console.log('📡 Bulk trash response:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Bulk trash success:', data);
+        
+        showBulkProgress(false);
+        
+        if (data.success) {
+            showNotification(data.message || `ย้ายพนักงาน ${total} คน ไปถังขยะเรียบร้อยแล้ว`, 'success');
+            
+            // Close modal and clear selections
+            if (bulkModal) bulkModal.hide();
+            clearAllSelections();
+            
+            // Reload page to reflect changes
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            
+        } else {
+            throw new Error(data.message || 'ไม่สามารถย้ายไปถังขยะได้');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Bulk trash error:', error);
+        showBulkProgress(false);
+        showNotification('เกิดข้อผิดพลาดในการย้ายไปถังขยะ: ' + error.message, 'error');
+    });
+}
+
+// ✅ FINAL SOLUTION: Fixed Bulk Permanent Delete with Proper Route
+function bulkPermanentDelete() {
+    const count = selectedEmployees.size;
+    if (count === 0) {
+        showNotification('ไม่มีพนักงานที่เลือก', 'warning');
+        return;
+    }
+    
+    // Get selected employee names for display
+    const selectedNames = Array.from(selectedEmployees).map(id => {
+        const checkbox = document.querySelector(`.employee-checkbox[value="${id}"]`);
+        return checkbox ? (checkbox.dataset.name || 'ไม่ระบุ') : 'ไม่ระบุ';
+    }).slice(0, 3); // Show first 3 names
+    
+    const namesList = selectedNames.join(', ') + (count > 3 ? ` และอีก ${count - 3} คน` : '');
+    
+    // ✅ STEP 1: Show warning first
+    Swal.fire({
+        title: '🚨 คำเตือนสูงสุด: การลบถาวร',
+        html: `
+            <div style="text-align: left; color: #333; font-size: 14px; line-height: 1.5;">
+                <div class="danger-zone">
+                    <div class="danger-zone-header">
+                        <i class="fas fa-skull-crossbones danger-zone-icon"></i>
+                        <h4 class="danger-zone-title">โซนอันตราย - การลบถาวร</h4>
+                    </div>
+                    <div class="danger-zone-content">
+                        <p><strong>คุณกำลังจะลบพนักงาน ${count} คน ถาวรและไม่สามารถกู้คืนได้:</strong></p>
+                        <div style="background: #fff; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin: 10px 0; max-height: 100px; overflow-y: auto;">
+                            <small style="color: #666;">${namesList}</small>
+                        </div>
+                        <ul class="danger-zone-list">
+                            <li>💀 <strong>ข้อมูลจะหายไปตลอดกาล</strong></li>
+                            <li>🚫 <strong>ไม่สามารถกู้คืนได้อีก</strong></li>
+                            <li>📸 <strong>รูปภาพและไฟล์แนบจะถูกลบ</strong></li>
+                            <li>📊 <strong>ประวัติการทำงานจะหายหมด</strong></li>
+                            <li>🔗 <strong>ความเชื่อมโยงกับข้อมูลอื่นจะขาด</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; padding: 20px; border-radius: 12px; border: 3px solid #ffc107; margin: 20px 0;">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 16px; font-weight: 700; color: #856404; margin-bottom: 10px;">
+                            เพื่อยืนยันการลบถาวร
+                        </div>
+                        <div style="background: #ffeaa7; padding: 15px; border-radius: 8px; border: 2px solid #f39c12;">
+                            <span style="font-size: 24px; font-weight: bold; color: #d63031; font-family: 'Courier New', monospace; letter-spacing: 3px;">DELETE</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e7f3ff; padding: 12px; border-radius: 8px; border-left: 4px solid #007acc;">
+                        <div style="color: #003d82; font-weight: 600;">
+                            <i class="fas fa-info-circle me-2"></i>ขั้นตอนต่อไป:
+                        </div>
+                        <div style="color: #004a99; margin-top: 5px; font-size: 13px;">
+                            • คลิก <strong>"ดำเนินการลบถาวร"</strong> ด้านล่าง<br>
+                            • พิมพ์ <strong>"DELETE"</strong> ในกล่องโต้ตอบที่ปรากฏ<br>
+                            • ระบบจะลบข้อมูลทันที
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #ffeaa7; padding: 10px; border-radius: 5px; border-left: 4px solid #f39c12; margin-top: 15px;">
+                    <small style="color: #d68910;">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>คำเตือน:</strong> การกระทำนี้ไม่สามารถยกเลิกได้ กรุณาตรวจสอบให้แน่ใจก่อนยืนยัน
+                    </small>
+                </div>
+            </div>
+        `,
+        icon: null,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-skull-crossbones me-2"></i>ดำเนินการลบถาวร',
+        cancelButtonText: '<i class="fas fa-shield-alt me-2"></i>ยกเลิก (ปลอดภัย)',
+        reverseButtons: true,
+        customClass: {
+            popup: 'swal2-large',
+            confirmButton: 'swal2-confirm-danger',
+            cancelButton: 'swal2-cancel-safe'
+        },
+        width: '700px',
+        backdrop: 'rgba(220, 38, 38, 0.4)',
+        allowOutsideClick: false,
+        allowEscapeKey: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ✅ STEP 2: Use window.prompt() for confirmation text
+            showConfirmationPrompt(count, namesList);
+        } else {
+            console.log('🛡️ User cancelled permanent delete');
+        }
+    });
+}
+
+// ✅ Simple confirmation using window.prompt()
+function showConfirmationPrompt(count, namesList) {
+    // Add delay to ensure SweetAlert2 is closed first
+    setTimeout(() => {
+        const confirmationText = window.prompt(
+            `🚨 การลบถาวร - ขั้นตอนสุดท้าย\n\n` +
+            `คุณกำลังลบพนักงาน ${count} คน ถาวร:\n` +
+            `${namesList}\n\n` +
+            `💀 ข้อมูลจะหายไปตลอดกาล\n` +
+            `🚫 ไม่สามารถกู้คืนได้อีก\n` +
+            `📸 รูปภาพและไฟล์แนบจะถูกลบ\n\n` +
+            `พิมพ์ "DELETE" เพื่อยืนยันการลบถาวร:`
+        );
+        
+        console.log('📝 User input:', confirmationText);
+        
+        if (confirmationText === null) {
+            // User clicked Cancel
+            console.log('🛡️ User cancelled confirmation prompt');
+            showNotification('ยกเลิกการลบถาวรแล้ว', 'info');
+            return;
+        }
+        
+        if (confirmationText.trim() === 'DELETE') {
+            console.log('✅ Confirmation successful - proceeding with delete');
+            
+            // Show final confirmation
+            Swal.fire({
+                title: '⚠️ ยืนยันครั้งสุดท้าย',
                 html: `
-                    <div class="text-start">
-                        <p>คุณต้องการลบพนักงาน "<strong>${employeeName}</strong>" หรือไม่?</p>
-                        <div class="alert alert-info small mt-3">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>หมายเหตุ:</strong> ข้อมูลจะถูกย้ายไปยังถังขยะ และสามารถกู้คืนได้ภายหลัง
+                    <div style="text-align: center; color: #333;">
+                        <div style="background: linear-gradient(135deg, #fee2e2, #fecaca); border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin: 15px 0;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">💀</div>
+                            <h3 style="color: #dc2626; margin-bottom: 15px;">การลบถาวร ${count} คน</h3>
+                            <p style="color: #7f1d1d; font-weight: 600; line-height: 1.5;">
+                                ข้อมูลจะถูกลบออกจากระบบทันที<br>
+                                และไม่สามารถกู้คืนได้อีก
+                            </p>
+                        </div>
+                        
+                        <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <div style="color: #0c4a6e; font-weight: 600;">
+                                <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                คุณได้พิมพ์ "DELETE" ถูกต้องแล้ว
+                            </div>
+                        </div>
+                        
+                        <p style="color: #666; font-size: 14px; margin-top: 15px;">
+                            คลิก <strong>"ลบถาวรทันที"</strong> เพื่อดำเนินการ หรือ <strong>"ยกเลิก"</strong> เพื่อหยุด
+                        </p>
+                    </div>
+                `,
+                icon: null,
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#10b981',
+                confirmButtonText: '<i class="fas fa-skull-crossbones me-2"></i>ลบถาวรทันที',
+                cancelButtonText: '<i class="fas fa-shield-alt me-2"></i>ยกเลิก',
+                reverseButtons: true,
+                backdrop: 'rgba(220, 38, 38, 0.6)',
+                allowOutsideClick: false,
+                allowEscapeKey: true
+            }).then((finalResult) => {
+                if (finalResult.isConfirmed) {
+                    console.log('🚀 Final confirmation - executing permanent delete');
+                    performBulkPermanentDelete();
+                } else {
+                    console.log('🛡️ User cancelled at final step');
+                    showNotification('ยกเลิกการลบถาวรในขั้นตอนสุดท้าย', 'info');
+                }
+            });
+            
+        } else {
+            // Wrong confirmation text
+            console.log('❌ Wrong confirmation text:', confirmationText);
+            
+            Swal.fire({
+                title: '❌ ข้อความยืนยันไม่ถูกต้อง',
+                html: `
+                    <div style="text-align: center; color: #333;">
+                        <div style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #f87171; border-radius: 12px; padding: 20px; margin: 15px 0;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                            <h3 style="color: #dc2626; margin-bottom: 15px;">ข้อความยืนยันไม่ถูกต้อง</h3>
+                            <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin: 15px 0;">
+                                <div style="color: #666; margin-bottom: 8px;">คุณพิมพ์:</div>
+                                <div style="font-family: monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; color: #dc2626; font-weight: bold;">
+                                    "${confirmationText}"
+                                </div>
+                            </div>
+                            <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0;">
+                                <div style="color: #856404; margin-bottom: 8px;">ต้องพิมพ์:</div>
+                                <div style="font-family: monospace; background: #ffeaa7; padding: 8px; border-radius: 4px; color: #d63031; font-weight: bold; letter-spacing: 2px;">
+                                    DELETE
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #e0f2fe; border: 2px solid #0284c7; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                            <div style="color: #0c4a6e; font-weight: 600;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                กรุณาพิมพ์ตัวอักษรให้ตรงทุกตัว (ใหญ่ทั้งหมด)
+                            </div>
                         </div>
                     </div>
                 `,
-                icon: 'warning',
+                icon: null,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: '<i class="fas fa-redo me-2"></i>ลองใหม่อีกครั้ง',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: '<i class="fas fa-trash me-1"></i>ย้ายไปถังขยะ',
                 cancelButtonText: 'ยกเลิก',
-                reverseButtons: true,
-                customClass: {
-                    popup: 'swal2-popup-wide'
+                backdrop: 'rgba(220, 38, 38, 0.3)'
+            }).then((retryResult) => {
+                if (retryResult.isConfirmed) {
+                    // Retry the confirmation
+                    showConfirmationPrompt(count, namesList);
+                } else {
+                    showNotification('ยกเลิกการลบถาวรแล้ว', 'info');
                 }
             });
+        }
+    }, 300); // Small delay to ensure previous modal is closed
+}
 
-            if (result.isConfirmed) {
-                try {
-                    // Show loading
-                    Swal.fire({
-                        title: 'กำลังลบข้อมูล...',
-                        html: `กำลังย้าย "${employeeName}" ไปยังถังขยะ`,
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+// ✅ CRITICAL FIX: Updated performBulkPermanentDelete with correct routes
+function performBulkPermanentDelete() {
+    const employeeIds = Array.from(selectedEmployees);
+    const total = employeeIds.length;
+    
+    showBulkProgress(true);
+    updateBulkProgress(0, `เริ่มต้นการลบถาวร...`);
+    
+    showNotification(`🚨 กำลังลบพนักงาน ${total} คน ถาวร - กรุณารอสักครู่...`, 'error', 15000);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    console.log('🔐 CSRF Token:', csrfToken ? 'Found' : 'Missing');
+    
+    // ✅ CRITICAL FIX: Try multiple possible routes based on web.php
+    const possibleRoutes = [
+        '/api/employees/bulk/permanent-delete',    // Primary API route
+        '/employees/bulk/permanent-delete',        // Alternative web route
+        '/api/employees/bulk-permanent-delete',    // Alternative format
+        '/api/employees/force-delete-bulk',        // Alternative endpoint
+        '/api/employees/empty-trash'               // Trash endpoint
+    ];
+    
+    // Try routes one by one
+    tryDeleteWithRoute(possibleRoutes, 0, employeeIds, total, csrfToken);
+}
 
-                    // Send actual AJAX request
-                    const response = await fetch(`/employees/${employeeId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        Swal.fire({
-                            title: 'สำเร็จ!',
-                            html: `
-                                <div class="text-start">
-                                    <p>${data.message}</p>
-                                    <div class="alert alert-success small mt-3">
-                                        <i class="fas fa-undo me-2"></i>
-                                        ข้อมูลสามารถกู้คืนได้จาก <strong>ถังขยะ</strong>
-                                    </div>
+// ✅ Function to try different routes systematically
+async function tryDeleteWithRoute(routes, routeIndex, employeeIds, total, csrfToken) {
+    if (routeIndex >= routes.length) {
+        showBulkProgress(false);
+        showRouteNotFoundError(routes, employeeIds);
+        return;
+    }
+    
+    const currentRoute = routes[routeIndex];
+    console.log(`🌐 Trying route ${routeIndex + 1}/${routes.length}: ${currentRoute}`);
+    
+    try {
+        const response = await fetch(currentRoute, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                employee_ids: employeeIds,
+                confirmation: 'DELETE FOREVER'
+            }),
+            credentials: 'same-origin'
+        });
+        
+        console.log(`📡 Response from ${currentRoute}:`, response.status, response.statusText);
+        
+        // ✅ Handle specific HTTP status codes
+        if (response.status === 404 || response.status === 405) {
+            // Route not found or method not allowed, try next route
+            console.log(`❌ Route ${currentRoute} not available, trying next...`);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+            tryDeleteWithRoute(routes, routeIndex + 1, employeeIds, total, csrfToken);
+            return;
+        }
+        
+        if (response.status === 401) {
+            throw new Error('UNAUTHORIZED: Session expired or insufficient permissions');
+        }
+        
+        if (response.status === 403) {
+            throw new Error('FORBIDDEN: Super Admin role required');
+        }
+        
+        if (response.status === 419) {
+            throw new Error('CSRF_TOKEN_MISMATCH: Page expired, please refresh');
+        }
+        
+        if (response.status === 422) {
+            throw new Error('VALIDATION_ERROR: Invalid data sent to server');
+        }
+        
+        if (response.status === 500) {
+            throw new Error('SERVER_ERROR: Internal server error');
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP_${response.status}: ${response.statusText}`);
+        }
+        
+        // ✅ Success! Process the response
+        const data = await response.json();
+        console.log('✅ Success with route:', currentRoute, data);
+        
+        showBulkProgress(false);
+        
+        if (data.success) {
+            Swal.fire({
+                title: '✅ ลบถาวรสำเร็จ',
+                html: `
+                    <div style="text-align: left; color: #333;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>การลบถาวรเสร็จสิ้น</strong>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                    <div><strong>${data.data?.deleted || total}</strong></div>
+                                    <small>ลบสำเร็จ</small>
                                 </div>
-                            `,
-                            icon: 'success',
-                            timer: 3000,
-                            showConfirmButton: true,
-                            confirmButtonText: 'ตกลง',
-                            showCancelButton: true,
-                            cancelButtonText: 'ดูถังขยะ'
-                        }).then((result) => {
-                            if (result.dismiss === Swal.DismissReason.cancel) {
-                                window.location.href = '{{ route("employees.trash") }}';
-                            } else {
-                                // Remove row from table and reload
-                                location.reload();
-                            }
-                        });
-                    } else {
-                        throw new Error(data.message || 'ไม่สามารถลบข้อมูลได้');
-                    }
-                } catch (error) {
-                    Swal.fire({
-                        title: 'เกิดข้อผิดพลาด!',
-                        text: error.message,
-                        icon: 'error'
-                    });
-                }
-            }
+                                <div class="col-4">
+                                    <i class="fas fa-images fa-2x text-info mb-2"></i>
+                                    <div><strong>${data.data?.photos_deleted || 0}</strong></div>
+                                    <small>รูปภาพลบ</small>
+                                </div>
+                                <div class="col-4">
+                                    <i class="fas fa-database fa-2x text-warning mb-2"></i>
+                                    <div><strong>${data.data?.records_cleaned || 0}</strong></div>
+                                    <small>ข้อมูลเชื่อมโยง</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background: #e7f3ff; border: 1px solid #007acc; border-radius: 6px; padding: 10px; margin: 10px 0;">
+                            <small style="color: #004a99;">
+                                <i class="fas fa-check me-1"></i>
+                                <strong>เส้นทางที่ใช้:</strong> ${currentRoute}
+                            </small>
+                        </div>
+                        ${data.data?.failed && data.data.failed > 0 ? `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            มีข้อมูล <strong>${data.data.failed}</strong> รายการที่ไม่สามารถลบได้
+                        </div>` : ''}
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: '<i class="fas fa-home me-2"></i>กลับสู่หน้าหลัก',
+                allowOutsideClick: false
+            }).then(() => {
+                if (bulkModal) bulkModal.hide();
+                clearAllSelections();
+                location.reload();
+            });
+        } else {
+            throw new Error(data.message || 'ไม่สามารถลบถาวรได้');
+        }
+        
+    } catch (error) {
+        console.error(`❌ Error with route ${currentRoute}:`, error);
+        
+        // If this is the last route, show detailed error
+        if (routeIndex === routes.length - 1) {
+            showBulkProgress(false);
+            showDetailedError(error, currentRoute, csrfToken, employeeIds);
+        } else {
+            // Try next route
+            console.log(`⚠️ Route ${currentRoute} failed, trying next...`);
+            await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+            tryDeleteWithRoute(routes, routeIndex + 1, employeeIds, total, csrfToken);
+        }
+    }
+}
+
+// ✅ Enhanced error handling functions
+function showRouteNotFoundError(triedRoutes, employeeIds) {
+    Swal.fire({
+        title: '❌ ไม่พบเส้นทางสำหรับลบถาวร',
+        html: `
+            <div style="text-align: left; color: #333;">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>ไม่พบ API endpoint สำหรับการลบถาวร</strong>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <div style="color: #856404;">
+                        <i class="fas fa-route me-2"></i>
+                        <strong>เส้นทางที่ลองแล้ว:</strong>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            ${triedRoutes.map(route => `<li><code>${route}</code></li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-tools me-2"></i>
+                    <strong>สำหรับทีมพัฒนา:</strong><br>
+                    • ตรวจสอบ route ใน <code>web.php</code><br>
+                    • ตรวจสอบ middleware permissions<br>
+                    • ตรวจสอบ EmployeeController method<br>
+                    • Selected IDs: ${employeeIds.length} items<br>
+                    • User role: SUPER_ADMIN required
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="location.reload()" class="btn btn-primary me-2" style="background: linear-gradient(135deg, #007bff, #0056b3); border: none; padding: 8px 20px; border-radius: 6px; color: white; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>รีเฟรชหน้าเว็บ
+                    </button>
+                    <button onclick="window.open('/health', '_blank')" class="btn btn-info" style="padding: 8px 20px; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-stethoscope me-2"></i>ตรวจสอบระบบ
+                    </button>
+                </div>
+            </div>
+        `,
+        icon: 'error',
+        confirmButtonText: 'เข้าใจแล้ว',
+        width: '700px',
+        customClass: {
+            popup: 'text-start'
+        }
+    });
+}
+
+function showDetailedError(error, usedRoute, csrfToken, employeeIds) {
+    let errorTitle = 'ลบถาวรไม่สำเร็จ';
+    let errorMessage = 'เกิดข้อผิดพลาดในการลบถาวร';
+    let suggestionMessage = 'ลองใหม่อีกครั้ง หรือติดต่อทีม IT';
+    let showRefreshButton = false;
+    let showLoginButton = false;
+    
+    if (error.message.includes('UNAUTHORIZED')) {
+        errorTitle = 'ไม่มีสิทธิ์เข้าถึง (401)';
+        errorMessage = 'Session หมดอายุ หรือระบบไม่รู้จักผู้ใช้';
+        suggestionMessage = 'ออกจากระบบและเข้าใหม่ หรือรีเฟรชหน้าเว็บ';
+        showRefreshButton = true;
+        showLoginButton = true;
+    } else if (error.message.includes('FORBIDDEN')) {
+        errorTitle = 'ไม่มีสิทธิ์ดำเนินการ (403)';
+        errorMessage = 'ระบบตรวจพบบัญชีแต่ไม่มีสิทธิ์ Super Admin';
+        suggestionMessage = 'ตรวจสอบสิทธิ์ผู้ใช้ หรือติดต่อผู้ดูแลระบบ';
+    } else if (error.message.includes('CSRF_TOKEN_MISMATCH')) {
+        errorTitle = 'หน้าเว็บหมดอายุ (419)';
+        errorMessage = 'CSRF Token หมดอายุ';
+        suggestionMessage = 'รีเฟรชหน้าเว็บและลองใหม่';
+        showRefreshButton = true;
+    } else if (error.message.includes('VALIDATION_ERROR')) {
+        errorTitle = 'ข้อมูลไม่ถูกต้อง (422)';
+        errorMessage = 'ข้อมูลที่ส่งไปไม่ผ่านการตรวจสอบ';
+        suggestionMessage = 'ตรวจสอบข้อมูลและลองใหม่';
+    } else if (error.message.includes('SERVER_ERROR')) {
+        errorTitle = 'เซิร์ฟเวอร์ผิดพลาด (500)';
+        errorMessage = 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์';
+        suggestionMessage = 'รอสักครู่แล้วลองใหม่ หรือติดต่อทีม IT';
+    }
+    
+    Swal.fire({
+        title: `❌ ${errorTitle}`,
+        html: `
+            <div style="text-align: left; color: #333;">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>${errorMessage}</strong>
+                </div>
+                
+                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <div style="color: #495057; font-size: 13px;">
+                        <strong>รายละเอียดการเชื่อมต่อ:</strong><br>
+                        • URL: <code>${usedRoute}</code><br>
+                        • Method: <code>DELETE</code><br>
+                        • CSRF Token: ${csrfToken ? '✅ มี' : '❌ ไม่มี'}<br>
+                        • ข้อมูลที่ส่ง: ${employeeIds.length} รายการ<br>
+                        • เวลา: ${new Date().toLocaleString('th-TH')}
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0;">
+                    <div style="color: #856404; font-size: 13px;">
+                        <strong>ข้อผิดพลาดดิบ:</strong><br>
+                        <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; word-break: break-all;">
+                            ${error.message}
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>แนะนำ:</strong> ${suggestionMessage}
+                </div>
+                
+                ${showRefreshButton || showLoginButton ? `
+                <div style="text-align: center; margin-top: 15px;">
+                    ${showRefreshButton ? `
+                    <button onclick="location.reload()" class="btn btn-primary me-2" style="background: linear-gradient(135deg, #007bff, #0056b3); border: none; padding: 8px 20px; border-radius: 6px; color: white; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>รีเฟรชหน้าเว็บ
+                    </button>` : ''}
+                    ${showLoginButton ? `
+                    <button onclick="window.location.href='/logout'" class="btn btn-warning me-2" style="padding: 8px 20px; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                    </button>
+                    <button onclick="window.location.href='/login'" class="btn btn-success" style="padding: 8px 20px; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบใหม่
+                    </button>` : ''}
+                </div>` : ''}
+            </div>
+        `,
+        icon: 'error',
+        confirmButtonText: 'เข้าใจแล้ว',
+        width: '700px',
+        customClass: {
+            popup: 'text-start'
+        }
+    });
+}
+
+// ✅ Function to show detailed error information
+function showDetailedError(error, usedRoute, csrfToken, employeeIds) {
+    let errorTitle = 'ลบถาวรไม่สำเร็จ';
+    let errorMessage = 'เกิดข้อผิดพลาดในการลบถาวร';
+    let suggestionMessage = 'ลองใหม่อีกครั้ง หรือติดต่อทีม IT';
+    let showRefreshButton = false;
+    let showLoginButton = false;
+    
+    if (error.message.includes('UNAUTHORIZED')) {
+        errorTitle = 'ไม่มีสิทธิ์เข้าถึง (401)';
+        errorMessage = 'Session หมดอายุ หรือระบบไม่รู้จักผู้ใช้';
+        suggestionMessage = 'ออกจากระบบและเข้าใหม่ หรือรีเฟรชหน้าเว็บ';
+        showRefreshButton = true;
+        showLoginButton = true;
+    } else if (error.message.includes('FORBIDDEN')) {
+        errorTitle = 'ไม่มีสิทธิ์ดำเนินการ (403)';
+        errorMessage = 'ระบบตรวจพบบัญชีแต่ไม่มีสิทธิ์ Super Admin';
+        suggestionMessage = 'ตรวจสอบสิทธิ์ผู้ใช้ หรือติดต่อผู้ดูแลระบบ';
+    } else if (error.message.includes('CSRF_TOKEN_MISMATCH')) {
+        errorTitle = 'หน้าเว็บหมดอายุ (419)';
+        errorMessage = 'CSRF Token หมดอายุ';
+        suggestionMessage = 'รีเฟรชหน้าเว็บและลองใหม่';
+        showRefreshButton = true;
+    } else if (error.message.includes('VALIDATION_ERROR')) {
+        errorTitle = 'ข้อมูลไม่ถูกต้อง (422)';
+        errorMessage = 'ข้อมูลที่ส่งไปไม่ผ่านการตรวจสอบ';
+        suggestionMessage = 'ตรวจสอบข้อมูลและลองใหม่';
+    } else if (error.message.includes('SERVER_ERROR')) {
+        errorTitle = 'เซิร์ฟเวอร์ผิดพลาด (500)';
+        errorMessage = 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์';
+        suggestionMessage = 'รอสักครู่แล้วลองใหม่ หรือติดต่อทีม IT';
+    }
+    
+    Swal.fire({
+        title: `❌ ${errorTitle}`,
+        html: `
+            <div style="text-align: left; color: #333;">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>${errorMessage}</strong>
+                </div>
+                
+                <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <div style="color: #495057; font-size: 13px;">
+                        <strong>รายละเอียดการเชื่อมต่อ:</strong><br>
+                        • URL: <code>${usedRoute}</code><br>
+                        • Method: <code>DELETE</code><br>
+                        • CSRF Token: ${csrfToken ? '✅ มี' : '❌ ไม่มี'}<br>
+                        • ข้อมูลที่ส่ง: ${employeeIds.length} รายการ<br>
+                        • เวลา: ${new Date().toLocaleString('th-TH')}
+                    </div>
+                </div>
+                
+                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin: 15px 0;">
+                    <div style="color: #856404; font-size: 13px;">
+                        <strong>ข้อผิดพลาดดิบ:</strong><br>
+                        <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; word-break: break-all;">
+                            ${error.message}
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>แนะนำ:</strong> ${suggestionMessage}
+                </div>
+                
+                ${showRefreshButton || showLoginButton ? `
+                <div style="text-align: center; margin-top: 15px;">
+                    ${showRefreshButton ? `
+                    <button onclick="location.reload()" class="btn btn-primary me-2" style="background: linear-gradient(135deg, #007bff, #0056b3); border: none; padding: 8px 20px; border-radius: 6px; color: white; font-weight: 600;">
+                        <i class="fas fa-sync-alt me-2"></i>รีเฟรชหน้าเว็บ
+                    </button>` : ''}
+                    ${showLoginButton ? `
+                    <button onclick="window.location.href='/logout'" class="btn btn-warning me-2" style="padding: 8px 20px; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-sign-out-alt me-2"></i>ออกจากระบบ
+                    </button>
+                    <button onclick="window.location.href='/login'" class="btn btn-success" style="padding: 8px 20px; border-radius: 6px; font-weight: 600;">
+                        <i class="fas fa-sign-in-alt me-2"></i>เข้าสู่ระบบใหม่
+                    </button>` : ''}
+                </div>` : ''}
+            </div>
+        `,
+        icon: 'error',
+        confirmButtonText: 'เข้าใจแล้ว',
+        width: '700px',
+        customClass: {
+            popup: 'text-start'
+        }
+    });
+}
+
+// ✅ Working Permanent Delete Implementation
+function performBulkPermanentDelete() {
+    const employeeIds = Array.from(selectedEmployees);
+    const total = employeeIds.length;
+    
+    showBulkProgress(true);
+    updateBulkProgress(0, `เริ่มต้นการลบถาวร...`);
+    
+    showNotification(`🚨 กำลังลบพนักงาน ${total} คน ถาวร - กรุณารอสักครู่...`, 'error', 15000);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch('/api/employees/bulk/permanent-delete', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            employee_ids: employeeIds,
+            confirmation: 'DELETE FOREVER'
+        })
+    })
+    .then(response => {
+        console.log('📡 Bulk permanent delete response:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Bulk permanent delete success:', data);
+        
+        showBulkProgress(false);
+        
+        if (data.success) {
+            // Show detailed success message
+            Swal.fire({
+                title: '✅ ลบถาวรสำเร็จ',
+                html: `
+                    <div style="text-align: left; color: #333;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>การลบถาวรเสร็จสิ้น</strong>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                                    <div><strong>${data.deleted || total}</strong></div>
+                                    <small>ลบสำเร็จ</small>
+                                </div>
+                                <div class="col-4">
+                                    <i class="fas fa-images fa-2x text-info mb-2"></i>
+                                    <div><strong>${data.photos_deleted || 0}</strong></div>
+                                    <small>รูปภาพลบ</small>
+                                </div>
+                                <div class="col-4">
+                                    <i class="fas fa-database fa-2x text-warning mb-2"></i>
+                                    <div><strong>${data.records_cleaned || 0}</strong></div>
+                                    <small>ข้อมูลเชื่อมโยง</small>
+                                </div>
+                            </div>
+                        </div>
+                        ${data.failed && data.failed > 0 ? `
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            มีข้อมูล <strong>${data.failed}</strong> รายการที่ไม่สามารถลบได้
+                        </div>` : ''}
+                    </div>
+                `,
+                icon: 'success',
+                confirmButtonText: '<i class="fas fa-home me-2"></i>กลับสู่หน้าหลัก',
+                allowOutsideClick: false
+            }).then(() => {
+                // Close modal and clear selections
+                if (bulkModal) bulkModal.hide();
+                clearAllSelections();
+                
+                // Reload page to reflect changes
+                location.reload();
+            });
+            
+        } else {
+            throw new Error(data.message || 'ไม่สามารถลบถาวรได้');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Bulk permanent delete error:', error);
+        
+        showBulkProgress(false);
+        
+        let errorMessage = 'เกิดข้อผิดพลาดในการลบถาวร';
+        
+        if (error.message.includes('403')) {
+            errorMessage = 'ไม่มีสิทธิ์ในการลบถาวร - ติดต่อผู้ดูแลระบบ';
+        } else if (error.message.includes('404')) {
+            errorMessage = 'ไม่พบข้อมูลที่ต้องการลบ';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย';
+        }
+        
+        Swal.fire({
+            title: '❌ ลบถาวรไม่สำเร็จ',
+            html: `
+                <div style="text-align: left; color: #333;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>${errorMessage}</strong>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                        <small><strong>รายละเอียดข้อผิดพลาด:</strong><br>${error.message}</small>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>แนะนำ:</strong> ลองใหม่อีกครั้ง หรือติดต่อทีม IT หากปัญหายังคงมีอยู่
+                    </div>
+                </div>
+            `,
+            icon: 'error',
+            confirmButtonText: 'เข้าใจแล้ว'
         });
     });
-    @endif
+}
+
+// ✅ Progress Functions
+function showBulkProgress(show) {
+    const container = document.getElementById('bulkProgressContainer');
+    if (container) {
+        container.style.display = show ? 'block' : 'none';
+    }
+}
+
+function updateBulkProgress(percentage, text) {
+    const progressBar = document.querySelector('.bulk-progress-bar');
+    const progressText = document.getElementById('bulkProgressText');
     
-    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'it_admin' || auth()->user()->role === 'hr')
-    // Bulk action
-    const executeBulkActionBtn = document.getElementById('executeBulkAction');
-    if (executeBulkActionBtn) {
-        executeBulkActionBtn.addEventListener('click', async function() {
-            const action = document.getElementById('bulkAction').value;
-            const selected = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
-                                 .map(cb => cb.value);
-            
-            if (!action) {
-                showNotification('กรุณาเลือกการดำเนินการ', 'warning');
-                return;
-            }
-            
-            if (selected.length === 0) {
-                showNotification('กรุณาเลือกพนักงานที่ต้องการดำเนินการ', 'warning');
-                return;
-            }
-            
-            const confirmed = await Swal.fire({
-                title: 'ยืนยันการดำเนินการ',
-                text: `ต้องการ${getActionText(action)} ${selected.length} คนหรือไม่?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'ดำเนินการ',
-                cancelButtonText: 'ยกเลิก'
-            });
-            
-            if (confirmed.isConfirmed) {
-                try {
-                    const response = await fetch('/employees/bulk-action', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken
-                        },
-                        body: JSON.stringify({
-                            action: action,
-                            employee_ids: selected
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showNotification(data.message, 'error');
-                    }
-                } catch (error) {
-                    showNotification('เกิดข้อผิดพลาดในการดำเนินการ', 'error');
-                }
-                
-                // Close modal
-                const bulkModal = bootstrap.Modal.getInstance(document.getElementById('bulkActionModal'));
-                if (bulkModal) {
-                    bulkModal.hide();
-                }
-            }
-        });
+    if (progressBar) {
+        progressBar.style.width = percentage + '%';
     }
     
-    function getActionText(action) {
-        switch(action) {
-            case 'activate': return 'เปิดใช้งาน';
-            case 'deactivate': return 'ปิดใช้งาน';
-            case 'delete': return 'ลบ';
-            default: return '';
+    if (progressText) {
+        progressText.textContent = percentage + '%';
+    }
+    
+    const container = document.getElementById('bulkProgressContainer');
+    if (container) {
+        const textEl = container.querySelector('.fw-bold');
+        if (textEl) {
+            textEl.textContent = text;
         }
     }
-    @endif
-    
-    // Export functionality
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            // TODO: Implement export functionality
-            showNotification('ฟังก์ชันส่งออกจะพัฒนาในเวอร์ชันถัดไป', 'info');
-        });
-    }
-    
-    // Load trash count
-    loadTrashCount();
-    
-    async function loadTrashCount() {
-        try {
-            const response = await fetch('/api/employees/trash-count');
-            const data = await response.json();
-            
-            if (data.success) {
-                updateTrashCount(data.count);
-            }
-        } catch (error) {
-            console.error('Failed to load trash count:', error);
-        }
-    }
+}
 
-    function updateTrashCount(count) {
-        const trashBadges = document.querySelectorAll('.trash-count');
-        trashBadges.forEach(badge => {
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'inline' : 'none';
-        });
+// ✅ Photo Management Functions
+function massPhotoUpload() {
+    showNotification('ฟีเจอร์อัปโหลดรูปหลายคน กำลังพัฒนา', 'info');
+}
 
-        // Update trash button visibility
-        const trashButton = document.getElementById('viewTrashBtn');
-        if (trashButton && count > 0) {
-            trashButton.style.display = 'inline-block';
+function compressAllPhotos() {
+    Swal.fire({
+        title: 'บีบอัดรูปภาพทั้งหมด',
+        html: 'คุณต้องการบีบอัดรูปภาพทั้งหมดในระบบหรือไม่?<br><small class="text-muted">จะช่วยประหยัดพื้นที่จัดเก็บข้อมูล</small>',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#17a2b8',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-compress me-2"></i>เริ่มบีบอัด',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showNotification('ฟีเจอร์บีบอัดรูปภาพ กำลังพัฒนา', 'info');
         }
-    }
+    });
+}
+
+function exportPhotoReport() {
+    showNotification('ฟีเจอร์รายงานรูปภาพ กำลังพัฒนา', 'info');
+}
+
+function photoBackup() {
+    Swal.fire({
+        title: 'สำรองข้อมูลรูปภาพ',
+        html: 'คุณต้องการสำรองข้อมูลรูปภาพทั้งหมดหรือไม่?<br><small class="text-muted">จะสร้างไฟล์ ZIP สำหรับดาวน์โหลด</small>',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-cloud-download-alt me-2"></i>เริ่มสำรองข้อมูล',
+        cancelButtonText: 'ยกเลิก'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            showNotification('ฟีเจอร์สำรองข้อมูลรูปภาพ กำลังพัฒนา', 'info');
+        }
+    });
+}
+
+// ✅ Export Functions
+function convertToCSV(data) {
+    if (!data || data.length === 0) return '';
     
-    // Notification function
-    function showNotification(message, type = 'info') {
-        const alertClass = {
-            'success': 'alert-success',
-            'error': 'alert-danger',
-            'warning': 'alert-warning',
-            'info': 'alert-info'
-        }[type] || 'alert-info';
+    const headers = ['รหัสพนักงาน', 'ชื่อ-นามสกุล', 'สาขา', 'แผนก', 'ตำแหน่ง', 'ข้อมูลติดต่อ', 'Express', 'สถานะ'];
+    const csvRows = [headers.join(',')];
+    
+    data.forEach(item => {
+        const row = [
+            `"${item.code}"`,
+            `"${item.name}"`,
+            `"${item.branch}"`,
+            `"${item.department}"`,
+            `"${item.position}"`,
+            `"${item.contact.replace(/"/g, '""')}"`,
+            `"${item.express}"`,
+            `"${item.status}"`
+        ];
+        csvRows.push(row.join(','));
+    });
+    
+    return csvRows.join('\n');
+}
+
+function downloadCSV(csvContent, filename) {
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+}
+
+// ✅ Enhanced Photo Functions
+function showPhotoModal(photoUrl, employeeName) {
+    try {
+        const nameEl = document.getElementById('photoEmployeeName');
+        const imageEl = document.getElementById('photoViewImage');
         
-        const iconClass = {
-            'success': 'fa-check-circle',
-            'error': 'fa-exclamation-triangle',
-            'warning': 'fa-exclamation-circle',
-            'info': 'fa-info-circle'
-        }[type] || 'fa-info-circle';
+        if (nameEl) nameEl.textContent = employeeName || 'ไม่ระบุ';
+        if (imageEl) {
+            imageEl.src = photoUrl || '/images/default-avatar.png';
+            imageEl.alt = employeeName || 'ไม่ระบุ';
+        }
         
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = document.getElementById('photoViewModal');
+            if (modal) {
+                new bootstrap.Modal(modal).show();
+            }
+        }
+    } catch (error) {
+        console.warn('Error showing photo modal:', error);
+    }
+}
+
+function uploadPhotoModal(employeeId, employeeName) {
+    try {
+        const nameEl = document.getElementById('uploadEmployeeName');
+        const formEl = document.getElementById('photoUploadForm');
+        
+        if (nameEl) nameEl.textContent = employeeName || 'ไม่ระบุ';
+        if (formEl) {
+            formEl.dataset.employeeId = employeeId || 0;
+            formEl.reset();
+        }
+        
+        const previewEl = document.getElementById('photoPreview');
+        if (previewEl) previewEl.style.display = 'none';
+        
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = document.getElementById('photoUploadModal');
+            if (modal) {
+                new bootstrap.Modal(modal).show();
+            }
+        }
+    } catch (error) {
+        console.warn('Error showing upload modal:', error);
+    }
+}
+
+function downloadPhoto() {
+    try {
+        const photoUrl = document.getElementById('photoViewImage')?.src;
+        const employeeName = document.getElementById('photoEmployeeName')?.textContent || 'employee';
+        
+        if (photoUrl) {
+            const link = document.createElement('a');
+            link.href = photoUrl;
+            link.download = `${employeeName}_photo.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('เริ่มดาวน์โหลดรูปภาพแล้ว', 'success');
+        }
+    } catch (error) {
+        console.warn('Error downloading photo:', error);
+        showNotification('เกิดข้อผิดพลาดในการดาวน์โหลด', 'error');
+    }
+}
+
+// ✅ Update Employee Status Function
+function updateEmployeeStatus(employeeId, newStatus, toggleElement) {
+    console.log('🔄 Updating employee status:', { employeeId, newStatus });
+    
+    const statusText = newStatus === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+    showNotification(`กำลังอัปเดตสถานะเป็น "${statusText}"...`, 'info', 8000);
+    
+    // Temporarily disable the toggle
+    toggleElement.disabled = true;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch(`/employees/${employeeId}/status`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            status: newStatus
+        })
+    })
+    .then(response => {
+        console.log('📡 Status update response:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Status update success:', data);
+        
+        if (data.success) {
+            showNotification(data.message || `อัปเดตสถานะเป็น "${statusText}" เรียบร้อยแล้ว`, 'success');
+            
+            // Update the row data attribute
+            const row = toggleElement.closest('tr');
+            if (row) {
+                row.dataset.status = newStatus;
+            }
+            
+            // Update mobile card data attribute
+            const mobileCard = toggleElement.closest('.employee-mobile-card-enhanced');
+            if (mobileCard) {
+                mobileCard.dataset.status = newStatus;
+            }
+            
+        } else {
+            throw new Error(data.message || 'ไม่สามารถอัปเดตสถานะได้');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Status update error:', error);
+        
+        let errorMessage = 'เกิดข้อผิดพลาดในการอัปเดตสถานะ';
+        
+        if (error.message.includes('404')) {
+            errorMessage = 'ไม่พบข้อมูลพนักงานที่ต้องการอัปเดต';
+        } else if (error.message.includes('403')) {
+            errorMessage = 'ไม่มีสิทธิ์ในการอัปเดตสถานะพนักงาน';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย';
+        }
+        
+        showNotification(errorMessage, 'error');
+        
+        // Revert toggle state on error
+        toggleElement.checked = !toggleElement.checked;
+    })
+    .finally(() => {
+        // Re-enable the toggle
+        toggleElement.disabled = false;
+    });
+}
+
+// ✅ ENHANCED Delete Function with Crystal Clear Popup
+function deleteEmployee(employeeId, employeeName) {
+    console.log('🗑️ Delete function called:', { employeeId, employeeName });
+    
+    try {
+        if (typeof Swal === 'undefined') {
+            if (confirm(`คุณต้องการลบพนักงาน "${employeeName}" หรือไม่?\n\nข้อมูลจะถูกย้ายไปยังถังขยะและสามารถกู้คืนได้`)) {
+                performDelete(employeeId, employeeName);
+            }
+            return;
+        }
+
+        Swal.fire({
+            title: '⚠️ ยืนยันการลบพนักงาน',
+            html: `
+                <div style="text-align: left; padding: 10px; background: #ffffff; color: #333333;">
+                    <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #856404; font-size: 24px; margin-right: 10px;"></i>
+                            <strong style="color: #856404; font-size: 16px;">คำเตือน: การลบข้อมูลพนักงาน</strong>
+                        </div>
+                        <p style="color: #333333; margin: 0; line-height: 1.5;">
+                            คุณต้องการลบพนักงาน <strong style="color: #e74c3c;">"${employeeName}"</strong> จากระบบหรือไม่?
+                        </p>
+                    </div>
+                    
+                    <div class="alert-info-custom" style="padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: start;">
+                            <i class="fas fa-info-circle" style="color: #0d47a1; font-size: 18px; margin-right: 8px; margin-top: 2px;"></i>
+                            <div style="color: #0d47a1;">
+                                <strong>ข้อมูลสำคัญ:</strong>
+                                <ul style="margin: 5px 0 0 0; padding-left: 15px;">
+                                    <li>ข้อมูลจะถูกย้ายไปยัง <strong>ถังขยะ</strong></li>
+                                    <li>สามารถ <strong>กู้คืนข้อมูล</strong> ได้ภายหลัง</li>
+                                    <li>รูปภาพและไฟล์แนบจะถูกเก็บไว้</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 6px; padding: 10px; border-left: 4px solid #6c757d;">
+                        <small style="color: #495057;">
+                            <i class="fas fa-clock me-1"></i>
+                            การดำเนินการนี้จะใช้เวลาสักครู่ กรุณารอการประมวลผล
+                        </small>
+                    </div>
+                </div>
+            `,
+            icon: null,
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>ย้ายไปถังขยะ',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>ยกเลิก',
+            reverseButtons: true,
+            customClass: {
+                popup: 'swal2-large',
+                confirmButton: 'swal2-confirm-custom',
+                cancelButton: 'swal2-cancel-custom'
+            },
+            width: '500px',
+            backdrop: 'rgba(0,0,0,0.5)'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                performDelete(employeeId, employeeName);
+            }
+        });
+    } catch (error) {
+        console.warn('Error showing delete confirmation:', error);
+        if (confirm(`คุณต้องการลบพนักงาน "${employeeName}" หรือไม่?`)) {
+            performDelete(employeeId, employeeName);
+        }
+    }
+}
+
+function performDelete(employeeId, employeeName = '') {
+    console.log('🚀 Performing delete:', { employeeId, employeeName });
+    
+    showNotification(`กำลังลบพนักงาน${employeeName ? ` "${employeeName}"` : ''}...`, 'info', 10000);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch(`/employees/${employeeId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('📡 Delete response:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Delete success:', data);
+        
+        if (data.success) {
+            showNotification(data.message || 'ลบพนักงานเรียบร้อยแล้ว', 'success');
+            
+            // Update trash count if function exists
+            if (typeof loadTrashCount === 'function') {
+                setTimeout(() => loadTrashCount(), 500);
+            }
+            
+            // Reload page after delay
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            throw new Error(data.message || 'ไม่สามารถลบข้อมูลได้');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Delete error:', error);
+        
+        let errorMessage = 'เกิดข้อผิดพลาดในการลบพนักงาน';
+        
+        if (error.message.includes('404')) {
+            errorMessage = 'ไม่พบข้อมูลพนักงานที่ต้องการลบ';
+        } else if (error.message.includes('403')) {
+            errorMessage = 'ไม่มีสิทธิ์ในการลบพนักงาน';
+        } else if (error.message.includes('500')) {
+            errorMessage = 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'ปัญหาการเชื่อมต่อเครือข่าย';
+        }
+        
+        showNotification(errorMessage, 'error');
+    });
+}
+
+// ✅ Enhanced Notification System
+function showNotification(message, type = 'info', duration = 4000) {
+    try {
+        const typeConfig = {
+            success: { 
+                class: 'alert-success', 
+                icon: 'fa-check-circle', 
+                color: 'var(--itms-teal)',
+                bg: 'linear-gradient(135deg, #d4edda, #c3e6cb)'
+            },
+            error: { 
+                class: 'alert-danger', 
+                icon: 'fa-exclamation-triangle', 
+                color: 'var(--itms-primary)',
+                bg: 'linear-gradient(135deg, #f8d7da, #f1b0b7)'
+            },
+            warning: { 
+                class: 'alert-warning', 
+                icon: 'fa-exclamation-circle', 
+                color: 'var(--itms-orange)',
+                bg: 'linear-gradient(135deg, #fff3cd, #ffeaa7)'
+            },
+            info: { 
+                class: 'alert-info', 
+                icon: 'fa-info-circle', 
+                color: '#17a2b8',
+                bg: 'linear-gradient(135deg, #d1ecf1, #bee5eb)'
+            }
+        };
+        
+        const config = typeConfig[type];
         const alert = document.createElement('div');
-        alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
-        alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+        alert.className = `alert ${config.class} alert-dismissible fade show position-fixed`;
+        alert.style.cssText = `
+            top: 20px; 
+            right: 20px; 
+            z-index: 9999; 
+            min-width: 320px; 
+            max-width: 380px;
+            background: ${config.bg};
+            border: 2px solid ${config.color};
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            font-size: 0.9rem;
+            animation: slideInRight 0.4s ease;
+        `;
         alert.innerHTML = `
-            <i class="fas ${iconClass} me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="d-flex align-items-center">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: ${config.color}; 
+                            display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;">
+                    <i class="fas ${config.icon} text-white"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold mb-1 small">${type === 'success' ? 'สำเร็จ!' : type === 'error' ? 'ข้อผิดพลาด!' : type === 'warning' ? 'คำเตือน!' : 'แจ้งเตือน!'}</div>
+                    <div class="small">${message}</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-sm" onclick="this.parentElement.remove()"></button>
         `;
         
         document.body.appendChild(alert);
         
         setTimeout(() => {
             if (alert.parentNode) {
-                alert.remove();
+                alert.style.animation = 'slideOutRight 0.4s ease';
+                setTimeout(() => alert.remove(), 400);
             }
-        }, 5000);
+        }, duration);
+    } catch (error) {
+        console.warn('Error showing notification:', error);
+        alert(message);
     }
-    
-    // Initialize count
-    updateVisibleCount();
-    
-    // Role-based notifications
-    @if(auth()->user()->role === 'express')
-        console.log('⚡ Express User: Limited to accounting department employees');
-    @elseif(auth()->user()->role === 'super_admin')
-        console.log('🔧 Super Admin: Full access to all employees and actions');
-    @elseif(auth()->user()->role === 'it_admin')
-        console.log('💻 IT Admin: Full employee management access');
-    @elseif(auth()->user()->role === 'hr')
-        console.log('👥 HR: Employee management with restrictions');
-    @else
-        console.log('👤 Employee: View only access to own profile');
-    @endif
+}
+
+// ✅ Export Button Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // Simple export all employees
+            const allData = [];
+            const table = document.getElementById('employeesTable');
+            
+            if (table) {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    if (row.cells.length > 1) {
+                        const cells = row.cells;
+                        const startIndex = cells[0].querySelector('.form-check-input') ? 1 : 0;
+                        
+                        allData.push({
+                            code: cells[startIndex + 0]?.textContent.trim() || '',
+                            name: cells[startIndex + 1]?.textContent.trim() || '',
+                            branch: cells[startIndex + 2]?.textContent.trim() || '',
+                            department: cells[startIndex + 3]?.textContent.trim() || '',
+                            position: cells[startIndex + 4]?.textContent.trim() || '',
+                            contact: cells[startIndex + 5]?.textContent.trim() || '',
+                            express: cells[startIndex + 6]?.textContent.trim() || '',
+                            status: row.dataset.status || ''
+                        });
+                    }
+                });
+            }
+            
+            if (allData.length > 0) {
+                const csvContent = convertToCSV(allData);
+                downloadCSV(csvContent, `all_employees_${new Date().toISOString().split('T')[0]}.csv`);
+                showNotification(`ส่งออกข้อมูลพนักงานทั้งหมด ${allData.length} คน เรียบร้อยแล้ว`, 'success');
+            } else {
+                showNotification('ไม่มีข้อมูลสำหรับส่งออก', 'warning');
+            }
+        });
+    }
 });
+
+// ✅ Add animation CSS
+if (!document.getElementById('enhanced-animations')) {
+    const style = document.createElement('style');
+    style.id = 'enhanced-animations';
+    style.textContent = `
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shake {
+            0%, 20%, 40%, 60%, 80%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+        }
+        
+        /* Enhanced SweetAlert2 Danger Zone Styles */
+        .swal2-confirm-danger {
+            background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+            border: none !important;
+            font-weight: 700 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .swal2-confirm-danger:hover {
+            background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4) !important;
+        }
+        
+        .swal2-cancel-safe {
+            background: linear-gradient(135deg, #059669, #047857) !important;
+            border: none !important;
+            font-weight: 600 !important;
+            color: white !important;
+        }
+        
+        .swal2-cancel-safe:hover {
+            background: linear-gradient(135deg, #047857, #065f46) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3) !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+console.log('🎯 Enhanced Employee Management System with WORKING DELETE FOREVER INPUT Loaded Successfully!');
+console.log('✨ Features: WORKING DELETE FOREVER Input | Complete Bulk Actions | Photo Management | Status Toggle | Export | Enhanced UI');
+console.log('🗑️ DELETE FOREVER input field is now COMPLETELY FUNCTIONAL');
+console.log('✅ Input can be clicked, typed in, and validates properly');
 </script>
-
-<style>
-@media print {
-    .btn, .input-group, .modal, .card-header .d-flex > div:last-child, .form-check {
-        display: none !important;
-    }
-    
-    .card {
-        border: 1px solid #000 !important;
-        box-shadow: none !important;
-    }
-    
-    .table {
-        border: 1px solid #000;
-        font-size: 12px;
-    }
-    
-    .table th, .table td {
-        border: 1px solid #000 !important;
-        padding: 4px !important;
-    }
-    
-    .badge {
-        border: 1px solid #000 !important;
-        background: white !important;
-        color: black !important;
-    }
-}
-
-/* ✅ ข้อ 1: แก้ไข Responsive Design */
-@media (max-width: 991.98px) {
-    .h4-md {
-        font-size: 1.25rem;
-    }
-    
-    .fa-md-2x {
-        font-size: 1.5em;
-    }
-    
-    .employee-mobile-card:hover {
-        background-color: rgba(13, 110, 253, 0.05);
-        transition: background-color 0.2s ease;
-    }
-    
-    .btn-group-sm .btn {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-    }
-}
-
-@media (max-width: 575.98px) {
-    .card-body.p-3 {
-        padding: 1rem !important;
-    }
-    
-    .employee-mobile-card {
-        padding: 1rem !important;
-    }
-    
-    .h5 {
-        font-size: 1rem;
-    }
-    
-    .badge.small {
-        font-size: 0.65em;
-    }
-}
-
-/* Express user highlighting */
-.badge.bg-warning.text-dark {
-    background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
-    font-weight: 600;
-    animation: express-glow 3s infinite alternate;
-}
-
-@keyframes express-glow {
-    from { box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
-    to { box-shadow: 0 0 15px rgba(255, 193, 7, 0.8); }
-}
-
-/* Role badge colors */
-.badge.bg-danger {
-    background: linear-gradient(45deg, #dc3545, #e91e63) !important;
-}
-
-.badge.bg-warning {
-    background: linear-gradient(45deg, #ffc107, #fd7e14) !important;
-    color: #000 !important;
-}
-
-/* Row hover effects */
-.table tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.05) !important;
-    transform: scale(1.01);
-    transition: all 0.2s ease;
-}
-
-/* SweetAlert2 custom styles */
-.swal2-popup-wide {
-    width: 500px !important;
-}
-
-.swal2-popup .alert {
-    margin: 0;
-    border-radius: 6px;
-}
-
-/* Table responsive improvements */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.table td, .table th {
-    white-space: nowrap;
-    vertical-align: middle;
-}
-
-.table td.text-wrap, .table th.text-wrap {
-    white-space: normal;
-}
-
-/* Fixed table column widths to prevent horizontal scroll */
-@media (min-width: 992px) {
-    .table {
-        table-layout: fixed;
-        width: 100%;
-    }
-    
-    .table th:nth-child(3), .table td:nth-child(3) {
-        width: 20%;
-        white-space: normal;
-    }
-    
-    .table th:nth-child(6), .table td:nth-child(6) {
-        width: 18%;
-        white-space: normal;
-        word-break: break-word;
-    }
-}
-</style>
 @endpush

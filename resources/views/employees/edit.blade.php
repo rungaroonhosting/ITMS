@@ -8,6 +8,334 @@
     <li class="breadcrumb-item active">แก้ไข</li>
 @endsection
 
+{{-- ✅ CSS FIXES - Responsive Photo System --}}
+@push('styles')
+<style>
+/* ===== RESPONSIVE LAYOUT FIXES ===== */
+.container-fluid {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ===== PHOTO SYSTEM RESPONSIVE ===== */
+#photoDropZone {
+    min-height: 200px;
+    max-height: 280px;
+    border: 3px dashed #B54544 !important;
+    border-radius: 15px;
+    background: rgba(181, 69, 68, 0.03);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#photoDropZone:hover {
+    border-color: #E6952A !important;
+    background: rgba(230, 149, 42, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(181, 69, 68, 0.15);
+}
+
+.photo-upload-section {
+    background: linear-gradient(135deg, rgba(181, 69, 68, 0.02), rgba(230, 149, 42, 0.02));
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid rgba(181, 69, 68, 0.1);
+}
+
+.photo-current-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    min-height: 280px;
+}
+
+#currentPhotoPreview,
+#newPhotoPreview {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border: 4px solid #B54544 !important;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(181, 69, 68, 0.2);
+}
+
+#currentPhotoPreview:hover,
+#newPhotoPreview:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(181, 69, 68, 0.3);
+    border-color: #E6952A !important;
+}
+
+/* Drop Zone States */
+#dropZoneDefault,
+#dropZoneLoading,
+#dropZonePreview {
+    width: 100%;
+    height: 100%;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+#dropZoneLoading {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(181, 69, 68, 0.05));
+}
+
+#dropZonePreview {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.05), rgba(230, 149, 42, 0.05));
+}
+
+/* Progress Bar */
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background: rgba(181, 69, 68, 0.1);
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #B54544, #E6952A);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    box-shadow: 0 2px 8px rgba(181, 69, 68, 0.3);
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+@media (max-width: 768px) {
+    .photo-upload-section .row {
+        flex-direction: column;
+    }
+    
+    .photo-upload-section .col-md-4,
+    .photo-upload-section .col-md-8 {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1.5rem;
+    }
+    
+    #photoDropZone {
+        min-height: 160px;
+        margin-top: 1rem;
+    }
+    
+    #currentPhotoPreview,
+    #newPhotoPreview {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .photo-current-section {
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    #photoDropZone {
+        min-height: 140px;
+        padding: 1rem;
+    }
+    
+    #currentPhotoPreview,
+    #newPhotoPreview {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .photo-upload-section {
+        padding: 1rem;
+    }
+    
+    .photo-current-section {
+        min-height: 180px;
+        padding: 0.5rem;
+    }
+}
+
+/* ===== QUICK ACTIONS RESPONSIVE ===== */
+.quick-actions-container .row {
+    margin: 0 -0.5rem;
+}
+
+.quick-actions-container .col-md-2,
+.quick-actions-container .col-sm-6 {
+    padding: 0 0.5rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .quick-actions-container .col-md-2 {
+        width: 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 576px) {
+    .quick-actions-container .col-md-2,
+    .quick-actions-container .col-sm-6 {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* ===== ENHANCED UI COMPONENTS ===== */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.gradient-badge {
+    background: linear-gradient(45deg, #B54544, #E6952A) !important;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 8px rgba(181, 69, 68, 0.3);
+}
+
+.gradient-btn {
+    background: linear-gradient(45deg, #B54544, #E6952A);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(181, 69, 68, 0.3);
+    transition: all 0.3s ease;
+}
+
+.gradient-btn:hover {
+    background: linear-gradient(45deg, #E6952A, #B54544);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(181, 69, 68, 0.4);
+    color: white;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 0.6rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #B54544;
+    box-shadow: 0 0 0 0.2rem rgba(181, 69, 68, 0.25);
+}
+
+.alert {
+    border-radius: 12px;
+    border: none;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(25, 135, 84, 0.1), rgba(25, 135, 84, 0.05));
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(230, 149, 42, 0.1), rgba(230, 149, 42, 0.05));
+    color: #856404;
+    border-left: 4px solid #E6952A;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-in-up { animation: slideInUp 0.5s ease-out; }
+.fade-in { animation: fadeIn 0.3s ease-out; }
+
+/* ===== MODAL IMPROVEMENTS ===== */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-radius: 15px 15px 0 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.modal-body { padding: 2rem; }
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 15px 15px;
+    padding: 1.5rem;
+}
+</style>
+@endpush
+
 @section('content')
 <!-- Page Header -->
 <div class="row mb-4">
@@ -17,7 +345,7 @@
                 <h1 class="h3 mb-0 text-success fw-bold">
                     <i class="fas fa-user-edit me-2"></i>แก้ไขข้อมูลพนักงาน
                 </h1>
-                <p class="text-muted mb-0">แก้ไขข้อมูล: {{ $employee->full_name_th }} ({{ $employee->employee_code }}) - Enhanced v2.0 + Branch System</p>
+                <p class="text-muted mb-0">แก้ไขข้อมูล: {{ $employee->full_name_th }} ({{ $employee->employee_code }}) - Enhanced v2.0 + Branch System + Photo System</p>
                 <div class="mt-2">
                     <span class="badge bg-{{ $employee->status == 'active' ? 'success' : 'secondary' }} me-2">
                         {{ $employee->status == 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
@@ -33,9 +361,9 @@
                             @endif
                         </span>
                     @endif
-                    {{-- ✅ NEW: Branch Badge --}}
+                    {{-- Branch Badge --}}
                     @if($employee->branch)
-                        <span class="badge text-white me-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                        <span class="badge gradient-badge me-2">
                             <i class="fas fa-building me-1"></i>{{ $employee->branch->name }}
                         </span>
                     @else
@@ -43,13 +371,47 @@
                             <i class="fas fa-building me-1"></i>ไม่ระบุสาขา
                         </span>
                     @endif
+                    {{-- Photo Badge - PRODUCTION READY VERSION --}}
+                    @php
+                        // ✅ Use model attribute for reliable photo detection
+                        $hasPhoto = $employee->has_photo ?? false; // Uses model's getHasPhotoAttribute()
+                        $photoUrl = $employee->photo_url ?? asset('images/default-avatar.png'); // Uses model's getPhotoUrlAttribute()
+                        
+                        // Additional fallback for safety
+                        if (!$hasPhoto) {
+                            // Generate avatar URL
+                            $initials = '';
+                            if ($employee->first_name_th && $employee->last_name_th) {
+                                $initials = mb_substr($employee->first_name_th, 0, 1) . mb_substr($employee->last_name_th, 0, 1);
+                            } elseif ($employee->first_name_en && $employee->last_name_en) {
+                                $initials = substr($employee->first_name_en, 0, 1) . substr($employee->last_name_en, 0, 1);
+                            } else {
+                                $initials = 'NN';
+                            }
+                            
+                            // Use employee ID for consistent color (not employee_code)
+                            $colors = ['FF6B6B', '4ECDC4', '45B7D1', 'FFA07A', '98D8C8', 'F06292', 'FFD93D', 'AED581'];
+                            $colorIndex = abs(crc32((string)$employee->id)) % count($colors);
+                            $bgColor = $colors[$colorIndex];
+                            
+                            $photoUrl = "https://ui-avatars.com/api/?name=" . urlencode($initials) . 
+                                       "&background=" . $bgColor . "&color=ffffff&size=400&font-size=0.33&bold=true";
+                        }
+                    @endphp
+                    @if($hasPhoto)
+                        <span class="badge gradient-badge me-2">
+                            <i class="fas fa-camera me-1"></i>มีรูปภาพ
+                        </span>
+                    @else
+                        <span class="badge bg-secondary me-2">
+                            <i class="fas fa-camera me-1"></i>ไม่มีรูปภาพ
+                        </span>
+                    @endif
                     <span class="badge bg-success">
-                        <i class="fas fa-phone me-1"></i>
-                        ✅ เบอร์โทรซ้ำได้แล้ว
+                        <i class="fas fa-phone me-1"></i>เบอร์โทรซ้ำได้แล้ว
                     </span>
                     <span class="badge bg-primary">
-                        <i class="fas fa-eye me-1"></i>
-                        แสดงรหัสผ่านได้ทั้งหมด
+                        <i class="fas fa-eye me-1"></i>แสดงรหัสผ่านได้ทั้งหมด
                     </span>
                 </div>
             </div>
@@ -60,35 +422,106 @@
     </div>
 </div>
 
-<!-- ✅ ENHANCED: Success Alert with Branch System -->
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>โหมดแก้ไข - ระบบพร้อมใช้งาน! (Branch System + Password Handling แก้ไขแล้ว)</h6>
+<!-- Success Alert -->
+<div class="alert alert-success alert-dismissible fade show slide-in-up" role="alert">
+    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>โหมดแก้ไข - ระบบพร้อมใช้งาน! (Photo System + Branch System + Password Handling แก้ไขแล้ว)</h6>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <ul class="mb-0">
+                <li><strong>📸 Photo System:</strong> อัปโหลดรูปภาพได้แล้ว</li>
                 <li><strong>🏢 Branch System:</strong> รองรับสาขาแล้ว</li>
-                <li><strong>✅ เบอร์โทรซ้ำได้:</strong> สามารถใช้เบอร์เดียวกันได้หลายคน</li>
             </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <ul class="mb-0">
+                <li><strong>✅ เบอร์โทรซ้ำได้:</strong> หลายคนใช้เบอร์เดียวกันได้</li>
                 <li><strong>🔒 รหัสผ่าน:</strong> แก้ไข NULL error แล้ว</li>
-                <li><strong>🔒 ความปลอดภัย:</strong> Email, Username ยังคง unique</li>
             </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <ul class="mb-0">
+                <li><strong>🔒 ความปลอดภัย:</strong> Email, Username ยังคง unique</li>
                 <li><strong>⚡ Express v2.0:</strong> ทำงานปกติ ไม่กระทบ</li>
+            </ul>
+        </div>
+        <div class="col-md-3">
+            <ul class="mb-0">
                 <li><strong>🎨 ITMS Theme:</strong> สีแดง-ส้ม สมบูรณ์</li>
+                <li><strong>🖼️ Drag & Drop:</strong> ลากไฟล์เข้าได้</li>
             </ul>
         </div>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
-<!-- ✅ NEW: Branch Status Alert (if missing) -->
+<!-- Photo Status Alert - PRODUCTION VERSION -->
+@if(!$hasPhoto)
+    <div class="alert alert-warning alert-dismissible fade show fade-in" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-camera me-2"></i>📸 ไม่มีรูปภาพพนักงาน
+        </h6>
+        <p class="mb-0">
+            พนักงานนี้ยังไม่มีรูปภาพ หรือไฟล์รูปภาพอาจหายไป กรุณาอัปโหลดรูปภาพใหม่
+            <br><small class="text-muted">รองรับ: JPG, PNG, GIF | ขนาดไม่เกิน 2MB | พร้อม Drag & Drop</small>
+            
+            @if(isset($employee->photo_path) && $employee->photo_path)
+                <br><span class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>หมายเหตุ:</strong> มีข้อมูลรูปภาพใน Database แต่ไฟล์หายไป
+                </span>
+            @endif
+        </p>
+        
+        {{-- Show migration notice if applicable --}}
+        <div class="mt-2">
+            <small class="text-info">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>💡 เคล็ดลับ:</strong> หากเพิ่งเปลี่ยนรหัสพนักงาน ระบบจะหารูปเก่าให้อัตโนมัติ
+            </small>
+        </div>
+        
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@else
+    <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
+        <h6 class="fw-bold">
+            <i class="fas fa-check-circle me-2"></i>✅ มีรูปภาพพนักงานแล้ว
+        </h6>
+        <p class="mb-0">
+            พนักงานมีรูปภาพในระบบแล้ว สามารถดูหรือเปลี่ยนรูปใหม่ได้ในส่วน "รูปภาพพนักงาน" ด้านล่าง
+            
+            @php
+                $photoInfo = [];
+                try {
+                    if (method_exists($employee, 'getPhotoInfo')) {
+                        $photoInfo = $employee->getPhotoInfo();
+                    }
+                } catch (Exception $e) {
+                    // Silently handle error
+                }
+            @endphp
+            
+            @if(!empty($photoInfo))
+                <br><small class="text-success">
+                    <i class="fas fa-info-circle me-1"></i>
+                    ขนาด: {{ $photoInfo['file_size_human'] ?? 'ไม่ทราบ' }}
+                    @if(isset($photoInfo['dimensions']) && $photoInfo['dimensions'])
+                        | {{ $photoInfo['dimensions']['width'] }}x{{ $photoInfo['dimensions']['height'] }}px
+                    @endif
+                    @if(isset($photoInfo['uploaded_at']) && $photoInfo['uploaded_at'])
+                        | อัปโหลด: {{ $photoInfo['uploaded_at']->diffForHumans() }}
+                    @endif
+                </small>
+            @endif
+        </p>
+        
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+<!-- Branch Status Alert -->
 @if(!$employee->branch_id)
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <div class="alert alert-warning alert-dismissible fade show fade-in" role="alert">
         <h6 class="fw-bold">
             <i class="fas fa-building me-2"></i>⚠️ กำหนดสาขาสำหรับพนักงาน
         </h6>
@@ -99,55 +532,11 @@
     </div>
 @endif
 
-<!-- Current Data Overview -->
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>ข้อมูลปัจจุบัน - สำหรับอ้างอิง</h6>
-    <div class="row">
-        <div class="col-md-3">
-            <ul class="mb-0 small">
-                <li><strong>รหัสพนักงาน:</strong> {{ $employee->employee_code }}</li>
-                <li><strong>อีเมล:</strong> {{ $employee->email }}</li>
-                <li><strong>Username:</strong> {{ $employee->username }}</li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <ul class="mb-0 small">
-                <li><strong>แผนก:</strong> {{ $employee->department ? $employee->department->name : 'ไม่ระบุ' }}</li>
-                <li><strong>สาขา:</strong> 
-                    @if($employee->branch)
-                        <span class="text-success">{{ $employee->branch->name }}</span>
-                    @else
-                        <span class="text-warning">ไม่ระบุ</span>
-                    @endif
-                </li>
-                <li><strong>ตำแหน่ง:</strong> {{ $employee->position }}</li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <ul class="mb-0 small">
-                <li><strong>เบอร์โทร:</strong> {{ $employee->phone }} <span class="badge bg-success">ซ้ำได้</span></li>
-                <li><strong>รหัสผ่านคอม:</strong> <code>{{ $employee->computer_password ?: 'ไม่มี' }}</code></li>
-                <li><strong>รหัสผ่านอีเมล:</strong> <code>{{ $employee->email_password ?: 'ไม่มี' }}</code></li>
-            </ul>
-        </div>
-        <div class="col-md-3">
-            <ul class="mb-0 small">
-                @if($employee->express_username)
-                    <li><strong>Express:</strong> <code>{{ $employee->express_username }}</code>/<code>{{ $employee->express_password }}</code></li>
-                @endif
-                <li><strong>VPN:</strong> {{ $employee->vpn_access ? '✅' : '❌' }}</li>
-                <li><strong>ปริ้นสี:</strong> {{ $employee->color_printing ? '✅' : '❌' }}</li>
-            </ul>
-        </div>
-    </div>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-
 <!-- Enhanced Quick Actions -->
-<div class="card mb-4">
+<div class="card mb-4 quick-actions-container">
     <div class="card-body">
         <div class="row text-center g-3">
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-2 col-sm-6">
                 <div class="d-flex flex-column h-100">
                     <button type="button" class="btn btn-outline-primary w-100 flex-fill d-flex align-items-center justify-content-center" id="autoFillBtn" style="min-height: 45px;">
                         <span class="d-flex align-items-center">
@@ -161,7 +550,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-2 col-sm-6">
                 <div class="d-flex flex-column h-100">
                     <button type="button" class="btn btn-outline-info w-100 flex-fill d-flex align-items-center justify-content-center" id="previewBtn" style="min-height: 45px;">
                         <span class="d-flex align-items-center">
@@ -174,7 +563,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-2 col-sm-6">
                 <div class="d-flex flex-column h-100">
                     <button type="button" class="btn btn-outline-warning w-100 flex-fill d-flex align-items-center justify-content-center" id="resetPasswordBtn" style="min-height: 45px;">
                         <span class="d-flex align-items-center">
@@ -188,7 +577,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-2 col-sm-6">
                 <div class="d-flex flex-column h-100">
                     <button type="button" class="btn btn-outline-success w-100 flex-fill d-flex align-items-center justify-content-center" id="generateAllBtn" style="min-height: 45px;">
                         <span class="d-flex align-items-center">
@@ -202,12 +591,54 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="d-flex flex-column h-100">
+                    <button type="button" class="btn btn-outline-danger w-100 flex-fill d-flex align-items-center justify-content-center" id="deletePhotoBtn" style="min-height: 45px;" {{ !$hasPhoto ? 'disabled' : '' }}>
+                        <span class="d-flex align-items-center">
+                            <i class="fas fa-trash me-2"></i>
+                            <span class="d-none d-lg-inline">ลบรูปภาพ</span>
+                            <span class="d-lg-none">ลบรูป</span>
+                        </span>
+                    </button>
+                    <div class="form-text mt-2">
+                        <small class="text-danger">ลบรูปภาพปัจจุบัน</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="d-flex flex-column h-100">
+                    <button type="button" class="btn gradient-btn w-100 flex-fill d-flex align-items-center justify-content-center" id="photoPreviewBtn" style="min-height: 45px;">
+                        <span class="d-flex align-items-center">
+                            <i class="fas fa-image me-2"></i>
+                            <span class="d-none d-lg-inline">ดูรูปภาพ</span>
+                            <span class="d-lg-none">ดูรูป</span>
+                        </span>
+                    </button>
+                    <div class="form-text mt-2">
+                        <small class="text-muted">แสดงรูปภาพใหญ่</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <div class="d-flex flex-column h-100">
+                    <button type="button" class="btn btn-outline-info w-100 flex-fill d-flex align-items-center justify-content-center" onclick="window.location.reload()" style="min-height: 45px;">
+                        <span class="d-flex align-items-center">
+                            <i class="fas fa-sync me-2"></i>
+                            <span class="d-none d-lg-inline">รีเฟรชภาพ</span>
+                            <span class="d-lg-none">รีเฟรช</span>
+                        </span>
+                    </button>
+                    <div class="form-text mt-2">
+                        <small class="text-muted">ค้นหาไฟล์ใหม่</small>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Form -->
-<form id="employeeForm" action="{{ route('employees.update', $employee) }}" method="POST">
+<form id="employeeForm" action="{{ route('employees.update', $employee) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
     
@@ -223,15 +654,227 @@
             <div class="mt-2">
                 <small class="text-success">
                     <i class="fas fa-check-circle me-1"></i>
-                    <strong>แก้ไขแล้ว:</strong> ปัญหา Password NULL - ระบบจะไม่อัปเดตรหัสผ่านถ้าเว้นว่าง
+                    <strong>แก้ไขแล้ว:</strong> ปัญหา Password NULL + Photo System เพิ่มแล้ว
                 </small>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
     
+    <!-- ✅ PHOTO SYSTEM - RESPONSIVE DESIGN -->
+    <div class="card mb-4 slide-in-up">
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                <div class="border border-2 rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px; border-color: #B54544 !important;">
+                    <i class="fas fa-camera" style="font-size: 20px; color: #B54544;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">รูปภาพพนักงาน</h5>
+                    <small class="text-muted">อัปโหลดรูปภาพ (JPG, PNG, GIF | ไม่เกิน 2MB) - รองรับ Drag & Drop</small>
+                </div>
+                <div class="ms-auto">
+                    <span class="badge gradient-badge">
+                        <i class="fas fa-camera me-1"></i>Photo System
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body photo-upload-section">
+            <div class="row g-4">
+                <!-- Current Photo Preview -->
+                <div class="col-md-4">
+                    <div class="photo-current-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-image me-2"></i>รูปภาพปัจจุบัน
+                        </h6>
+                        <div class="position-relative d-inline-block">
+                            <img id="currentPhotoPreview" 
+                                 src="{{ $photoUrl }}" 
+                                 alt="{{ $employee->full_name_th }}" 
+                                 class="slide-in-up"
+                                 onclick="showPhotoModal('{{ $photoUrl }}', '{{ $employee->full_name_th }}', 'current')"
+                                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode(mb_substr($employee->first_name_th ?? 'N', 0, 1) . mb_substr($employee->last_name_th ?? 'N', 0, 1)) }}&background=B54544&color=ffffff&size=400&font-size=0.33&bold=true';">
+                            
+                            @if($hasPhoto)
+                                <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-success">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            @else
+                                <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-secondary">
+                                    <i class="fas fa-robot"></i>
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <div class="mt-3">
+                            @if($hasPhoto)
+                                <div class="badge bg-success mb-2">
+                                    <i class="fas fa-check-circle me-1"></i>มีรูปภาพ
+                                </div>
+                                <br>
+                                <small class="text-muted">
+                                    @php
+                                        $photoSize = 'ไม่ทราบขนาด';
+                                        try {
+                                            if (isset($employee->photo_path) && $employee->photo_path) {
+                                                $photoFullPath = storage_path('app/public/' . $employee->photo_path);
+                                                if (file_exists($photoFullPath)) {
+                                                    $fileSizeBytes = filesize($photoFullPath);
+                                                    $photoSize = $fileSizeBytes > 0 ? formatBytes($fileSizeBytes) : 'ไม่ทราบขนาด';
+                                                }
+                                            }
+                                        } catch (Exception $e) {
+                                            $photoSize = 'ไม่สามารถตรวจสอบได้';
+                                        }
+                                        
+                                        // Helper function for formatting bytes
+                                        function formatBytes($size, $precision = 2) {
+                                            $units = ['B', 'KB', 'MB', 'GB'];
+                                            $base = log($size, 1024);
+                                            return round(pow(1024, $base - floor($base)), $precision) . ' ' . $units[floor($base)];
+                                        }
+                                    @endphp
+                                    ขนาด: {{ $photoSize }}
+                                </small>
+                            @else
+                                <div class="badge bg-warning text-dark mb-2">
+                                    <i class="fas fa-robot me-1"></i>Avatar อัตโนมัติ
+                                </div>
+                                <br>
+                                <small class="text-muted">
+                                    สร้างจากชื่อ: {{ mb_substr($employee->first_name_th ?? 'N', 0, 1) . mb_substr($employee->last_name_th ?? 'N', 0, 1) }}
+                                    <br>ระบบ Avatar อัตโนมัติ
+                                </small>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photo Upload Section -->
+                <div class="col-md-8">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-upload me-2"></i>อัปโหลดรูปภาพใหม่
+                    </h6>
+                    
+                    <!-- File Input (Hidden) -->
+                    <input type="file" 
+                           id="photo" 
+                           name="photo" 
+                           accept="image/jpeg,image/png,image/jpg,image/gif"
+                           class="d-none @error('photo') is-invalid @enderror"
+                           onchange="handlePhotoSelect(this)">
+                    
+                    <!-- Drag & Drop Area -->
+                    <div id="photoDropZone" 
+                         class="fade-in"
+                         onclick="document.getElementById('photo').click()">
+                        
+                        <!-- Default State -->
+                        <div id="dropZoneDefault" class="d-flex flex-column align-items-center justify-content-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-cloud-upload-alt fa-3x" style="color: #B54544;"></i>
+                            </div>
+                            <h5 class="text-dark mb-2">ลากไฟล์มาที่นี่ หรือคลิกเพื่อเลือกไฟล์</h5>
+                            <p class="text-muted mb-2">รองรับ: JPG, PNG, GIF</p>
+                            <p class="text-muted mb-0">ขนาดไม่เกิน 2MB</p>
+                            
+                            <div class="mt-3">
+                                <button type="button" class="btn gradient-btn">
+                                    <i class="fas fa-folder-open me-2"></i>เลือกไฟล์
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading State -->
+                        <div id="dropZoneLoading" class="d-flex flex-column align-items-center justify-content-center h-100" style="display: none !important;">
+                            <div class="mb-3">
+                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="text-primary mb-2">กำลังประมวลผลรูปภาพ...</h5>
+                            <div class="progress w-75 mb-2" style="height: 8px;">
+                                <div id="uploadProgress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small id="uploadStatus" class="text-muted">เตรียมการอัปโหลด...</small>
+                        </div>
+                        
+                        <!-- Preview State -->
+                        <div id="dropZonePreview" class="d-flex flex-column align-items-center justify-content-center h-100" style="display: none !important;">
+                            <div class="mb-3">
+                                <img id="newPhotoPreview" 
+                                     src="" 
+                                     alt="รูปภาพใหม่">
+                            </div>
+                            <h6 class="text-success mb-2">
+                                <i class="fas fa-check-circle me-1"></i>รูปภาพพร้อมอัปโหลด
+                            </h6>
+                            <p id="newPhotoInfo" class="text-muted mb-2"></p>
+                            
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm me-2" onclick="clearPhotoPreview()">
+                                    <i class="fas fa-times me-1"></i>ยกเลิก
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="document.getElementById('photo').click()">
+                                    <i class="fas fa-exchange-alt me-1"></i>เปลี่ยนรูป
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @error('photo')
+                        <div class="invalid-feedback d-block mt-2">{{ $message }}</div>
+                    @enderror
+                    
+                    <!-- Photo Constraints Info -->
+                    <div class="mt-3">
+                        <div class="alert alert-info mb-0">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-info-circle me-2"></i>ข้อกำหนดรูปภาพ
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li><strong>ประเภทไฟล์:</strong> JPG, PNG, GIF</li>
+                                        <li><strong>ขนาดไฟล์:</strong> ไม่เกิน 2MB</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0 small">
+                                        <li><strong>ขนาดแนะนำ:</strong> 400x400px ขึ้นไป</li>
+                                        <li><strong>รูปแบบ:</strong> รูปสี่เหลี่ยมจัตุรัสดีที่สุด</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DELETE PHOTO Option -->
+                    @if($hasPhoto)
+                        <div class="mt-3">
+                            <div class="card border-danger">
+                                <div class="card-body">
+                                    <h6 class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>ลบรูปภาพปัจจุบัน
+                                    </h6>
+                                    <p class="text-muted mb-3">
+                                        หากต้องการลบรูปภาพปัจจุบัน ระบบจะใช้ Avatar อัตโนมัติแทน
+                                    </p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="deletePhoto" name="delete_photo" value="1">
+                                        <label class="form-check-label text-danger" for="deletePhoto">
+                                            <strong>ลบรูปภาพปัจจุบัน</strong> (จะใช้ Avatar อัตโนมัติแทน)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ข้อมูลพื้นฐาน -->
-    <div class="card mb-4">
+    <div class="card mb-4 fade-in">
         <div class="card-header">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
@@ -374,7 +1017,7 @@
                     @enderror
                 </div>
                 
-                <!-- เบอร์โทร (✅ FIXED - อนุญาติซ้ำได้แล้ว) -->
+                <!-- เบอร์โทร -->
                 <div class="col-md-6">
                     <label for="phone" class="form-label">
                         เบอร์โทรศัพท์ <span class="text-danger">*</span>
@@ -390,16 +1033,6 @@
                                 ปัจจุบัน: <strong>{{ $employee->phone }}</strong><br>
                                 <i class="fas fa-check-circle me-1"></i>
                                 <strong>✅ แก้ไขแล้ว:</strong> สามารถใช้เบอร์โทรที่ซ้ำกันได้
-                            </small>
-                            <br>
-                            <small class="text-muted">
-                                <i class="fas fa-users me-1"></i>
-                                เหมาะสำหรับ: ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ, เบอร์บ้าน
-                            </small>
-                            <br>
-                            <small class="text-info">
-                                <i class="fas fa-shield-alt me-1"></i>
-                                Email และ Username ยังคง unique (ปลอดภัย)
                             </small>
                         </div>
                     </div>
@@ -427,7 +1060,7 @@
     </div>
 
     <!-- ระบบคอมพิวเตอร์ -->
-    <div class="card mb-4">
+    <div class="card mb-4 fade-in">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-success rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
@@ -476,7 +1109,7 @@
                     @enderror
                 </div>
 
-                <!-- ✅ FIXED: Computer Password (แสดงได้ทั้งหมด) -->
+                <!-- Computer Password -->
                 <div class="col-md-6">
                     <label for="computer_password" class="form-label">
                         Password (เปิดคอมพิวเตอร์)
@@ -499,14 +1132,13 @@
                     <div class="form-text">
                         ปัจจุบัน: <code class="text-success">{{ $employee->computer_password ?: 'ไม่มีข้อมูล' }}</code>
                         <br><small class="text-warning">เว้นว่างหากไม่ต้องการเปลี่ยน</small>
-                        <br><span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
                     </div>
                     @error('computer_password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <!-- Copier Code (On Demand) -->
+                <!-- Copier Code -->
                 <div class="col-md-6">
                     <label for="copier_code" class="form-label">
                         รหัสเครื่องถ่ายเอกสาร
@@ -539,8 +1171,8 @@
         </div>
     </div>
 
-    <!-- ระบบอีเมลและ Login (แยกแล้ว) -->
-    <div class="card mb-4">
+    <!-- ระบบอีเมลและ Login -->
+    <div class="card mb-4 fade-in">
         <div class="card-header">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-info rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
@@ -548,7 +1180,7 @@
                 </div>
                 <div>
                     <h5 class="card-title mb-0">ระบบอีเมลและ Login</h5>
-                    <small class="text-muted">อีเมลและรหัสผ่าน แยกระบบแล้ว (รหัสผ่านต่างกัน) - แก้ไข NULL Error แล้ว</small>
+                    <small class="text-muted">อีเมลและรหัสผ่าน แยกระบบแล้ว - แก้ไข NULL Error แล้ว</small>
                 </div>
             </div>
         </div>
@@ -608,7 +1240,7 @@
                     @enderror
                 </div>
 
-                <!-- ✅ FIXED: Email Password (แยกแล้ว) -->
+                <!-- Email Password -->
                 <div class="col-md-4">
                     <label for="email_password" class="form-label">
                         Password อีเมล
@@ -631,10 +1263,6 @@
                     <div class="form-text">
                         ปัจจุบัน: <code class="text-warning">{{ $employee->email_password ?: 'ไม่มีข้อมูล' }}</code>
                         <br><small class="text-warning">เว้นว่างหากไม่ต้องการเปลี่ยน</small>
-                        <br><span class="text-warning">
-                            <i class="fas fa-envelope me-1"></i>
-                            เฉพาะระบบอีเมล (ไม่ใช่ Login ระบบ)
-                        </span>
                     </div>
                     @error('email_password')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -650,7 +1278,7 @@
                     </h6>
                 </div>
 
-                <!-- Login Email (Auto-sync จาก email) -->
+                <!-- Login Email -->
                 <div class="col-md-8">
                     <label for="login_email" class="form-label">
                         อีเมลเข้าระบบ
@@ -676,7 +1304,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ FIXED: Login Password (แยกแล้ว) -->
+                <!-- Login Password -->
                 <div class="col-md-4">
                     <label for="login_password" class="form-label">
                         Password เข้าระบบ
@@ -702,10 +1330,6 @@
                             <strong>แก้ไขแล้ว:</strong> ไม่เปลี่ยนรหัสผ่านถ้าเว้นว่าง
                         </small>
                         <br><small class="text-warning">เว้นว่างหากไม่ต้องการเปลี่ยน</small>
-                        <br><span class="text-success">
-                            <i class="fas fa-shield-alt me-1"></i>
-                            เฉพาะเข้าสู่ระบบ (ไม่เกี่ยวกับอีเมล)
-                        </span>
                     </div>
                     @error('login_password')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -715,8 +1339,8 @@
         </div>
     </div>
 
-    <!-- ✅ ENHANCED: สาขา, แผนกและสิทธิ์ (Branch System) -->
-    <div class="card mb-4">
+    <!-- สาขา, แผนกและสิทธิ์ (Branch System) -->
+    <div class="card mb-4 fade-in">
         <div class="card-header">
             <div class="d-flex align-items-center">
                 <div class="border border-2 rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px; border-color: #B54544 !important;">
@@ -726,9 +1350,8 @@
                     <h5 class="card-title mb-0">สาขา, แผนกและสิทธิ์</h5>
                     <small class="text-muted">สาขาที่สังกัด, แผนกการทำงาน และสิทธิ์การใช้งาน</small>
                 </div>
-                {{-- ✅ Branch System Badge --}}
                 <div class="ms-auto">
-                    <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                    <span class="badge gradient-badge">
                         <i class="fas fa-building me-1"></i>Branch System
                     </span>
                 </div>
@@ -736,7 +1359,7 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <!-- ✅ NEW: Branch Selection (สาขา) -->
+                <!-- Branch Selection -->
                 <div class="col-md-6">
                     <label for="branch_id" class="form-label">
                         <i class="fas fa-building me-1" style="color: #B54544;"></i>สาขา
@@ -756,18 +1379,18 @@
                         <option value="">เลือกสาขา (ไม่บังคับ)</option>
                         @php
                             // ใช้ branches ที่ส่งมาจาก controller หรือ fallback
+                            $branchCollection = collect([
+                                (object)['id' => 1, 'name' => 'สำนักงานใหญ่', 'code' => 'HQ001', 'is_active' => true],
+                                (object)['id' => 2, 'name' => 'สาขา 1', 'code' => 'BR001', 'is_active' => true],
+                                (object)['id' => 3, 'name' => 'สาขา 2', 'code' => 'BR002', 'is_active' => true],
+                                (object)['id' => 4, 'name' => 'สาขา 3', 'code' => 'BR003', 'is_active' => true],
+                            ]);
+                            
+                            // ถ้ามี branches ที่ส่งมาจริง ให้ใช้แทน
                             if (isset($branches) && is_object($branches)) {
                                 $branchCollection = $branches;
                             } elseif (isset($branches) && is_array($branches)) {
                                 $branchCollection = collect($branches);
-                            } else {
-                                // Fallback branches
-                                $branchCollection = collect([
-                                    (object)['id' => 1, 'name' => 'สำนักงานใหญ่', 'code' => 'HQ001', 'is_active' => true],
-                                    (object)['id' => 2, 'name' => 'สาขา 1', 'code' => 'BR001', 'is_active' => true],
-                                    (object)['id' => 3, 'name' => 'สาขา 2', 'code' => 'BR002', 'is_active' => true],
-                                    (object)['id' => 4, 'name' => 'สาขา 3', 'code' => 'BR003', 'is_active' => true],
-                                ]);
                             }
                         @endphp
                         
@@ -784,22 +1407,14 @@
                     <div class="form-text">
                         ปัจจุบัน: 
                         @if($employee->branch)
-                            <span class="badge text-white" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                            <span class="badge gradient-badge">
                                 <i class="fas fa-building me-1"></i>{{ $employee->branch->name }}
                             </span>
-                            @if($employee->branch->code ?? $employee->branch->branch_code ?? null)
-                                <small class="text-muted ms-2">({{ $employee->branch->code ?? $employee->branch->branch_code }})</small>
-                            @endif
                         @else
                             <span class="badge bg-warning text-dark">
                                 <i class="fas fa-exclamation-triangle me-1"></i>ไม่ระบุสาขา
                             </span>
                         @endif
-                        <br>
-                        <small class="text-info">
-                            <i class="fas fa-info-circle me-1"></i>
-                            การระบุสาขาช่วยในการจัดการพนักงานและการรายงาน
-                        </small>
                     </div>
                     @error('branch_id')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -822,22 +1437,22 @@
                         <option value="">เลือกแผนก</option>
                         @php
                             // ใช้ departments ที่ส่งมาจาก controller หรือ fallback
+                            $deptCollection = collect([
+                                (object)['id' => 1, 'name' => 'บัญชี', 'express_enabled' => true],
+                                (object)['id' => 2, 'name' => 'IT', 'express_enabled' => false],
+                                (object)['id' => 3, 'name' => 'ฝ่ายขาย', 'express_enabled' => false],
+                                (object)['id' => 4, 'name' => 'การตลาด', 'express_enabled' => false],
+                                (object)['id' => 5, 'name' => 'บุคคล', 'express_enabled' => false],
+                                (object)['id' => 6, 'name' => 'ผลิต', 'express_enabled' => false],
+                                (object)['id' => 7, 'name' => 'คลังสินค้า', 'express_enabled' => false],
+                                (object)['id' => 8, 'name' => 'บริหาร', 'express_enabled' => false],
+                            ]);
+                            
+                            // ถ้ามี departments ที่ส่งมาจริง ให้ใช้แทน
                             if (isset($departments) && is_object($departments)) {
                                 $deptCollection = $departments;
                             } elseif (isset($departments) && is_array($departments)) {
                                 $deptCollection = collect($departments);
-                            } else {
-                                // Fallback departments
-                                $deptCollection = collect([
-                                    (object)['id' => 1, 'name' => 'บัญชี', 'express_enabled' => true],
-                                    (object)['id' => 2, 'name' => 'IT', 'express_enabled' => false],
-                                    (object)['id' => 3, 'name' => 'ฝ่ายขาย', 'express_enabled' => false],
-                                    (object)['id' => 4, 'name' => 'การตลาด', 'express_enabled' => false],
-                                    (object)['id' => 5, 'name' => 'บุคคล', 'express_enabled' => false],
-                                    (object)['id' => 6, 'name' => 'ผลิต', 'express_enabled' => false],
-                                    (object)['id' => 7, 'name' => 'คลังสินค้า', 'express_enabled' => false],
-                                    (object)['id' => 8, 'name' => 'บริหาร', 'express_enabled' => false],
-                                ]);
                             }
                         @endphp
                         
@@ -869,15 +1484,6 @@
                         ปัจจุบัน: <strong>{{ $employee->department ? $employee->department->name : 'ไม่ระบุ' }}</strong>
                         @if($employee->department && ($employee->department->express_enabled ?? false))
                             <span class="badge bg-info ms-1">Express</span>
-                        @endif
-                        @if($userRole === 'express')
-                            <br><span class="text-info">Express: สามารถเลือกเฉพาะแผนกที่รองรับ Express</span>
-                        @elseif($userRole === 'super_admin')
-                            <br><span class="text-success">
-                                <i class="fas fa-plus-circle me-1"></i>
-                                SuperAdmin: สามารถจัดการ Express ของแผนกได้ใน
-                                <a href="#" target="_blank">หน้าจัดการแผนก</a>
-                            </span>
                         @endif
                     </div>
                     @error('department_id')
@@ -976,65 +1582,11 @@
                     @enderror
                 </div>
             </div>
-
-            {{-- ✅ Branch-Department Summary --}}
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card border-info">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="mb-0">
-                                <i class="fas fa-info-circle me-2"></i>✅ สรุปข้อมูลองค์กร
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 style="color: #B54544;">
-                                        <i class="fas fa-building me-2"></i>ข้อมูลสาขา (ปัจจุบัน)
-                                    </h6>
-                                    <ul class="list-unstyled">
-                                        @if($employee->branch)
-                                            <li><strong>สาขา:</strong> {{ $employee->branch->name }}</li>
-                                            <li><strong>รหัสสาขา:</strong> {{ $employee->branch->code ?? $employee->branch->branch_code ?? 'N/A' }}</li>
-                                            <li><strong>สถานะ:</strong> 
-                                                <span class="badge bg-{{ $employee->branch->is_active ? 'success' : 'secondary' }}">
-                                                    {{ $employee->branch->is_active ? 'เปิดให้บริการ' : 'ปิดชั่วคราว' }}
-                                                </span>
-                                            </li>
-                                        @else
-                                            <li><span class="text-warning">ยังไม่ได้กำหนดสาขา</span></li>
-                                            <li><small class="text-muted">กรุณาเลือกสาขาด้านบนเพื่อให้ข้อมูลสมบูรณ์</small></li>
-                                        @endif
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-warning">
-                                        <i class="fas fa-users me-2"></i>ข้อมูลแผนก (ปัจจุบัน)
-                                    </h6>
-                                    <ul class="list-unstyled">
-                                        @if($employee->department)
-                                            <li><strong>แผนก:</strong> {{ $employee->department->name }}</li>
-                                            <li><strong>Express:</strong> 
-                                                <span class="badge bg-{{ $employee->department->express_enabled ?? false ? 'warning text-dark' : 'secondary' }}">
-                                                    {{ $employee->department->express_enabled ?? false ? 'รองรับ' : 'ไม่รองรับ' }}
-                                                </span>
-                                            </li>
-                                            <li><strong>ตำแหน่ง:</strong> {{ $employee->position }}</li>
-                                        @else
-                                            <li><span class="text-danger">ไม่มีข้อมูลแผนก</span></li>
-                                        @endif
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- โปรแกรม Express (Dynamic v2.0 Enhanced) -->
-    <div class="card mb-4" id="expressSection" 
+    <div class="card mb-4 fade-in" id="expressSection" 
          style="{{ ($employee->department && ($employee->department->express_enabled ?? false)) ? 'display: block;' : 'display: none;' }}">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
@@ -1089,7 +1641,7 @@
             @endif
             
             <div class="row g-3">
-                <!-- Express Username (Enhanced: 1-7 ตัวอักษร) -->
+                <!-- Express Username -->
                 <div class="col-md-6">
                     <label for="express_username" class="form-label">
                         Username Express (1-7 ตัวอักษร)
@@ -1112,20 +1664,14 @@
                             ปัจจุบัน: <code class="text-info">{{ $employee->express_username }}</code> ({{ strlen($employee->express_username) }} ตัว)
                             <br>
                         @endif
-                        <strong class="text-success">ปรับปรุงใหม่:</strong> ใช้ชื่อภาษาอังกฤษได้ 1-7 ตัวอักษร (ไม่ต้อง pad)
-                        <div class="mt-1">
-                            <small class="text-muted">
-                                <i class="fas fa-lightbulb me-1"></i>
-                                ตัวอย่าง: "John" → "john", "Alexandra" → "alexand"
-                            </small>
-                        </div>
+                        <strong class="text-success">ปรับปรุงใหม่:</strong> ใช้ชื่อภาษาอังกฤษได้ 1-7 ตัวอักษร
                     </div>
                     @error('express_username')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <!-- Express Password (Enhanced: 4 ตัวเลขไม่ซ้ำ) -->
+                <!-- Express Password -->
                 <div class="col-md-6">
                     <label for="express_password" class="form-label">
                         Password โปรแกรม Express
@@ -1153,14 +1699,7 @@
                             ปัจจุบัน: <code class="text-info">{{ $employee->express_password }}</code>
                             <br>
                         @endif
-                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน (เช่น 1234, 5678) 
-                        <span class="text-success">(แสดงให้เห็นได้ทั้งหมด)</span>
-                        <div class="mt-1">
-                            <small class="text-info">
-                                <i class="fas fa-calculator me-1"></i>
-                                ตัวอย่าง: 1357, 2468, 1029 (ไม่ซ้ำเลข)
-                            </small>
-                        </div>
+                        <strong class="text-success">ปรับปรุงใหม่:</strong> 4 ตัวเลขที่ไม่ซ้ำกัน
                     </div>
                     @error('express_password')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -1171,7 +1710,7 @@
     </div>
 
     <!-- สิทธิ์พิเศษ (Enhanced) -->
-    <div class="card mb-4">
+    <div class="card mb-4 fade-in">
         <div class="card-header">
             <div class="d-flex align-items-center">
                 <div class="border border-2 border-secondary rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
@@ -1249,7 +1788,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ NEW: Remote Work Permission -->
+                <!-- Remote Work Permission -->
                 <div class="col-md-6">
                     <div class="card border-info">
                         <div class="card-body text-center">
@@ -1281,7 +1820,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ NEW: Admin Access Permission -->
+                <!-- Admin Access Permission -->
                 <div class="col-md-6">
                     <div class="card border-danger">
                         <div class="card-body text-center">
@@ -1326,7 +1865,7 @@
     </div>
 
     <!-- Form Actions -->
-    <div class="card">
+    <div class="card slide-in-up">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center">
                 <a href="{{ route('employees.show', $employee) }}" 
@@ -1335,7 +1874,7 @@
                 </a>
                 
                 <button type="submit" 
-                        class="btn btn-success"
+                        class="btn gradient-btn"
                         id="submitBtn">
                     <i class="fas fa-save me-2"></i>บันทึกการแก้ไข
                 </button>
@@ -1343,6 +1882,39 @@
         </div>
     </div>
 </form>
+
+<!-- ✅ PHOTO PREVIEW MODAL -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header gradient-btn" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
+                <h5 class="modal-title" id="photoModalLabel">
+                    <i class="fas fa-image me-2"></i>รูปภาพพนักงาน
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="position-relative d-inline-block">
+                    <img id="modalPhotoImage" 
+                         src="" 
+                         alt="รูปภาพพนักงาน" 
+                         class="img-fluid rounded-3 border-3"
+                         style="max-height: 400px; border-color: #B54544 !important;">
+                </div>
+                <div class="mt-3">
+                    <h6 id="modalPhotoTitle" class="text-primary mb-2"></h6>
+                    <div id="modalPhotoInfo" class="text-muted"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn gradient-btn" onclick="document.getElementById('photo').click(); $('#photoModal').modal('hide');">
+                    <i class="fas fa-upload me-1"></i>เปลี่ยนรูปภาพ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Preview Modal -->
 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
@@ -1438,10 +2010,15 @@
 
 @endsection
 
+{{-- ✅ JAVASCRIPT - COMPLETE PHOTO SYSTEM --}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Enhanced Employee Edit Form Loaded - Branch System + Password NULL Error FIXED! ✅');
+    console.log('🚀 Enhanced Employee Edit Form Loaded - Complete Photo System + Branch System + Password NULL Error FIXED! ✅');
+    
+    // ✅ Photo System Variables
+    let selectedPhotoFile = null;
+    let photoPreviewURL = null;
     
     // Utility Functions
     const utils = {
@@ -1478,7 +2055,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return result;
         },
         
-        // Enhanced: สร้างเลข 4 หลักไม่ซ้ำกัน
         generateUniqueNumbers: (length = 4) => {
             const digits = [];
             while (digits.length < length) {
@@ -1512,6 +2088,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert.remove();
                 }
             }, 5000);
+        },
+        
+        formatFileSize: (bytes) => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
+        
+        validatePhotoFile: (file) => {
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            
+            if (!allowedTypes.includes(file.type)) {
+                return {
+                    valid: false,
+                    message: 'ประเภทไฟล์ต้องเป็น JPG, PNG หรือ GIF เท่านั้น'
+                };
+            }
+            
+            if (file.size > maxSize) {
+                return {
+                    valid: false,
+                    message: `ขนาดไฟล์ต้องไม่เกิน 2MB (ปัจจุบัน: ${utils.formatFileSize(file.size)})`
+                };
+            }
+            
+            return { valid: true };
         }
     };
     
@@ -1541,8 +2146,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         password: (length = 12) => utils.generateRandomString(length, true),
         copierCode: () => utils.generateRandomNumber(4),
-        
-        // Enhanced Express Username: 1-7 ตัวอักษร
         expressUsername: () => {
             const firstName = document.getElementById('first_name_en').value.trim().toLowerCase();
             if (firstName.length > 0) {
@@ -1550,9 +2153,130 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return utils.generateRandomString(5, false).toLowerCase();
         },
-        
-        // Enhanced Express Password: 4 ตัวเลขไม่ซ้ำกัน
         expressPassword: () => utils.generateUniqueNumbers(4)
+    };
+    
+    // ✅ PHOTO SYSTEM FUNCTIONS
+    const photoSystem = {
+        handleFileSelect: (file) => {
+            console.log('📸 Photo file selected:', file.name);
+            
+            const validation = utils.validatePhotoFile(file);
+            if (!validation.valid) {
+                utils.showNotification(validation.message, 'error');
+                return false;
+            }
+            
+            selectedPhotoFile = file;
+            photoSystem.showPreview(file);
+            return true;
+        },
+        
+        showPreview: (file) => {
+            const dropZoneDefault = document.getElementById('dropZoneDefault');
+            const dropZonePreview = document.getElementById('dropZonePreview');
+            const newPhotoPreview = document.getElementById('newPhotoPreview');
+            const newPhotoInfo = document.getElementById('newPhotoInfo');
+            
+            if (!dropZoneDefault || !dropZonePreview || !newPhotoPreview || !newPhotoInfo) return;
+            
+            if (photoPreviewURL) {
+                URL.revokeObjectURL(photoPreviewURL);
+            }
+            photoPreviewURL = URL.createObjectURL(file);
+            
+            newPhotoPreview.src = photoPreviewURL;
+            newPhotoInfo.innerHTML = `
+                <strong>${file.name}</strong><br>
+                ขนาด: ${utils.formatFileSize(file.size)}<br>
+                ประเภท: ${file.type}
+            `;
+            
+            dropZoneDefault.style.display = 'none';
+            dropZonePreview.style.display = 'flex';
+            
+            console.log('✅ Photo preview updated successfully');
+        },
+        
+        clearPreview: () => {
+            const dropZoneDefault = document.getElementById('dropZoneDefault');
+            const dropZonePreview = document.getElementById('dropZonePreview');
+            const photoInput = document.getElementById('photo');
+            
+            if (photoPreviewURL) {
+                URL.revokeObjectURL(photoPreviewURL);
+                photoPreviewURL = null;
+            }
+            
+            selectedPhotoFile = null;
+            
+            if (photoInput) {
+                photoInput.value = '';
+            }
+            
+            if (dropZoneDefault && dropZonePreview) {
+                dropZoneDefault.style.display = 'flex';
+                dropZonePreview.style.display = 'none';
+            }
+            
+            console.log('🗑️ Photo preview cleared');
+        },
+        
+        setupDragAndDrop: () => {
+            const dropZone = document.getElementById('photoDropZone');
+            if (!dropZone) return;
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            dropZone.addEventListener('drop', handleDrop, false);
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight() {
+                dropZone.style.borderColor = '#E6952A';
+                dropZone.style.backgroundColor = 'rgba(181, 69, 68, 0.05)';
+                dropZone.style.transform = 'scale(1.02)';
+            }
+            
+            function unhighlight() {
+                dropZone.style.borderColor = '#B54544';
+                dropZone.style.backgroundColor = '';
+                dropZone.style.transform = 'scale(1)';
+            }
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (photoSystem.handleFileSelect(file)) {
+                        const photoInput = document.getElementById('photo');
+                        if (photoInput) {
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            photoInput.files = dataTransfer.files;
+                        }
+                    }
+                }
+            }
+            
+            console.log('🎯 Drag & Drop initialized for photo upload');
+        }
     };
     
     // Auto-generation functions
@@ -1655,14 +2379,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     if (target === 'email') {
                         autoGenerate.showEmailPreview();
-                        // Auto-sync login email
                         const loginEmailEl = document.getElementById('login_email');
                         if (loginEmailEl) {
                             loginEmailEl.value = value;
                         }
                     }
                     
-                    // Show different messages based on target
                     let message = '';
                     switch (target) {
                         case 'email':
@@ -1716,7 +2438,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         
-        // ✅ ENHANCED: Department Change Handler - Express v2.0 + Branch System
         handleDepartmentChange: () => {
             const departmentSelect = document.getElementById('department_id');
             const expressSection = document.getElementById('expressSection');
@@ -1737,7 +2458,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 expressSection.style.display = 'block';
                 if (expressIndicator) expressIndicator.style.display = 'inline-block';
                 
-                // Auto-generate Express fields if name is available and fields are empty
                 const firstName = document.getElementById('first_name_en').value.trim();
                 if (firstName) {
                     const expressUsernameEl = document.getElementById('express_username');
@@ -1758,7 +2478,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         
-        // ✅ NEW: Branch Change Handler
         handleBranchChange: () => {
             const branchSelect = document.getElementById('branch_id');
             if (!branchSelect) return;
@@ -1784,7 +2503,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.style.borderColor = '#dc3545';
                     input.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
                     
-                    // Show warning
                     let warningDiv = input.parentElement.querySelector('.english-warning');
                     if (!warningDiv) {
                         warningDiv = document.createElement('div');
@@ -1793,13 +2511,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.parentElement.appendChild(warningDiv);
                     }
                     
-                    // Remove non-English characters
                     input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
                 } else {
                     input.style.borderColor = '';
                     input.style.boxShadow = '';
                     
-                    // Remove warning
                     const warningDiv = input.parentElement.querySelector('.english-warning');
                     if (warningDiv) {
                         warningDiv.remove();
@@ -1818,7 +2534,6 @@ document.addEventListener('DOMContentLoaded', function() {
             event.target.value = value;
         },
         
-        // ✅ ENHANCED: Handle Special Permission Switches (4 permissions)
         handlePermissionSwitches: () => {
             const switches = [
                 { id: 'vpn_access', statusId: 'vpnStatus' },
@@ -1836,7 +2551,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         statusEl.textContent = this.checked ? 'อนุญาต' : 'ไม่อนุญาต';
                         statusEl.className = this.checked ? 'text-success' : 'text-muted';
                         
-                        // Show notification
                         const permissionName = switchInfo.id === 'vpn_access' ? 'VPN' :
                                              switchInfo.id === 'color_printing' ? 'การปริ้นสี' :
                                              switchInfo.id === 'remote_work' ? 'ทำงานจากบ้าน' :
@@ -1848,7 +2562,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         },
         
-        // Email Auto-sync Handler
         handleEmailSync: () => {
             const emailInput = document.getElementById('email');
             const loginEmailInput = document.getElementById('login_email');
@@ -1858,7 +2571,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     loginEmailInput.value = this.value;
                 });
                 
-                // Initial sync
                 loginEmailInput.value = emailInput.value;
             }
         }
@@ -1873,7 +2585,6 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 console.log('🪄 Auto-filling data...');
                 
-                // Auto-fill username and email based on names
                 const firstName = document.getElementById('first_name_en').value.trim();
                 const lastName = document.getElementById('last_name_en').value.trim();
                 
@@ -1882,7 +2593,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     await new Promise(resolve => setTimeout(resolve, 200));
                     autoGenerate.email();
                     
-                    // Sync login email
                     const emailValue = document.getElementById('email').value;
                     const loginEmailEl = document.getElementById('login_email');
                     if (loginEmailEl && emailValue) {
@@ -1908,9 +2618,8 @@ document.addEventListener('DOMContentLoaded', function() {
             utils.showLoading(button);
             
             try {
-                console.log('🎯 Starting generateAll Enhanced Edit with Branch System...');
+                console.log('🎯 Starting generateAll Enhanced Edit with Photo + Branch System...');
                 
-                // ✅ FIXED: Generate passwords only if fields are CURRENTLY EMPTY (don't overwrite existing values)
                 if (!document.getElementById('computer_password').value) {
                     document.getElementById('computer_password').value = utils.generateRandomString(10, true);
                 }
@@ -1924,7 +2633,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('email_password').value = utils.generateRandomString(10, true);
                 }
                 
-                // Express fields (ถ้าแสดงอยู่)
                 const expressSection = document.getElementById('expressSection');
                 if (expressSection && expressSection.style.display !== 'none') {
                     if (!document.getElementById('express_username').value) {
@@ -1935,12 +2643,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Generate copier code if empty
                 if (!document.getElementById('copier_code').value) {
                     document.getElementById('copier_code').value = generators.copierCode();
                 }
                 
-                utils.showNotification('🎉 สร้างรหัสผ่านใหม่ทั้งหมดสำเร็จ! (Branch System + แก้ไข NULL Error แล้ว)', 'success');
+                utils.showNotification('🎉 สร้างรหัสผ่านใหม่ทั้งหมดสำเร็จ! (Photo + Branch System + แก้ไข NULL Error แล้ว)', 'success');
                 
             } catch (error) {
                 console.error('Error in generateAll:', error);
@@ -1956,7 +2663,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showPreview: () => {
-            // Create preview content
             const previewContent = formActions.generatePreviewContent();
             document.getElementById('previewContent').innerHTML = previewContent;
             
@@ -1982,23 +2688,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         </table>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="text-success">ระบบคอมพิวเตอร์</h6>
+                        <h6 style="color: #B54544;"><i class="fas fa-camera me-1"></i> รูปภาพ</h6>
+                        <table class="table table-sm">
+                            <tr><th>รูปภาพใหม่:</th><td>${selectedPhotoFile ? selectedPhotoFile.name : 'ไม่มีการเปลี่ยน'}</td></tr>
+                            <tr><th>ขนาดไฟล์:</th><td>${selectedPhotoFile ? utils.formatFileSize(selectedPhotoFile.size) : '-'}</td></tr>
+                            <tr><th>ลบรูปเก่า:</th><td>${data.delete_photo ? '<span class="text-danger">ใช่ - จะลบรูปปัจจุบัน</span>' : 'ไม่'}</td></tr>
+                        </table>
+                        
+                        <h6 class="text-success mt-3">ระบบคอมพิวเตอร์</h6>
                         <table class="table table-sm">
                             <tr><th>Username:</th><td>${data.username || '-'}</td></tr>
                             <tr><th>รหัสผ่านคอม:</th><td>${data.computer_password ? '••••••••••' : 'ไม่เปลี่ยน'}</td></tr>
                             <tr><th>รหัสถ่ายเอกสาร:</th><td>${data.copier_code || '-'}</td></tr>
                         </table>
-                        
-                        <h6 class="text-info mt-3">ระบบอีเมลและ Login</h6>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="text-info">ระบบอีเมลและ Login</h6>
                         <table class="table table-sm">
                             <tr><th>อีเมล:</th><td>${data.email || '-'}</td></tr>
                             <tr><th>รหัสผ่านอีเมล:</th><td>${data.email_password ? '••••••••••' : 'ไม่เปลี่ยน'}</td></tr>
                             <tr><th>รหัสผ่านเข้าระบบ:</th><td>${data.login_password ? '<span class="text-success">••••••••••••</span>' : '<span class="text-warning">ไม่เปลี่ยน</span>'}</td></tr>
                         </table>
                     </div>
-                </div>
-                
-                <div class="row mt-3">
                     <div class="col-md-6">
                         <h6 style="color: #B54544;"><i class="fas fa-building me-1"></i> สาขาและแผนก</h6>
                         <table class="table table-sm">
@@ -2009,14 +2723,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             <tr><th>สถานะ:</th><td>${document.querySelector('#status option:checked')?.textContent || '-'}</td></tr>
                         </table>
                     </div>
+                </div>
+                
+                <div class="row mt-3">
                     <div class="col-md-6">
                         <h6 class="text-danger">Express v2.0</h6>
                         <table class="table table-sm">
                             <tr><th>Express Username:</th><td>${data.express_username || 'ไม่มี'}</td></tr>
                             <tr><th>Express Password:</th><td>${data.express_password || 'ไม่มี'}</td></tr>
                         </table>
-                        
-                        <h6 class="text-secondary mt-3">สิทธิ์พิเศษ</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-secondary">สิทธิ์พิเศษ</h6>
                         <table class="table table-sm">
                             <tr><th>VPN:</th><td>${data.vpn_access ? '<span class="badge bg-success">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
                             <tr><th>ปริ้นสี:</th><td>${data.color_printing ? '<span class="badge bg-warning text-dark">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
@@ -2028,31 +2746,103 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <div class="alert alert-success mt-3">
                     <i class="fas fa-check-circle me-2"></i>
-                    <strong>✅ Branch System + Password Handling แก้ไขแล้ว:</strong> ระบบจะไม่อัปเดตรหัสผ่านถ้าฟิลด์เว้นว่าง และรองรับสาขาแล้ว
+                    <strong>✅ Photo + Branch System + Password Handling แก้ไขแล้ว:</strong> ระบบจะไม่อัปเดตรหัสผ่านถ้าฟิลด์เว้นว่าง และรองรับรูปภาพ + สาขาแล้ว
                 </div>
             `;
+        },
+        
+        deletePhoto: () => {
+            const deletePhotoCheckbox = document.getElementById('deletePhoto');
+            if (deletePhotoCheckbox) {
+                deletePhotoCheckbox.checked = true;
+                utils.showNotification('🗑️ จะลบรูปภาพปัจจุบันเมื่อบันทึก (จะใช้ Avatar อัตโนมัติแทน)', 'warning');
+            }
+        },
+        
+        showPhotoModal: (imageSrc, title, type) => {
+            const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+            const modalImage = document.getElementById('modalPhotoImage');
+            const modalTitle = document.getElementById('modalPhotoTitle');
+            const modalInfo = document.getElementById('modalPhotoInfo');
+            
+            if (modalImage && modalTitle && modalInfo) {
+                modalImage.src = imageSrc;
+                modalTitle.textContent = title;
+                
+                // Add error handling for missing images
+                modalImage.onerror = function() {
+                    this.onerror = null;
+                    const initials = title.split(' ').map(name => name.charAt(0)).join('').substring(0, 2) || 'NN';
+                    this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=B54544&color=ffffff&size=400&font-size=0.33&bold=true`;
+                    
+                    // Update modal info to show it's a fallback
+                    modalInfo.innerHTML = `
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <span class="badge bg-warning text-dark mb-2">Avatar อัตโนมัติ</span>
+                                <br><small class="text-muted">รูปภาพเดิมไม่พบในระบบ กรุณาอัปโหลดรูปใหม่</small>
+                            </div>
+                        </div>
+                    `;
+                };
+                
+                if (type === 'current') {
+                    modalInfo.innerHTML = `
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <span class="badge bg-success mb-2">รูปภาพปัจจุบัน</span>
+                                <br>คลิกปุ่ม "เปลี่ยนรูปภาพ" เพื่ออัปโหลดรูปใหม่
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modalInfo.innerHTML = `
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <span class="badge bg-info mb-2">รูปภาพใหม่</span>
+                                <br>จะถูกอัปโหลดเมื่อบันทึกฟอร์ม
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            modal.show();
         }
+    };
+    
+    // ✅ GLOBAL PHOTO FUNCTIONS
+    window.handlePhotoSelect = function(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            photoSystem.handleFileSelect(file);
+        }
+    };
+    
+    window.clearPhotoPreview = function() {
+        photoSystem.clearPreview();
+        utils.showNotification('🗑️ ยกเลิกรูปภาพใหม่แล้ว', 'info');
+    };
+    
+    window.showPhotoModal = function(imageSrc, title, type) {
+        formActions.showPhotoModal(imageSrc, title, type);
     };
     
     // Event Listeners Setup
     try {
-        // Click handlers
         document.addEventListener('click', eventHandlers.handleMagicClick);
         document.addEventListener('click', eventHandlers.handlePasswordToggle);
         
-        // Department change handler
         const departmentSelect = document.getElementById('department_id');
         if (departmentSelect) {
             departmentSelect.addEventListener('change', eventHandlers.handleDepartmentChange);
         }
         
-        // ✅ NEW: Branch change handler
         const branchSelect = document.getElementById('branch_id');
         if (branchSelect) {
             branchSelect.addEventListener('change', eventHandlers.handleBranchChange);
         }
         
-        // Phone format handler
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', eventHandlers.handlePhoneFormat);
@@ -2064,7 +2854,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // English validation handlers
         const firstNameEn = document.getElementById('first_name_en');
         const lastNameEn = document.getElementById('last_name_en');
         
@@ -2086,7 +2875,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Email domain change handler
         const emailDomain = document.getElementById('email_domain');
         if (emailDomain) {
             emailDomain.addEventListener('change', () => {
@@ -2094,7 +2882,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Quick Action buttons
         const autoFillBtn = document.getElementById('autoFillBtn');
         if (autoFillBtn) {
             autoFillBtn.addEventListener('click', formActions.autoFill);
@@ -2115,13 +2902,30 @@ document.addEventListener('DOMContentLoaded', function() {
             generateAllBtn.addEventListener('click', formActions.generateAll);
         }
         
-        // Setup permission switches
+        const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+        if (deletePhotoBtn) {
+            deletePhotoBtn.addEventListener('click', formActions.deletePhoto);
+        }
+        
+        const photoPreviewBtn = document.getElementById('photoPreviewBtn');
+        if (photoPreviewBtn) {
+            photoPreviewBtn.addEventListener('click', () => {
+                const currentPhoto = document.getElementById('currentPhotoPreview');
+                if (currentPhoto) {
+                    formActions.showPhotoModal(
+                        currentPhoto.src, 
+                        '{{ $employee->full_name_th }}', 
+                        'current'
+                    );
+                }
+            });
+        }
+        
         eventHandlers.handlePermissionSwitches();
-        
-        // Setup email auto-sync
         eventHandlers.handleEmailSync();
+        photoSystem.setupDragAndDrop();
         
-        console.log('✅ All event listeners attached successfully (Enhanced Edit Version with Branch System - Password FIXED)');
+        console.log('✅ All event listeners attached successfully (Complete Photo System)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
@@ -2130,13 +2934,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial setup
     setTimeout(() => {
         try {
-            // Initialize department change handler
             eventHandlers.handleDepartmentChange();
-            
-            // Initialize email preview
             autoGenerate.showEmailPreview();
             
-            // ✅ ENHANCED: Initialize permission switches (4 permissions)
             const switches = [
                 { id: 'vpn_access', statusId: 'vpnStatus' },
                 { id: 'color_printing', statusId: 'printingStatus' },
@@ -2154,17 +2954,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Initialize email sync
             eventHandlers.handleEmailSync();
             
-            console.log('✅ Enhanced Employee Edit Form Ready - Branch System + Password NULL Error FIXED! 🎉');
-            console.log('📝 Features: แสดงรหัสผ่านปัจจุบัน, แยกกลุ่มตาม create.blade.php, Branch System');
+            console.log('✅ Enhanced Employee Edit Form Ready - Complete Photo System + Branch System + Password NULL Error FIXED! 🎉');
+            console.log('📸 Photo System: Drag & Drop, Preview, Validation, Delete, Modal View');
+            console.log('🎨 Responsive Design: Mobile-friendly layout with ITMS theme');
             console.log('🔒 Password Display: แสดงรหัสผ่านทั้งหมดให้เห็น');
             console.log('⚡ Express v2.0: ทำงานปกติตามแผนกที่เปิดใช้งาน');
-            console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว (แก้ไขเรียบร้อย)');
-            console.log('🛡️ Password Handling: แก้ไข NULL Error แล้ว - ไม่อัปเดตถ้าเว้นว่าง');
-            console.log('🏢 Branch System: เพิ่มการจัดการสาขาแล้ว (ITMS Theme)');
-            console.log('🔧 Permissions: รองรับ 4 สิทธิ์พิเศษ (VPN, Color Print, Remote Work, Admin Access)');
+            console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว');
+            console.log('🛡️ Password Handling: แก้ไข NULL Error แล้ว');
+            console.log('🏢 Branch System: เพิ่มการจัดการสาขาแล้ว');
+            console.log('🔧 Permissions: รองรับ 4 สิทธิ์พิเศษ');
+            console.log('🖼️ Photo Features: Upload, Preview, Drag & Drop, Delete, Validation (2MB, JPG/PNG/GIF)');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -2206,13 +3007,11 @@ window.resetSpecificPassword = function(type) {
         
         document.getElementById(fieldId).value = password;
         
-        // Close modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
         if (modal) {
             modal.hide();
         }
         
-        // Show success notification with fixed message
         const utils = {
             showNotification: (message, type = 'success') => {
                 const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
@@ -2244,7 +3043,6 @@ window.resetAllPasswords = function() {
     setTimeout(() => resetSpecificPassword('login'), 100);
     setTimeout(() => resetSpecificPassword('email'), 200);
     
-    // Close modal
     setTimeout(() => {
         const modal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
         if (modal) {
@@ -2253,7 +3051,6 @@ window.resetAllPasswords = function() {
     }, 500);
 };
 
-// Modal functions
 function submitForm() {
     const form = document.getElementById('employeeForm');
     if (form) {
@@ -2261,12 +3058,15 @@ function submitForm() {
     }
 }
 
-console.log('📝 Enhanced Employee Edit Form Script Loaded - Branch System + Password NULL Error FIXED! ✅');
+console.log('📝 Enhanced Employee Edit Form Script Loaded - Complete Photo System + Branch System + Password NULL Error FIXED! ✅');
 console.log('🔧 Available functions: resetSpecificPassword(), resetAllPasswords(), submitForm()');
 console.log('⚡ Features: Auto-fill, Preview, Reset Password Modal, Email Sync, Branch Selection');
 console.log('🛡️ FIXED: Password handling - ไม่อัปเดตรหัสผ่านถ้าเว้นว่าง');
 console.log('🏢 NEW: Branch System - สามารถเลือกสาขาได้แล้ว (ITMS Theme)');
-console.log('🎨 ITMS Colors: Red-Orange gradient for Branch elements');
+console.log('📸 NEW: Complete Photo System - Upload, Drag & Drop, Preview, Delete, Validation');
+console.log('🎨 ITMS Colors: Red-Orange gradient for Branch & Photo elements');
 console.log('🔧 Permissions: VPN, Color Printing, Remote Work, Admin Access (4 permissions)');
+console.log('🖼️ Photo Constraints: 2MB max, JPG/PNG/GIF, 400x400px recommended');
+console.log('📱 Responsive: Mobile-friendly layout with proper scaling');
 </script>
 @endpush

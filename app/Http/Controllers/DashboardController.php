@@ -22,21 +22,70 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Update last login time
-        if ($user && method_exists($user, 'update')) {
-            try {
-                $user->update([
-                    'last_login_at' => now()
-                ]);
-            } catch (\Exception $e) {
-                // Ignore if column doesn't exist
-            }
-        }
+        // Update last login time safely
+        $this->updateLastLogin($user);
 
         // Get role-specific data
         $dashboardData = $this->getDashboardDataByRole($user->role ?? 'employee');
 
-        return view('dashboard', $dashboardData);
+        // Get safe statistics for dashboard
+        $safeStats = $this->getSafeStatistics();
+
+        return view('dashboard', array_merge($dashboardData, $safeStats));
+    }
+
+    /**
+     * Safely update last login time
+     */
+    protected function updateLastLogin($user)
+    {
+        try {
+            if ($user && method_exists($user, 'update') && Schema::hasColumn('users', 'last_login_at')) {
+                $user->update(['last_login_at' => now()]);
+            }
+        } catch (\Exception $exception) {
+            // Silently fail - this is not critical
+            \Log::info('Could not update last_login_at: ' . $exception->getMessage());
+        }
+    }
+
+    /**
+     * Get safe statistics that won't cause undefined variable errors
+     */
+    protected function getSafeStatistics()
+    {
+        $stats = [];
+        
+        try {
+            // Employee statistics
+            $stats['totalEmployees'] = $this->getEmployeeCount();
+            $stats['activeEmployees'] = $this->getActiveEmployeeCount();
+            
+            // Branch statistics
+            $stats['totalBranches'] = $this->getBranchCount();
+            $stats['activeBranches'] = $this->getActiveBranchCount();
+            
+            // Department statistics
+            $stats['totalDepartments'] = $this->getDepartmentCount();
+            $stats['expressEnabledDepartments'] = $this->getExpressDepartmentCount();
+            
+            // Photo statistics
+            $stats['employeesWithPhotos'] = $this->getEmployeesWithPhotosCount();
+            $stats['photoPercentage'] = $this->calculatePhotoPercentage();
+            
+            // Role distribution
+            $stats['roleDistribution'] = $this->getRoleDistribution();
+            
+            // Express statistics
+            $stats['expressStats'] = $this->getExpressStatistics();
+            
+        } catch (\Exception $exception) {
+            \Log::error('Dashboard Statistics Error: ' . $exception->getMessage());
+            // Return safe defaults
+            $stats = $this->getDefaultStatistics();
+        }
+        
+        return $stats;
     }
 
     /**
@@ -46,8 +95,8 @@ class DashboardController extends Controller
     {
         $baseData = [
             'user' => Auth::user(),
-            'stats' => $this->getBasicStats(),
             'recent_activity' => $this->getRecentActivity(),
+            'system_info' => $this->getSystemInfo(),
         ];
 
         switch ($role) {
@@ -65,6 +114,24 @@ class DashboardController extends Controller
                     'admin_stats' => $this->getAdminStats()
                 ]);
 
+            case 'hr':
+                return array_merge($baseData, [
+                    'hr_dashboard' => $this->getHRDashboard(),
+                    'employee_overview' => $this->getEmployeeOverview()
+                ]);
+
+            case 'manager':
+                return array_merge($baseData, [
+                    'manager_dashboard' => $this->getManagerDashboard(),
+                    'team_overview' => $this->getTeamOverview()
+                ]);
+
+            case 'express':
+                return array_merge($baseData, [
+                    'express_dashboard' => $this->getExpressDashboard(),
+                    'express_features' => $this->getExpressFeatures()
+                ]);
+
             case 'employee':
             default:
                 return array_merge($baseData, [
@@ -75,42 +142,168 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * Get basic statistics for dashboard cards
-     */
-    protected function getBasicStats()
+    // Safe database query methods with error handling
+
+    protected function getEmployeeCount()
     {
         try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::count();
+            }
+            return $this->getUserCount();
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getActiveEmployeeCount()
+    {
+        try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::where('status', 'active')->count();
+            }
+            return $this->getUserCount();
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getBranchCount()
+    {
+        try {
+            if (class_exists('\App\Models\Branch')) {
+                return \App\Models\Branch::count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getActiveBranchCount()
+    {
+        try {
+            if (class_exists('\App\Models\Branch')) {
+                return \App\Models\Branch::where('is_active', true)->count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getDepartmentCount()
+    {
+        try {
+            if (class_exists('\App\Models\Department')) {
+                return \App\Models\Department::count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getExpressDepartmentCount()
+    {
+        try {
+            if (class_exists('\App\Models\Department')) {
+                return \App\Models\Department::where('express_enabled', true)->count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getEmployeesWithPhotosCount()
+    {
+        try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::whereNotNull('photo')->count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function calculatePhotoPercentage()
+    {
+        try {
+            $total = $this->getEmployeeCount();
+            $withPhoto = $this->getEmployeesWithPhotosCount();
+            return $total > 0 ? round(($withPhoto / $total) * 100, 1) : 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getRoleDistribution()
+    {
+        try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::selectRaw('role, count(*) as count')
+                                         ->groupBy('role')
+                                         ->pluck('count', 'role')
+                                         ->toArray();
+            }
+            return [];
+        } catch (\Exception $exception) {
+            return [];
+        }
+    }
+
+    protected function getExpressStatistics()
+    {
+        try {
+            if (class_exists('\App\Models\Department') && method_exists('\App\Models\Department', 'getExpressStats')) {
+                return \App\Models\Department::getExpressStats();
+            }
             return [
-                'employees' => [
-                    'count' => $this->getEmployeeCount(),
-                    'change' => 8,
-                    'trend' => 'up'
-                ],
-                'assets' => [
-                    'count' => $this->getAssetCount(),
-                    'change' => 15,
-                    'trend' => 'up'
-                ],
-                'repairs' => [
-                    'count' => $this->getRepairCount(),
-                    'change' => -3,
-                    'trend' => 'down'
-                ],
-                'service_requests' => [
-                    'count' => $this->getServiceRequestCount(),
-                    'change' => 22,
-                    'trend' => 'up'
-                ]
+                'express_enabled_departments' => 0,
+                'express_department_percentage' => 0,
+                'express_user_percentage' => 0
             ];
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return [
-                'employees' => ['count' => 248, 'change' => 8, 'trend' => 'up'],
-                'assets' => ['count' => 456, 'change' => 15, 'trend' => 'up'],
-                'repairs' => ['count' => 18, 'change' => -3, 'trend' => 'down'],
-                'service_requests' => ['count' => 34, 'change' => 22, 'trend' => 'up']
+                'express_enabled_departments' => 0,
+                'express_department_percentage' => 0,
+                'express_user_percentage' => 0
             ];
         }
+    }
+
+    protected function getUserCount()
+    {
+        try {
+            if (Schema::hasTable('users')) {
+                return DB::table('users')->count();
+            }
+            return 0;
+        } catch (\Exception $exception) {
+            return 0;
+        }
+    }
+
+    protected function getDefaultStatistics()
+    {
+        return [
+            'totalEmployees' => 0,
+            'activeEmployees' => 0,
+            'totalBranches' => 0,
+            'activeBranches' => 0,
+            'totalDepartments' => 0,
+            'expressEnabledDepartments' => 0,
+            'employeesWithPhotos' => 0,
+            'photoPercentage' => 0,
+            'roleDistribution' => [],
+            'expressStats' => [
+                'express_enabled_departments' => 0,
+                'express_department_percentage' => 0,
+                'express_user_percentage' => 0
+            ]
+        ];
     }
 
     /**
@@ -122,7 +315,7 @@ class DashboardController extends Controller
         $userRole = $user->role ?? 'employee';
         
         try {
-            if ($userRole === 'super_admin' || $userRole === 'it_admin') {
+            if (in_array($userRole, ['super_admin', 'it_admin'])) {
                 return [
                     [
                         'title' => 'การซ่อมเครื่องพิมพ์ เสร็จสิ้น',
@@ -144,13 +337,6 @@ class DashboardController extends Controller
                         'time' => '1 วันที่แล้ว',
                         'icon' => 'fas fa-ticket-alt',
                         'color' => 'info'
-                    ],
-                    [
-                        'title' => 'ข้อตกลง IT ใหม่',
-                        'description' => 'นายสมชาย ใจดี - แผนกขาย',
-                        'time' => '2 วันที่แล้ว',
-                        'icon' => 'fas fa-file-signature',
-                        'color' => 'warning'
                     ]
                 ];
             } else {
@@ -163,22 +349,15 @@ class DashboardController extends Controller
                         'color' => 'warning'
                     ],
                     [
-                        'title' => 'ข้อตกลง IT ลงนามแล้ว',
-                        'description' => 'ข้อตกลงการใช้งานระบบ',
-                        'time' => '3 วันที่แล้ว',
-                        'icon' => 'fas fa-file-signature',
+                        'title' => 'ระบบทำงานปกติ',
+                        'description' => 'ไม่มีกิจกรรมผิดปกติ',
+                        'time' => 'ตอนนี้',
+                        'icon' => 'fas fa-check',
                         'color' => 'success'
-                    ],
-                    [
-                        'title' => 'คำขอใช้ซอฟต์แวร์',
-                        'description' => 'Adobe Photoshop - รออนุมัติ',
-                        'time' => '5 วันที่แล้ว',
-                        'icon' => 'fas fa-ticket-alt',
-                        'color' => 'info'
                     ]
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return [
                 [
                     'title' => 'ระบบทำงานปกติ',
@@ -192,6 +371,21 @@ class DashboardController extends Controller
     }
 
     /**
+     * Get system info
+     */
+    protected function getSystemInfo()
+    {
+        return [
+            'version' => 'v2.1',
+            'laravel_version' => app()->version(),
+            'php_version' => PHP_VERSION,
+            'environment' => app()->environment(),
+            'current_time' => now()->format('d/m/Y H:i:s'),
+            'database_status' => $this->checkDatabaseStatus()
+        ];
+    }
+
+    /**
      * Get system status for Super Admin
      */
     protected function getSystemStatus()
@@ -199,7 +393,6 @@ class DashboardController extends Controller
         return [
             'database' => $this->checkDatabaseStatus(),
             'web_server' => ['status' => 'online', 'message' => 'เซิร์ฟเวอร์เว็บทำงานปกติ'],
-            'email_server' => ['status' => 'maintenance', 'message' => 'อีเมลเซิร์ฟเวอร์อยู่ระหว่างบำรุงรักษา'],
             'file_storage' => $this->checkFileStorage(),
             'uptime' => '99.8%',
             'response_time' => '42ms',
@@ -216,15 +409,21 @@ class DashboardController extends Controller
             return [
                 'super_admin_count' => $this->getUserCountByRole('super_admin'),
                 'it_admin_count' => $this->getUserCountByRole('it_admin'),
+                'hr_count' => $this->getUserCountByRole('hr'),
+                'manager_count' => $this->getUserCountByRole('manager'),
+                'express_count' => $this->getUserCountByRole('express'),
                 'employee_count' => $this->getUserCountByRole('employee'),
                 'total_users' => $this->getTotalUserCount(),
                 'active_users' => $this->getActiveUserCount()
             ];
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return [
                 'super_admin_count' => 1,
                 'it_admin_count' => 5,
-                'employee_count' => 242,
+                'hr_count' => 3,
+                'manager_count' => 12,
+                'express_count' => 8,
+                'employee_count' => 219,
                 'total_users' => 248,
                 'active_users' => 245
             ];
@@ -238,9 +437,13 @@ class DashboardController extends Controller
             'can_manage_users' => true,
             'can_access_system_settings' => true,
             'can_view_all_data' => true,
-            'can_delete_data' => true
+            'can_delete_data' => true,
+            'can_manage_trash' => true,
+            'can_bulk_operations' => true
         ];
     }
+
+    // Additional role-specific methods
 
     protected function getPendingTasks()
     {
@@ -265,11 +468,70 @@ class DashboardController extends Controller
     protected function getAdminStats()
     {
         return [
-            'can_see_passwords' => true,
             'can_manage_employees' => true,
             'can_manage_assets' => true,
-            'can_manage_agreements' => true,
+            'can_manage_departments' => true,
             'can_view_reports' => true
+        ];
+    }
+
+    protected function getHRDashboard()
+    {
+        return [
+            'new_hires_this_month' => 12,
+            'pending_interviews' => 5,
+            'contract_renewals' => 8,
+            'training_sessions' => 15
+        ];
+    }
+
+    protected function getEmployeeOverview()
+    {
+        return [
+            'total_employees' => $this->getEmployeeCount(),
+            'departments' => $this->getDepartmentCount(),
+            'average_tenure' => '2.5 ปี',
+            'satisfaction_rate' => 4.2
+        ];
+    }
+
+    protected function getManagerDashboard()
+    {
+        return [
+            'team_size' => 24,
+            'pending_approvals' => 6,
+            'monthly_targets' => 85,
+            'team_performance' => 92
+        ];
+    }
+
+    protected function getTeamOverview()
+    {
+        return [
+            'active_projects' => 8,
+            'completed_tasks' => 156,
+            'team_efficiency' => 88,
+            'upcoming_deadlines' => 3
+        ];
+    }
+
+    protected function getExpressDashboard()
+    {
+        return [
+            'express_access' => true,
+            'department_features' => true,
+            'quick_add_enabled' => true,
+            'express_reports' => 15
+        ];
+    }
+
+    protected function getExpressFeatures()
+    {
+        return [
+            'can_quick_add_employees' => true,
+            'can_view_express_reports' => true,
+            'can_access_accounting_tools' => true,
+            'express_shortcuts' => true
         ];
     }
 
@@ -309,62 +571,17 @@ class DashboardController extends Controller
 
     // Helper methods for stats calculation
     
-    protected function getEmployeeCount()
-    {
-        try {
-            if (Schema::hasTable('users')) {
-                return DB::table('users')->count();
-            }
-        } catch (\Exception $e) {
-            // Ignore error
-        }
-        return 248;
-    }
-
-    protected function getAssetCount()
-    {
-        try {
-            if (Schema::hasTable('assets')) {
-                return DB::table('assets')->count();
-            }
-        } catch (\Exception $e) {
-            // Ignore error
-        }
-        return 456;
-    }
-
-    protected function getRepairCount()
-    {
-        try {
-            if (Schema::hasTable('repair_requests')) {
-                return DB::table('repair_requests')->where('status', '!=', 'completed')->count();
-            }
-        } catch (\Exception $e) {
-            // Ignore error
-        }
-        return 18;
-    }
-
-    protected function getServiceRequestCount()
-    {
-        try {
-            if (Schema::hasTable('service_requests')) {
-                return DB::table('service_requests')->where('status', '!=', 'completed')->count();
-            }
-        } catch (\Exception $e) {
-            // Ignore error
-        }
-        return 34;
-    }
-
     protected function getUserCountByRole($role)
     {
         try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::where('role', $role)->count();
+            }
             if (Schema::hasTable('users')) {
                 return DB::table('users')->where('role', $role)->count();
             }
-        } catch (\Exception $e) {
-            // Ignore error
+        } catch (\Exception $exception) {
+            // Return safe default
         }
         return 0;
     }
@@ -372,13 +589,16 @@ class DashboardController extends Controller
     protected function getTotalUserCount()
     {
         try {
+            if (class_exists('\App\Models\Employee')) {
+                return \App\Models\Employee::count();
+            }
             if (Schema::hasTable('users')) {
                 return DB::table('users')->count();
             }
-        } catch (\Exception $e) {
-            // Ignore error
+        } catch (\Exception $exception) {
+            // Return safe default
         }
-        return 248;
+        return 0;
     }
 
     protected function getActiveUserCount()
@@ -389,10 +609,10 @@ class DashboardController extends Controller
                     ->where('last_login_at', '>=', Carbon::now()->subDay())
                     ->count();
             }
-        } catch (\Exception $e) {
-            // Ignore error
+        } catch (\Exception $exception) {
+            // Return safe default
         }
-        return 156;
+        return 0;
     }
 
     // System status check methods
@@ -401,9 +621,9 @@ class DashboardController extends Controller
     {
         try {
             DB::connection()->getPdo();
-            return ['status' => 'online', 'message' => 'ฐานข้อมูลเชื่อมต่อปกติ'];
-        } catch (\Exception $e) {
-            return ['status' => 'offline', 'message' => 'ฐานข้อมูลเชื่อมต่อไม่ได้'];
+            return ['status' => 'connected', 'message' => 'ฐานข้อมูลเชื่อมต่อปกติ'];
+        } catch (\Exception $exception) {
+            return ['status' => 'disconnected', 'message' => 'ฐานข้อมูลเชื่อมต่อไม่ได้'];
         }
     }
 
@@ -415,7 +635,7 @@ class DashboardController extends Controller
                 'status' => $storageAvailable ? 'online' : 'offline',
                 'message' => $storageAvailable ? 'ที่เก็บไฟล์พร้อมใช้งาน' : 'ที่เก็บไฟล์มีปัญหา'
             ];
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return ['status' => 'offline', 'message' => 'ตรวจสอบที่เก็บไฟล์ไม่ได้'];
         }
     }
@@ -425,10 +645,19 @@ class DashboardController extends Controller
      */
     public function getStats(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'data' => $this->getBasicStats()
-        ]);
+        try {
+            $stats = $this->getSafeStatistics();
+            return response()->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to fetch statistics',
+                'error' => $exception->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -436,14 +665,22 @@ class DashboardController extends Controller
      */
     public function getRoleData(Request $request)
     {
-        $user = Auth::user();
-        $roleData = $this->getDashboardDataByRole($user->role ?? 'employee');
-        
-        return response()->json([
-            'success' => true,
-            'role' => $user->role ?? 'employee',
-            'data' => $roleData
-        ]);
+        try {
+            $user = Auth::user();
+            $roleData = $this->getDashboardDataByRole($user->role ?? 'employee');
+            
+            return response()->json([
+                'success' => true,
+                'role' => $user->role ?? 'employee',
+                'data' => $roleData
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to fetch role data',
+                'error' => $exception->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -451,72 +688,72 @@ class DashboardController extends Controller
      */
     public function getNotifications(Request $request)
     {
-        $user = Auth::user();
-        $userRole = $user->role ?? 'employee';
-        
-        $notifications = [];
-        
-        switch ($userRole) {
-            case 'super_admin':
-                $notifications = [
-                    [
-                        'id' => 1,
-                        'title' => 'บำรุงรักษาระบบ',
-                        'message' => 'กำหนดบำรุงรักษาระบบคืนนี้ เวลา 02:00 น.',
-                        'type' => 'warning',
-                        'read' => false,
-                        'time' => Carbon::now()->subHours(2)->toISOString()
-                    ],
-                    [
-                        'id' => 2,
-                        'title' => 'ผู้ใช้ใหม่รอการอนุมัติ',
-                        'message' => 'มีผู้ใช้ใหม่ 3 คน รอการอนุมัติเข้าใช้งานระบบ',
-                        'type' => 'info',
-                        'read' => false,
-                        'time' => Carbon::now()->subHours(4)->toISOString()
-                    ]
-                ];
-                break;
-                
-            case 'it_admin':
-                $notifications = [
-                    [
-                        'id' => 3,
-                        'title' => 'แจ้งซ่อมใหม่',
-                        'message' => 'มีการแจ้งซ่อมเครื่องพิมพ์ แผนกบัญชี',
-                        'type' => 'warning',
-                        'read' => false,
-                        'time' => Carbon::now()->subMinutes(30)->toISOString()
-                    ],
-                    [
-                        'id' => 4,
-                        'title' => 'คำขอบริการใหม่',
-                        'message' => 'คำขอติดตั้งซอฟต์แวร์ Adobe Creative Suite',
-                        'type' => 'info',
-                        'read' => false,
-                        'time' => Carbon::now()->subHours(1)->toISOString()
-                    ]
-                ];
-                break;
-                
-            default: // employee
-                $notifications = [
-                    [
-                        'id' => 5,
-                        'title' => 'งานซ่อมเสร็จสิ้น',
-                        'message' => 'การซ่อมคอมพิวเตอร์ของคุณเสร็จเรียบร้อยแล้ว',
-                        'type' => 'success',
-                        'read' => false,
-                        'time' => Carbon::now()->subHours(3)->toISOString()
-                    ]
-                ];
-                break;
+        try {
+            $user = Auth::user();
+            $userRole = $user->role ?? 'employee';
+            
+            $notifications = [];
+            
+            switch ($userRole) {
+                case 'super_admin':
+                    $notifications = [
+                        [
+                            'id' => 1,
+                            'title' => 'บำรุงรักษาระบบ',
+                            'message' => 'กำหนดบำรุงรักษาระบบคืนนี้ เวลา 02:00 น.',
+                            'type' => 'warning',
+                            'read' => false,
+                            'time' => Carbon::now()->subHours(2)->toISOString()
+                        ],
+                        [
+                            'id' => 2,
+                            'title' => 'ผู้ใช้ใหม่รอการอนุมัติ',
+                            'message' => 'มีผู้ใช้ใหม่ 3 คน รอการอนุมัติเข้าใช้งานระบบ',
+                            'type' => 'info',
+                            'read' => false,
+                            'time' => Carbon::now()->subHours(4)->toISOString()
+                        ]
+                    ];
+                    break;
+                    
+                case 'it_admin':
+                    $notifications = [
+                        [
+                            'id' => 3,
+                            'title' => 'แจ้งซ่อมใหม่',
+                            'message' => 'มีการแจ้งซ่อมเครื่องพิมพ์ แผนกบัญชี',
+                            'type' => 'warning',
+                            'read' => false,
+                            'time' => Carbon::now()->subMinutes(30)->toISOString()
+                        ]
+                    ];
+                    break;
+                    
+                default: // employee
+                    $notifications = [
+                        [
+                            'id' => 5,
+                            'title' => 'งานซ่อมเสร็จสิ้น',
+                            'message' => 'การซ่อมคอมพิวเตอร์ของคุณเสร็จเรียบร้อยแล้ว',
+                            'type' => 'success',
+                            'read' => false,
+                            'time' => Carbon::now()->subHours(3)->toISOString()
+                        ]
+                    ];
+                    break;
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $notifications,
+                'unread_count' => collect($notifications)->where('read', false)->count()
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to fetch notifications',
+                'error' => $exception->getMessage()
+            ], 500);
         }
-        
-        return response()->json([
-            'success' => true,
-            'data' => $notifications,
-            'unread_count' => collect($notifications)->where('read', false)->count()
-        ]);
     }
 }

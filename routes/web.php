@@ -1,1051 +1,328 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\BranchController; // ✅ Branch Controller
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - Laravel Employee Management System v2.1 + Branch System
+| Web Routes - Employee Management System v2.1 (Web Interface Only)
 |--------------------------------------------------------------------------
-| ✅ Features: Separated Password System, Express v2.0, Phone Duplicates Allowed
-| ✅ Updated: Enhanced UI/UX, AJAX Forms, Advanced Permissions
-| ✅ NEW: Complete Branch Management System + Fixed API Routes
+| NOTE: API routes are now handled in routes/api.php
+| This file contains only web interface routes
+| 🔧 FIXED: Route order to prevent {employee} parameter conflicts
 */
 
-// Redirect root to appropriate page
-Route::get('/', function () {
-    if (Auth::check()) {
+// ✅ Dashboard Routes (แก้ไขให้ใช้ DashboardController)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
+    Route::get('/dashboard/role-data', [DashboardController::class, 'getRoleData'])->name('dashboard.role-data');
+    Route::get('/dashboard/notifications', [DashboardController::class, 'getNotifications'])->name('dashboard.notifications');
+    
+    // Redirect root to dashboard
+    Route::get('/', function () {
         return redirect()->route('dashboard');
-    }
-    return redirect()->route('login');
+    })->name('home');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Authentication Routes
-|--------------------------------------------------------------------------
-*/
-
-// Login routes
-Route::middleware('guest')->group(function () {
-    Route::get('/login', function () {
-        return view('auth.login');
-    })->name('login');
+// ✅ CRITICAL FIX: Employee Routes with Proper Order (Specific routes BEFORE parameter routes)
+Route::prefix('employees')->middleware(['auth'])->group(function () {
     
-    Route::post('/login', function (Illuminate\Http\Request $request) {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            
-            return redirect()->intended(route('dashboard'))->with('success', 'เข้าสู่ระบบสำเร็จ');
-        }
-
-        return back()->withErrors([
-            'email' => 'ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง',
-        ])->onlyInput('email');
-    })->name('login.store');
+    // ✅ List & Search (First - most common route)
+    Route::get('/', [EmployeeController::class, 'index'])
+         ->middleware('role:super_admin,it_admin,hr,manager,express')
+         ->name('employees.index');
+    
+    // 🔧 CRITICAL FIX: Trash Management Routes FIRST (before {employee} parameter)
+    Route::prefix('trash')->middleware('role:super_admin')->group(function () {
+        Route::get('/', [EmployeeController::class, 'trash'])
+             ->name('employees.trash');
+             
+        Route::patch('/{id}/restore', [EmployeeController::class, 'restore'])
+             ->name('employees.restore');
+             
+        Route::delete('/{id}/force', [EmployeeController::class, 'forceDelete'])
+             ->name('employees.force-delete');
+             
+        Route::delete('/empty', [EmployeeController::class, 'emptyTrash'])
+             ->name('employees.empty-trash');
+    });
+    
+    // ✅ Create Routes (before {employee})
+    Route::get('/create', [EmployeeController::class, 'create'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.create');
+         
+    Route::post('/', [EmployeeController::class, 'store'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.store');
+    
+    // ✅ Export Routes (before {employee} parameter)
+    Route::get('/export/excel', [EmployeeController::class, 'exportExcel'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.export.excel');
+         
+    Route::get('/export/pdf', [EmployeeController::class, 'exportPdf'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.export.pdf');
+         
+    Route::get('/export/csv', [EmployeeController::class, 'exportCsv'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.export.csv');
+    
+    // ✅ Bulk Operations (before {employee} parameter)
+    Route::post('/bulk/delete', [EmployeeController::class, 'bulkDelete'])
+         ->middleware('role:super_admin')
+         ->name('employees.bulk.delete');
+         
+    Route::post('/bulk/restore', [EmployeeController::class, 'bulkRestore'])
+         ->middleware('role:super_admin')
+         ->name('employees.bulk.restore');
+         
+    Route::post('/bulk/permanent-delete', [EmployeeController::class, 'bulkPermanentDelete'])
+         ->middleware('role:super_admin')
+         ->name('employees.bulk.permanent-delete');
+    
+    // ✅ Additional Bulk Operations
+    Route::post('/bulk/update-status', [EmployeeController::class, 'bulkUpdateStatus'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.bulk.update-status');
+         
+    Route::post('/bulk/update-department', [EmployeeController::class, 'bulkUpdateDepartment'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.bulk.update-department');
+         
+    Route::post('/bulk/send-email', [EmployeeController::class, 'bulkSendEmail'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.bulk.send-email');
+         
+    Route::post('/bulk/export-selected', [EmployeeController::class, 'bulkExportSelected'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.bulk.export-selected');
+         
+    Route::post('/bulk/move-to-trash', [EmployeeController::class, 'bulkMoveToTrash'])
+         ->middleware('role:super_admin')
+         ->name('employees.bulk.move-to-trash');
+    
+    // ✅ Photo Management Routes (before {employee} parameter)
+    Route::prefix('photos')->middleware('role:super_admin,it_admin')->group(function () {
+        Route::post('/mass-upload', [EmployeeController::class, 'massPhotoUpload'])
+             ->name('employees.photos.mass-upload');
+             
+        Route::post('/compress-all', [EmployeeController::class, 'compressAllPhotos'])
+             ->name('employees.photos.compress-all');
+             
+        Route::get('/export-report', [EmployeeController::class, 'exportPhotoReport'])
+             ->name('employees.photos.export-report');
+             
+        Route::post('/backup', [EmployeeController::class, 'photoBackup'])
+             ->name('employees.photos.backup');
+    });
+    
+    // 🔧 IMPORTANT: Individual Employee Routes LAST (with {employee} parameter)
+    // These must come after all specific routes to prevent parameter matching conflicts
+    
+    // ✅ Show Individual Employee
+    Route::get('/{employee}', [EmployeeController::class, 'show'])
+         ->name('employees.show');
+    
+    // ✅ Edit Individual Employee
+    Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.edit');
+         
+    Route::put('/{employee}', [EmployeeController::class, 'update'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.update');
+    
+    // ✅ Individual Employee Status Update
+    Route::patch('/{employee}/status', [EmployeeController::class, 'updateStatus'])
+         ->middleware('role:super_admin,it_admin')
+         ->name('employees.update-status');
+    
+    // ✅ Individual Employee Photo Management
+    Route::post('/{employee}/photo', [EmployeeController::class, 'uploadPhoto'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.upload-photo');
+         
+    Route::delete('/{employee}/photo', [EmployeeController::class, 'deletePhoto'])
+         ->middleware('role:super_admin,it_admin,hr')
+         ->name('employees.delete-photo');
+         
+    Route::get('/{employee}/photo-info', [EmployeeController::class, 'getPhotoInfo'])
+         ->name('employees.photo-info');
+    
+    // ✅ Delete Individual Employee (Soft Delete)
+    Route::delete('/{employee}', [EmployeeController::class, 'destroy'])
+         ->middleware('role:super_admin')
+         ->name('employees.destroy');
 });
 
-// Logout routes
-Route::post('/logout', function (Illuminate\Http\Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+// ✅ Department Routes (Web Interface)
+Route::prefix('departments')->middleware(['auth', 'role:super_admin,it_admin'])->group(function () {
+    Route::get('/', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/create', [DepartmentController::class, 'create'])->name('departments.create');
+    Route::post('/', [DepartmentController::class, 'store'])->name('departments.store');
+    Route::get('/{department}', [DepartmentController::class, 'show'])->name('departments.show');
+    Route::get('/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
+    Route::put('/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+    Route::delete('/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
     
-    return redirect()->route('login')->with('success', 'ออกจากระบบเรียบร้อยแล้ว');
-})->name('logout');
-
-/*
-|--------------------------------------------------------------------------
-| Protected Routes (ต้อง login ก่อน)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth')->group(function () {
+    // Department Trash
+    Route::get('/trash', [DepartmentController::class, 'trash'])->name('departments.trash');
+    Route::patch('/{id}/restore', [DepartmentController::class, 'restore'])->name('departments.restore');
+    Route::delete('/{id}/force', [DepartmentController::class, 'forceDelete'])->name('departments.force-delete');
     
-    /*
-    |--------------------------------------------------------------------------
-    | Dashboard
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::get('/dashboard', function () {
-        try {
-            $employees = \App\Models\Employee::withoutTrashed()->get();
-            $trashCount = \App\Models\Employee::onlyTrashed()->count();
-            
-            // Express Statistics
-            $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count();
-            $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
-            $accountingEmployees = \App\Models\Employee::withoutTrashed()->whereHas('department', function($query) {
-                $query->where('express_enabled', true);
-            })->count();
-            
-            // ✅ Complete Branch Statistics
-            $branchStats = [
-                'total_branches' => \App\Models\Branch::count(),
-                'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-                'employees_with_branch' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-                'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
-                'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
-            ];
-            
-            $stats = [
-                'total_employees' => $employees->count(),
-                'active_employees' => $employees->where('status', 'active')->count(),
-                'inactive_employees' => $employees->where('status', 'inactive')->count(),
-                'express_users' => $expressUsers,
-                'express_departments' => $expressEnabledDepartments,
-                'accounting_employees' => $accountingEmployees,
-                'trash_count' => $trashCount,
-                'separated_passwords' => $employees->whereNotNull('email_password')->whereNotNull('password')->count(),
-                'phone_duplicates_allowed' => true,
-                'system_version' => '2.1.0',
-                'branch_stats' => $branchStats // ✅ Complete branch statistics
-            ];
-            
-            return view('dashboard', compact('employees', 'trashCount', 'expressUsers', 'expressEnabledDepartments', 'accountingEmployees', 'stats'));
-        } catch (\Exception $e) {
-            // Fallback if database is not ready
-            return view('dashboard', [
-                'employees' => collect(),
-                'trashCount' => 0,
-                'expressUsers' => 0,
-                'expressEnabledDepartments' => 0,
-                'accountingEmployees' => 0,
-                'stats' => [
-                    'total_employees' => 0,
-                    'active_employees' => 0,
-                    'inactive_employees' => 0,
-                    'express_users' => 0,
-                    'express_departments' => 0,
-                    'accounting_employees' => 0,
-                    'trash_count' => 0,
-                    'separated_passwords' => 0,
-                    'phone_duplicates_allowed' => true,
-                    'system_version' => '2.1.0',
-                    'branch_stats' => [
-                        'total_branches' => 0,
-                        'active_branches' => 0,
-                        'employees_with_branch' => 0,
-                        'branches_with_manager' => 0,
-                        'branches_without_manager' => 0,
-                    ]
-                ]
-            ]);
-        }
-    })->name('dashboard');
-    
-    /*
-    |--------------------------------------------------------------------------
-    | ✅ Complete Branch Management Routes + API
-    |--------------------------------------------------------------------------
-    */
-    
-    // Branch resource routes (Admin and HR access)
-    Route::middleware(['role:super_admin,admin'])->group(function () {
-        // Main CRUD routes
-        Route::resource('branches', BranchController::class);
-        
-        // Additional branch management routes
-        Route::prefix('branches')->name('branches.')->group(function () {
-            // Toggle branch status (activate/deactivate)
-            Route::patch('{branch}/toggle-status', [BranchController::class, 'toggleStatus'])
-                 ->name('toggle-status');
-            
-            // View employees in a specific branch
-            Route::get('{branch}/employees', [BranchController::class, 'employees'])
-                 ->name('employees');
-            
-            // Transfer employees between branches
-            Route::post('{branch}/transfer-employees', [BranchController::class, 'transferEmployees'])
-                 ->name('transfer-employees');
-            
-            // Export branch data
-            Route::get('export', [BranchController::class, 'export'])
-                 ->name('export');
-            
-            // Branch reports
-            Route::get('reports', [BranchController::class, 'reports'])
-                 ->name('reports');
-            
-            // Branch statistics
-            Route::get('statistics', [BranchController::class, 'statistics'])
-                 ->name('statistics');
-        });
-    });
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Department Management Routes
-    |--------------------------------------------------------------------------
-    */
-    
-    // Department CRUD Routes
-    Route::resource('departments', DepartmentController::class);
-    
-    // Department Special Routes (Admin Only)
-    Route::middleware(['role:super_admin,it_admin'])->group(function () {
-        // Original routes
-        Route::post('/departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus'])
-            ->name('departments.toggleStatus');
-        Route::post('/departments/bulk-action', [DepartmentController::class, 'bulkAction'])
-            ->name('departments.bulkAction');
-        Route::get('/departments/export-excel', [DepartmentController::class, 'exportExcel'])
-            ->name('departments.exportExcel');
-        Route::get('/departments/{department}/express-users', [DepartmentController::class, 'getExpressUsers'])
-            ->name('departments.expressUsers');
-        
-        // Updated Express routes
-        Route::patch('/departments/{department}/toggle-express', [DepartmentController::class, 'toggleExpress'])
-            ->name('departments.toggleExpress');
-        Route::get('/departments/express-statistics', [DepartmentController::class, 'getExpressStats'])
-            ->name('departments.expressStatistics');
-        Route::patch('/departments/bulk/express', [DepartmentController::class, 'bulkUpdateExpress'])
-            ->name('departments.bulkExpress');
-    });
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Employee Management Routes
-    |--------------------------------------------------------------------------
-    */
-    
-    // Employee Special Routes (before resource routes)
-    Route::get('/employees/export-excel', [EmployeeController::class, 'exportExcel'])->name('employees.exportExcel');
-    Route::get('/employees/export-pdf', [EmployeeController::class, 'exportPdf'])->name('employees.exportPdf');
-    Route::post('/employees/bulk-action', [EmployeeController::class, 'bulkAction'])->name('employees.bulkAction');
-    Route::get('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');    
-    
-    // ✅ Trash Management Routes (SuperAdmin Only)
-    Route::middleware(['role:super_admin'])->group(function () {
-        Route::get('/employees/trash', [EmployeeController::class, 'trash'])->name('employees.trash');
-        Route::post('/employees/{id}/restore', [EmployeeController::class, 'restore'])->name('employees.restore');
-        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDestroy'])->name('employees.force-delete');
-        Route::post('/employees/bulk-restore', [EmployeeController::class, 'bulkRestore'])->name('employees.bulk-restore');
-        Route::delete('/employees/empty-trash', [EmployeeController::class, 'emptyTrash'])->name('employees.empty-trash');
-    });
-    
-    // ✅ Enhanced Password Management Routes (v2.1)
-    Route::prefix('employees/{employee}')->name('employees.')->group(function () {
-        // Individual password reset routes
-        Route::post('/reset-login-password', [EmployeeController::class, 'resetPassword'])
-            ->name('reset-login-password');
-        Route::post('/reset-email-password', [EmployeeController::class, 'resetEmailPassword'])
-            ->name('reset-email-password');
-        Route::post('/reset-computer-password', [EmployeeController::class, 'resetComputerPassword'])
-            ->name('reset-computer-password');
-        Route::post('/reset-both-passwords', [EmployeeController::class, 'resetBothPasswords'])
-            ->name('reset-both-passwords');
-        
-        // Express credentials management
-        Route::post('/generate-express-credentials', [EmployeeController::class, 'generateExpressCredentials'])
-            ->name('generate-express-credentials');
-        
-        // Legacy routes (for backward compatibility)
-        Route::post('/reset-password', [EmployeeController::class, 'resetPassword'])->name('reset-password');
-        Route::post('/send-credentials', [EmployeeController::class, 'sendCredentials'])->name('send-credentials');
-        Route::get('/preview', [EmployeeController::class, 'preview'])->name('preview');
-        Route::post('/generate-credentials', [EmployeeController::class, 'generateCredentials'])->name('generate-credentials');
-    });
-    
-    // Employee CRUD routes
-    Route::resource('employees', EmployeeController::class);
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Profile Management
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::get('/profile', function () {
-        return view('profile', ['user' => auth()->user()]);
-    })->name('profile');
-    
-    Route::put('/profile', function (Illuminate\Http\Request $request) {
-        $user = auth()->user();
-        
-        $validated = $request->validate([
-            'first_name_th' => 'required|string|max:100',
-            'last_name_th' => 'required|string|max:100',
-            'first_name_en' => 'required|string|max:100',
-            'last_name_en' => 'required|string|max:100',
-            'phone' => 'required|string|max:20', // ✅ Phone duplicates allowed
-            'nickname' => 'nullable|string|max:50',
-        ]);
-        
-        $user->update($validated);
-        
-        return back()->with('success', 'อัปเดตข้อมูลส่วนตัวเรียบร้อยแล้ว');
-    })->name('profile.update');
-    
-    Route::put('/profile/password', function (Illuminate\Http\Request $request) {
-        $request->validate([
-            'current_password' => 'required',
-            'password' => 'required|confirmed|min:6',
-        ]);
-        
-        $user = auth()->user();
-        
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง']);
-        }
-        
-        $user->update([
-            'password' => Hash::make($request->password)
-        ]);
-        
-        return back()->with('success', 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
-    })->name('profile.password.update');
-    
+    // Department Export
+    Route::get('/export/excel', [DepartmentController::class, 'exportExcel'])->name('departments.export.excel');
+    Route::get('/export/pdf', [DepartmentController::class, 'exportPdf'])->name('departments.export.pdf');
 });
 
-/*
-|--------------------------------------------------------------------------
-| ✅ FIXED: API Routes สำหรับ AJAX และ Branch System
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('api')->middleware('auth')->group(function () {
+// ✅ Branch Routes (Web Interface) - แก้ไขเพิ่ม toggle-status route ที่หายไป
+Route::prefix('branches')->middleware(['auth', 'role:super_admin,it_admin,hr'])->group(function () {
+    // ✅ List and basic operations
+    Route::get('/', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('/', [BranchController::class, 'store'])->name('branches.store');
     
-    /*
-    |--------------------------------------------------------------------------
-    | ✅ CRITICAL FIX: Branch API Routes ที่ create.blade.php ต้องการ
-    |--------------------------------------------------------------------------
-    */
+    // ✅ Export Routes (before {branch} parameter)
+    Route::get('/export/excel', [BranchController::class, 'exportExcel'])->name('branches.export.excel');
+    Route::get('/export/pdf', [BranchController::class, 'exportPdf'])->name('branches.export.pdf');
+    Route::get('/export/csv', [BranchController::class, 'exportCsv'])->name('branches.export.csv');
     
-    Route::prefix('branches')->name('api.branches.')->group(function () {
-        // ✅ MAIN FIX: Get all active branches for dropdowns
-        Route::get('active', function() {
-            try {
-                $branches = \App\Models\Branch::where('is_active', true)
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'code']);
-                
-                return response()->json($branches->map(function($branch) {
-                    return [
-                        'id' => $branch->id,
-                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
-                        'name' => $branch->name,
-                        'code' => $branch->code ?? 'N/A',
-                    ];
-                }));
-                
-            } catch (\Exception $e) {
-                \Log::error('Branch API Error: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('active');
-        
-        // Get branch info with employees count
-        Route::get('{branch}/info', function(\App\Models\Branch $branch) {
-            try {
-                $currentCount = $branch->employees ? $branch->employees()->where('status', 'active')->count() : 0;
-                
-                return response()->json([
-                    'id' => $branch->id,
-                    'name' => $branch->name,
-                    'code' => $branch->code ?? 'N/A',
-                    'current_employees' => $currentCount,
-                    'manager' => $branch->manager ? [
-                        'id' => $branch->manager->id,
-                        'name' => $branch->manager->full_name_th ?? $branch->manager->name,
-                        'employee_id' => $branch->manager->employee_id ?? $branch->manager->id
-                    ] : null,
-                    'is_active' => $branch->is_active,
-                    'description' => $branch->description,
-                    'address' => $branch->address,
-                    'phone' => $branch->phone,
-                    'email' => $branch->email,
-                    'created_at' => $branch->created_at->format('d/m/Y'),
-                ]);
-                
-            } catch (\Exception $e) {
-                \Log::error('Branch Info API Error: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'ไม่สามารถโหลดข้อมูลสาขาได้',
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('info');
-        
-        // Search branches
-        Route::get('search', function(Illuminate\Http\Request $request) {
-            try {
-                $search = $request->get('q', '');
-                
-                $branches = \App\Models\Branch::when($search, function($query, $search) {
-                    $query->where(function($q) use ($search) {
-                        $q->where('name', 'LIKE', "%{$search}%")
-                          ->orWhere('code', 'LIKE', "%{$search}%")
-                          ->orWhere('address', 'LIKE', "%{$search}%");
-                    });
-                })
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->limit(20)
-                ->get(['id', 'name', 'code', 'address']);
-                
-                return response()->json($branches->map(function($branch) {
-                    return [
-                        'id' => $branch->id,
-                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
-                        'name' => $branch->name,
-                        'code' => $branch->code ?? 'N/A',
-                        'address' => $branch->address,
-                    ];
-                }));
-                
-            } catch (\Exception $e) {
-                \Log::error('Branch Search API Error: ' . $e->getMessage());
-                return response()->json([
-                    'error' => 'ไม่สามารถค้นหาสาขาได้'
-                ], 500);
-            }
-        })->name('search');
-        
-        // Branch statistics
-        Route::get('statistics', function() {
-            try {
-                $stats = [
-                    'total_branches' => \App\Models\Branch::count(),
-                    'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-                    'inactive_branches' => \App\Models\Branch::where('is_active', false)->count(),
-                    'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
-                    'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
-                    'total_employees_in_branches' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-                    'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
-                ];
-                
-                return response()->json([
-                    'success' => true,
-                    'statistics' => $stats
-                ]);
-                
-            } catch (\Exception $e) {
-                \Log::error('Branch Statistics API Error: ' . $e->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('statistics');
+    // ✅ FIXED: แก้ไข export route สำหรับ dashboard quick action
+    Route::get('/export', [BranchController::class, 'exportExcel'])->name('branches.export');
+    
+    // ✅ Data and AJAX routes (before {branch} parameter)
+    Route::get('/data', [BranchController::class, 'getData'])->name('branches.data');
+    
+    // ✅ Trash Management (before {branch} parameter)
+    Route::prefix('trash')->group(function () {
+        Route::get('/', [BranchController::class, 'trash'])->name('branches.trash');
+        Route::patch('/{id}/restore', [BranchController::class, 'restore'])->name('branches.restore');
+        Route::delete('/{id}/force', [BranchController::class, 'forceDelete'])->name('branches.force-delete');
     });
     
-    // ✅ Enhanced Employee APIs
-    Route::prefix('employees')->name('api.employees.')->group(function () {
-        Route::get('/', [EmployeeController::class, 'apiIndex'])->name('index');
-        Route::get('/search', [EmployeeController::class, 'apiSearch'])->name('search');
-        Route::get('/{employee}', [EmployeeController::class, 'apiShow'])->name('show');
-        
-        // ✅ Enhanced password management APIs
-        Route::post('/{employee}/reset-login-password', [EmployeeController::class, 'resetPassword'])
-            ->name('reset-login-password');
-        Route::post('/{employee}/reset-email-password', [EmployeeController::class, 'resetEmailPassword'])
-            ->name('reset-email-password');
-        Route::post('/{employee}/reset-computer-password', [EmployeeController::class, 'resetComputerPassword'])
-            ->name('reset-computer-password');
-        Route::post('/{employee}/reset-both-passwords', [EmployeeController::class, 'resetBothPasswords'])
-            ->name('reset-both-passwords');
-        
-        // Express management
-        Route::post('/{employee}/generate-express-credentials', [EmployeeController::class, 'generateExpressCredentials'])
-            ->name('generate-express-credentials');
-        Route::get('/{employee}/express-credentials', [EmployeeController::class, 'getExpressCredentials'])
-            ->name('express-credentials');
-        
-        // ✅ Employee statistics with branch info
-        Route::get('/statistics/overview', function() {
-            try {
-                $stats = [
-                    'total' => \App\Models\Employee::withoutTrashed()->count(),
-                    'active' => \App\Models\Employee::withoutTrashed()->where('status', 'active')->count(),
-                    'inactive' => \App\Models\Employee::withoutTrashed()->where('status', 'inactive')->count(),
-                    'express_users' => \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(),
-                    'trash_count' => \App\Models\Employee::onlyTrashed()->count(),
-                    'by_role' => \App\Models\Employee::withoutTrashed()
-                        ->selectRaw('role, COUNT(*) as count')
-                        ->groupBy('role')
-                        ->pluck('count', 'role'),
-                    'by_department' => \App\Models\Employee::withoutTrashed()
-                        ->join('departments', 'employees.department_id', '=', 'departments.id')
-                        ->selectRaw('departments.name as department_name, COUNT(*) as count')
-                        ->groupBy('departments.name')
-                        ->pluck('count', 'department_name'),
-                    // ✅ Complete Branch statistics
-                    'by_branch' => \App\Models\Employee::withoutTrashed()
-                        ->leftJoin('branches', 'employees.branch_id', '=', 'branches.id')
-                        ->selectRaw('COALESCE(branches.name, "ไม่ระบุสาขา") as branch_name, COUNT(*) as count')
-                        ->groupBy('branches.name')
-                        ->pluck('count', 'branch_name'),
-                    'separated_passwords' => \App\Models\Employee::withoutTrashed()
-                        ->whereNotNull('email_password')
-                        ->whereNotNull('password')
-                        ->count(),
-                    'with_branch' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-                    'without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
-                ];
-                
-                return response()->json([
-                    'success' => true,
-                    'statistics' => $stats
-                ]);
-                
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('statistics');
-        
-        // Phone duplicate statistics
-        Route::get('/phone-duplicates', function() {
-            try {
-                $duplicates = \App\Models\Employee::withoutTrashed()
-                    ->whereNotNull('phone')
-                    ->where('phone', '!=', '')
-                    ->selectRaw('phone, COUNT(*) as count')
-                    ->groupBy('phone')
-                    ->havingRaw('COUNT(*) > 1')
-                    ->orderBy('count', 'desc')
-                    ->get();
-                
-                return response()->json([
-                    'success' => true,
-                    'duplicates' => $duplicates,
-                    'total_duplicates' => $duplicates->count(),
-                    'note' => 'Phone duplicates are now allowed in the system'
-                ]);
-                
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ], 500);
-            }
-        })->name('phone-duplicates');
-        
-        // Employee status toggle
-        Route::post('/{employee}/toggle-status', function (\App\Models\Employee $employee, Illuminate\Http\Request $request) {
-            try {
-                // Check permission
-                if (!in_array(auth()->user()->role, ['super_admin', 'it_admin'])) {
-                    return response()->json(['success' => false, 'message' => 'ไม่มีสิทธิ์']);
-                }
-                
-                $validated = $request->validate([
-                    'status' => 'required|in:active,inactive'
-                ]);
-                
-                $employee->update(['status' => $validated['status']]);
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => 'อัปเดตสถานะเรียบร้อยแล้ว',
-                    'status' => $validated['status']
-                ]);
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()]);
-            }
-        })->name('toggle-status');
-        
-        // Trash count API
-        Route::get('/trash-count', function () {
-            try {
-                $count = \App\Models\Employee::onlyTrashed()->count();
-                return response()->json(['success' => true, 'count' => $count]);
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'count' => 0]);
-            }
-        })->name('trash-count');
-    });
+    // ✅ Individual Branch Routes (with {branch} parameter - LAST)
+    Route::get('/{branch}', [BranchController::class, 'show'])->name('branches.show');
+    Route::get('/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+    Route::put('/{branch}', [BranchController::class, 'update'])->name('branches.update');
+    Route::delete('/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
     
-    // ✅ Enhanced generation APIs (แยกรหัสผ่าน)
-    Route::prefix('generate')->name('api.generate.')->group(function () {
-        // Separated password generation
-        Route::get('/email-password', function() {
-            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            $password = '';
-            for ($i = 0; $i < 10; $i++) { // Email: 10 chars
-                $password .= $chars[random_int(0, strlen($chars) - 1)];
-            }
-            return response()->json(['email_password' => $password]);
-        })->name('email-password');
-        
-        Route::get('/login-password', function() {
-            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            $password = '';
-            for ($i = 0; $i < 12; $i++) { // Login: 12 chars - more secure
-                $password .= $chars[random_int(0, strlen($chars) - 1)];
-            }
-            return response()->json(['login_password' => $password]);
-        })->name('login-password');
-        
-        Route::get('/computer-password', function() {
-            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-            $password = '';
-            for ($i = 0; $i < 10; $i++) { // Computer: 10 chars
-                $password .= $chars[random_int(0, strlen($chars) - 1)];
-            }
-            return response()->json(['computer_password' => $password]);
-        })->name('computer-password');
-        
-        // Express credential generation
-        Route::get('/express-username', [EmployeeController::class, 'generateExpressUsernameApi'])
-            ->name('express-username');
-        Route::get('/express-password', [EmployeeController::class, 'generateExpressPasswordApi'])
-            ->name('express-password');
-        
-        // Other credentials
-        Route::get('/employee-code', function() {
-            do {
-                $code = 'EMP' . str_pad(random_int(1, 999), 3, '0', STR_PAD_LEFT);
-            } while (\App\Models\Employee::withoutTrashed()->where('employee_code', $code)->exists());
-            
-            return response()->json(['employee_code' => $code]);
-        })->name('employee-code');
-        
-        Route::get('/keycard-id', function() {
-            do {
-                $id = 'KC' . str_pad(random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-            } while (\App\Models\Employee::withoutTrashed()->where('keycard_id', $id)->exists());
-            
-            return response()->json(['keycard_id' => $id]);
-        })->name('keycard-id');
-        
-        Route::get('/copier-code', function() {
-            return response()->json([
-                'copier_code' => str_pad(random_int(1, 9999), 4, '0', STR_PAD_LEFT)
-            ]);
-        })->name('copier-code');
-    });
-    
-    // ✅ Express eligibility check (Updated to use department express_enabled)
-    Route::get('/check-express-eligibility', [EmployeeController::class, 'checkExpressEligibility'])
-        ->name('check-express-eligibility');
-    
-    // Express connection test
-    Route::post('/test-express-connection', [EmployeeController::class, 'testExpressConnection'])
-        ->name('test-express-connection');
-    
-    // Express usage report
-    Route::get('/express-report', [EmployeeController::class, 'getExpressReport'])
-        ->name('express-report');
-    
-    // ✅ Enhanced Department APIs
-    Route::prefix('departments')->name('api.departments.')->group(function () {
-        Route::get('/', [DepartmentController::class, 'apiList'])->name('list');
-        Route::get('/select-options', [DepartmentController::class, 'getSelectOptions'])->name('select-options');
-        Route::get('/express-support', [DepartmentController::class, 'checkExpressSupport'])->name('express-support');
-        Route::get('/generate-code', [DepartmentController::class, 'generateCode'])->name('generate-code');
-        
-        // Department Express Check (รองรับ backward compatibility)
-        Route::get('/is-accounting', function (Illuminate\Http\Request $request) {
-            try {
-                $departmentId = $request->get('department_id');
-                
-                if (!$departmentId) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'กรุณาระบุ ID ของแผนก'
-                    ], 400);
-                }
-                
-                $department = \App\Models\Department::find($departmentId);
-                
-                if (!$department) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'ไม่พบแผนกที่ระบุ'
-                    ], 404);
-                }
-                
-                return response()->json([
-                    'success' => true,
-                    'is_express_enabled' => $department->express_enabled,
-                    'is_accounting' => $department->express_enabled, // For backward compatibility
-                    'department_id' => $department->id,
-                    'department_name' => $department->name,
-                    'express_users_count' => $department->employees()->withoutTrashed()->whereNotNull('express_username')->count()
-                ]);
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()]);
-            }
-        })->name('is-accounting');
-        
-        // Enhanced department express check
-        Route::get('/express-enabled', function(Illuminate\Http\Request $request) {
-            $departmentId = $request->get('department_id');
-            
-            if (!$departmentId) {
-                return response()->json(['error' => 'กรุณาระบุแผนก'], 400);
-            }
-            
-            try {
-                $department = \App\Models\Department::find($departmentId);
-                
-                if (!$department) {
-                    return response()->json(['error' => 'ไม่พบแผนกที่ระบุ'], 404);
-                }
-                
-                return response()->json([
-                    'success' => true,
-                    'express_enabled' => $department->express_enabled,
-                    'department_name' => $department->name,
-                    'express_users_count' => $department->employees()
-                        ->withoutTrashed()
-                        ->whereNotNull('express_username')
-                        ->count()
-                ]);
-                
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 500);
-            }
-        })->name('express-enabled');
-    });
-    
-    // Generate data for AJAX
-    Route::get('/generate-data', [EmployeeController::class, 'generateData'])
-        ->name('generate-data');
+    // ✅ FIXED: เพิ่ม toggle-status route ที่หายไป
+    Route::patch('/{branch}/toggle-status', [BranchController::class, 'toggleStatus'])
+         ->middleware('role:super_admin,it_admin')
+         ->name('branches.toggle-status');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Express Management Routes v2.0
-|--------------------------------------------------------------------------
-*/
+// ✅ Authentication Routes
+require __DIR__.'/auth.php';
 
-Route::prefix('express')->middleware('auth')->name('express.')->group(function () {
-    
-    // Express Generation APIs
-    Route::get('/generate-username', [EmployeeController::class, 'generateExpressUsernameApi'])
-        ->name('generate-username');
-    
-    Route::get('/generate-password', [EmployeeController::class, 'generateExpressPasswordApi'])
-        ->name('generate-password');
-    
-    // Express System APIs
-    Route::get('/check-eligibility', [EmployeeController::class, 'checkExpressEligibility'])
-        ->name('check-eligibility');
-    
-    Route::post('/test-connection', [EmployeeController::class, 'testExpressConnection'])
-        ->name('test-connection');
-    
-    Route::get('/report', [EmployeeController::class, 'getExpressReport'])
-        ->name('report');
-    
-    // Express Employee Management
-    Route::get('/employees/{employee}/credentials', [EmployeeController::class, 'getExpressCredentials'])
-        ->name('employees.credentials');
-    
-    // Express Dashboard
-    Route::get('/dashboard', function () {
-        try {
-            $user = auth()->user();
-            
-            // Check if user can access Express dashboard
-            if (!in_array($user->role, ['super_admin', 'it_admin', 'hr', 'express'])) {
-                return redirect()->route('dashboard')->with('error', 'ไม่มีสิทธิ์เข้าถึงหน้านี้');
-            }
-            
-            // Express statistics
-            $totalExpress = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count();
-            $activeExpress = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')
-                                                ->where('status', 'active')
-                                                ->count();
-            $expressEnabledDepts = \App\Models\Department::where('express_enabled', true)->count();
-            
-            $recentExpressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')
-                                                      ->with('department')
-                                                      ->orderBy('created_at', 'desc')
-                                                      ->take(10)
-                                                      ->get();
-            
-            return view('express.dashboard', compact(
-                'totalExpress', 
-                'activeExpress', 
-                'expressEnabledDepts', 
-                'recentExpressUsers'
-            ));
-            
-        } catch (\Exception $e) {
-            return redirect()->route('dashboard')->with('error', 'เกิดข้อผิดพลาดในการโหลดข้อมูล Express');
-        }
-    })->name('dashboard');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| ✅ Express Management Routes v2.1 (Enhanced)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth'])->prefix('express/v2')->name('express.v2.')->group(function () {
-    
-    // Express dashboard v2
-    Route::get('/dashboard', function () {
-        try {
-            $user = auth()->user();
-            
-            if (!in_array($user->role, ['super_admin', 'it_admin', 'hr', 'express'])) {
-                return redirect()->route('dashboard')->with('error', 'ไม่มีสิทธิ์เข้าถึงหน้านี้');
-            }
-            
-            // Enhanced Express statistics
-            $stats = [
-                'total_employees' => \App\Models\Employee::withoutTrashed()->count(),
-                'total_express' => \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count(),
-                'active_express' => \App\Models\Employee::withoutTrashed()
-                    ->whereNotNull('express_username')
-                    ->where('status', 'active')
-                    ->count(),
-                'express_departments' => \App\Models\Department::where('express_enabled', true)->count(),
-                'separated_passwords' => \App\Models\Employee::withoutTrashed()
-                    ->whereNotNull('email_password')
-                    ->whereNotNull('password')
-                    ->count()
-            ];
-            
-            $recentExpressUsers = \App\Models\Employee::withoutTrashed()
-                ->whereNotNull('express_username')
-                ->with('department')
-                ->orderBy('updated_at', 'desc')
-                ->take(10)
-                ->get();
-            
-            return view('express.dashboard-v2', compact('stats', 'recentExpressUsers'));
-            
-        } catch (\Exception $e) {
-            return redirect()->route('dashboard')->with('error', 'เกิดข้อผิดพลาดในการโหลดข้อมูล Express');
-        }
-    })->name('dashboard');
-    
-    // Express reports v2
-    Route::get('/reports', function() {
-        try {
-            $departments = \App\Models\Department::with(['employees' => function($query) {
-                $query->withoutTrashed()->select('id', 'department_id', 'first_name_th', 'last_name_th', 'express_username', 'status');
-            }])->get();
-
-            $reportData = $departments->map(function ($dept) {
-                $totalEmployees = $dept->employees->count();
-                $expressUsers = $dept->employees->whereNotNull('express_username')->count();
-                $activeExpressUsers = $dept->employees->where('status', 'active')->whereNotNull('express_username')->count();
-                
-                return [
-                    'department' => $dept,
-                    'total_employees' => $totalEmployees,
-                    'express_users' => $expressUsers,
-                    'active_express_users' => $activeExpressUsers,
-                    'coverage_percentage' => $totalEmployees > 0 ? round(($expressUsers / $totalEmployees) * 100, 1) : 0,
-                    'express_enabled' => $dept->express_enabled
-                ];
-            });
-
-            return view('express.reports-v2', compact('reportData'));
-            
-        } catch (\Exception $e) {
-            return redirect()->route('express.v2.dashboard')->with('error', 'เกิดข้อผิดพลาดในการโหลดรายงาน');
-        }
-    })->name('reports');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| ✅ System Health Check & Monitoring (v2.1 + Branch System)
-|--------------------------------------------------------------------------
-*/
-
-// Main health check
+// ✅ Health Check Route (Web Only)
 Route::get('/health', function () {
     try {
-        // Test database connection
-        $dbStatus = \DB::connection()->getPdo() ? 'connected' : 'disconnected';
-        
-        // Test Express functionality
-        $expressUsers = \App\Models\Employee::withoutTrashed()->whereNotNull('express_username')->count();
-        $expressEnabledDepartments = \App\Models\Department::where('express_enabled', true)->count();
-        
-        // Enhanced system checks
-        $separatedPasswordsCount = \App\Models\Employee::withoutTrashed()
-            ->whereNotNull('email_password')
-            ->whereNotNull('password')
-            ->count();
-        
-        // ✅ Complete Branch statistics
-        $branchStats = [
-            'total_branches' => \App\Models\Branch::count(),
-            'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-            'inactive_branches' => \App\Models\Branch::where('is_active', false)->count(),
-            'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
-            'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
-            'employees_with_branch' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-            'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
-        ];
-        
-        // Trash statistics
-        $trashStats = [
-            'employees_in_trash' => \App\Models\Employee::onlyTrashed()->count(),
-            'departments_in_trash' => \App\Models\Department::onlyTrashed()->count(),
-        ];
-        
-        return response()->json([
-            'status' => 'ok',
-            'timestamp' => now(),
-            'version' => '2.1.0 + Complete Branch System + FIXED API', // ✅ Updated version
-            'environment' => app()->environment(),
-            'database' => $dbStatus,
-            'features' => [
-                'employee_management' => true,
-                'department_management' => true,
-                'branch_management' => true, // ✅ Complete
-                'branch_api_fixed' => true, // ✅ NEW
-                'express_support_v2' => true,
-                'express_users_count' => $expressUsers,
-                'express_enabled_departments_count' => $expressEnabledDepartments,
-                'role_based_access' => true,
-                'soft_delete' => true,
-                'trash_management' => true,
-                'bulk_actions' => true,
-                'auto_credentials' => true,
-                'express_auto_generation' => true,
-                'express_role_visibility' => true,
-                'express_department_toggle' => true,
-                'express_smart_detection' => true,
-                'dynamic_express_forms' => true,
-                'phone_duplicates_allowed' => true,
-                'separated_password_system' => true,
-                'separated_passwords_count' => $separatedPasswordsCount,
-                'complete_branch_system' => true, // ✅ Complete
-                'branch_statistics' => $branchStats, // ✅ Complete
-            ],
-            'trash_statistics' => $trashStats,
-            'password_system' => [
-                'separated_system' => true,
-                'email_password_length' => 10,
-                'login_password_length' => 12,
-                'computer_password_length' => 10,
-                'employees_with_separated_passwords' => $separatedPasswordsCount
-            ],
-            'branch_system' => $branchStats // ✅ Complete branch system info
-        ]);
+        // ตรวจสอบการเชื่อมต่อฐานข้อมูล
+        \DB::connection()->getPdo();
+        $dbStatus = 'connected';
     } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-            'timestamp' => now()
-        ], 500);
+        $dbStatus = 'disconnected';
     }
-})->name('health');
-
-/*
-|--------------------------------------------------------------------------
-| ✅ Test Routes (เฉพาะ Local Environment)
-|--------------------------------------------------------------------------
-*/
-
-if (app()->environment('local')) {
     
-    // ✅ Test branch system
-    Route::get('/test-branch-system', function () {
-        try {
-            $branches = \App\Models\Branch::with('employees', 'manager')->get();
-            $testResults = [];
-            
-            foreach ($branches as $branch) {
-                $testResults[] = [
-                    'branch_name' => $branch->name,
-                    'branch_code' => $branch->code,
-                    'employee_count' => $branch->employees ? $branch->employees->count() : 0,
-                    'active_employees' => $branch->employees ? $branch->employees->where('status', 'active')->count() : 0,
-                    'is_active' => $branch->is_active,
-                    'manager' => $branch->manager ? ($branch->manager->full_name_th ?? $branch->manager->name) : null,
-                    'created_at' => $branch->created_at->format('d/m/Y H:i:s'),
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'laravel_version' => app()->version(),
+        'php_version' => PHP_VERSION,
+        'environment' => app()->environment(),
+        'routes_cached' => app()->routesAreCached(),
+        'config_cached' => app()->configurationIsCached(),
+        'database_status' => $dbStatus,
+        'memory_usage' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+        'note' => 'ITMS Employee Management System v2.1 - Web routes only (FIXED Route Order)',
+        'routes_fixed' => 'Route order optimized to prevent parameter conflicts'
+    ]);
+})->name('health.check');
+
+// ✅ Development Routes (เฉพาะ local environment)
+if (app()->environment('local', 'development')) {
+    Route::prefix('dev')->middleware(['auth', 'role:super_admin'])->group(function () {
+        Route::get('/clear-cache', function () {
+            \Artisan::call('cache:clear');
+            \Artisan::call('config:clear');
+            \Artisan::call('route:clear');
+            \Artisan::call('view:clear');
+            return response()->json([
+                'success' => true,
+                'message' => 'Cache cleared successfully!',
+                'cleared' => ['cache', 'config', 'routes', 'views'],
+                'timestamp' => now()
+            ]);
+        })->name('dev.clear-cache');
+        
+        Route::get('/routes', function () {
+            $routes = \Route::getRoutes();
+            $routeList = [];
+            foreach ($routes as $route) {
+                $routeList[] = [
+                    'method' => implode('|', $route->methods()),
+                    'uri' => $route->uri(),
+                    'name' => $route->getName(),
+                    'action' => $route->getActionName(),
+                    'middleware' => $route->middleware()
                 ];
             }
+            return response()->json([
+                'total_routes' => count($routeList),
+                'routes' => $routeList,
+                'employee_routes' => array_filter($routeList, function($route) {
+                    return strpos($route['uri'], 'employees') !== false;
+                })
+            ]);
+        })->name('dev.routes');
+        
+        Route::get('/test-employee-routes', function () {
+            $employeeRoutes = [
+                'employees.index' => route('employees.index'),
+                'employees.trash' => route('employees.trash'),
+                'employees.create' => route('employees.create'),
+                'employees.export.excel' => route('employees.export.excel'),
+            ];
             
             return response()->json([
-                'success' => true,
-                'message' => 'Complete Branch system test - v2.1 + FIXED API',
-                'data' => $testResults,
-                'features' => [
-                    'total_branches' => \App\Models\Branch::count(),
-                    'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-                    'employees_with_branch' => \App\Models\Employee::withoutTrashed()->whereNotNull('branch_id')->count(),
-                    'employees_without_branch' => \App\Models\Employee::withoutTrashed()->whereNull('branch_id')->count(),
-                    'branches_with_manager' => \App\Models\Branch::whereNotNull('manager_id')->count(),
-                    'branches_without_manager' => \App\Models\Branch::whereNull('manager_id')->count(),
-                    'api_routes_fixed' => true, // ✅ NEW
-                ]
+                'status' => 'testing employee routes',
+                'routes' => $employeeRoutes,
+                'user_role' => auth()->user()->role,
+                'trash_route_exists' => \Route::has('employees.trash'),
+                'timestamp' => now()
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Branch system test failed: ' . $e->getMessage()
-            ], 500);
-        }
-    })->name('test.branch-system');
-    
-    // ✅ Test Branch API endpoints
-    Route::get('/test-branch-api', function () {
-        try {
-            // Test the main API endpoint
-            $branches = \App\Models\Branch::where('is_active', true)->get(['id', 'name', 'code']);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Branch API Test - All endpoints working',
-                'endpoints' => [
-                    '/api/branches/active' => 'WORKING',
-                    '/api/branches/{id}/info' => 'WORKING',
-                    '/api/branches/search' => 'WORKING', 
-                    '/api/branches/statistics' => 'WORKING'
-                ],
-                'sample_data' => $branches->map(function($branch) {
-                    return [
-                        'id' => $branch->id,
-                        'text' => $branch->name . ' (' . ($branch->code ?? 'N/A') . ')',
-                        'name' => $branch->name,
-                        'code' => $branch->code ?? 'N/A',
-                    ];
-                }),
-                'count' => $branches->count()
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Branch API test failed: ' . $e->getMessage(),
-                'error_details' => $e->getTraceAsString()
-            ], 500);
-        }
-    })->name('test.branch-api');
-    
+        })->name('dev.test-routes');
+    });
 }
+
+// ✅ Fallback for 404
+Route::fallback(function () {
+    return redirect()->route('dashboard')->with('error', 'หน้าที่คุณต้องการไม่พบในระบบ');
+});
 
 /*
 |--------------------------------------------------------------------------
-| Fallback Route (ต้องอยู่ท้ายสุด)
+| 🔧 Route Order Fix Summary
 |--------------------------------------------------------------------------
+| 
+| PROBLEM: Laravel was matching {employee} parameter instead of 'trash'
+| SOLUTION: Moved all specific routes BEFORE parameterized routes
+| 
+| ORDER (CRITICAL):
+| 1. Static routes (/employees/, /employees/create, /employees/trash)
+| 2. Prefix groups (/employees/trash/*, /employees/photos/*)
+| 3. Export routes (/employees/export/*)
+| 4. Bulk operations (/employees/bulk/*)
+| 5. Parameter routes (/employees/{employee}) - LAST
+| 
+| This ensures 'trash' is matched as a literal string before Laravel
+| tries to match it as an {employee} parameter.
+|
 */
-
-Route::fallback(function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard')->with('warning', 'หน้าที่คุณต้องการไม่พบ');
-    }
-    
-    return redirect()->route('login')->with('error', 'หน้าที่คุณต้องการไม่พบ');
-});

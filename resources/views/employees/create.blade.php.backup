@@ -16,7 +16,7 @@
                 <h1 class="h3 mb-0 text-primary fw-bold">
                     <i class="fas fa-user-plus me-2"></i>เพิ่มพนักงานใหม่
                 </h1>
-                <p class="text-muted mb-0">กรอกข้อมูลพนักงานใหม่เข้าระบบ (รองรับ Express v2.0 Enhanced)</p>
+                <p class="text-muted mb-0">กรอกข้อมูลพนักงานใหม่เข้าระบบ (รองรับ Branch + Express v2.0)</p>
                 <div class="mt-2">
                     <span class="badge bg-info">
                         <i class="fas fa-info-circle me-1"></i>
@@ -34,6 +34,10 @@
                         <i class="fas fa-eye me-1"></i>
                         แสดงรหัสผ่านได้ทั้งหมด
                     </span>
+                    <span class="badge" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
+                        <i class="fas fa-building me-1"></i>
+                        ✨ รองรับเลือกสาขา - ITMS Theme
+                    </span>
                 </div>
             </div>
             <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary">
@@ -45,18 +49,24 @@
 
 <!-- Success Alert for Phone Fix -->
 <div class="alert alert-success alert-dismissible fade show" role="alert">
-    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>ระบบได้รับการอัปเดต!</h6>
+    <h6 class="fw-bold"><i class="fas fa-check-circle me-2"></i>ระบบได้รับการอัปเดต! (รองรับ Branch System แล้ว)</h6>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <ul class="mb-0">
                 <li><strong>✅ เบอร์โทรซ้ำได้:</strong> สามารถใช้เบอร์เดียวกันได้หลายคน</li>
-                <li><strong>👨‍👩‍👧‍👦 เหมาะสำหรับ:</strong> ครอบครัว, เพื่อนร่วมงาน, เบอร์ออฟฟิศ</li>
+                <li><strong>👨‍👩‍👧‍👦 เหมาะสำหรับ:</strong> ครอบครัว, เพื่อนร่วมงาน</li>
             </ul>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <ul class="mb-0">
                 <li><strong>🔒 ความปลอดภัย:</strong> Email, Username ยังคง unique</li>
                 <li><strong>⚡ Express v2.0:</strong> ทำงานปกติ ไม่กระทบ</li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <ul class="mb-0">
+                <li><strong>🏢 Branch System:</strong> เลือกสาขาได้</li>
+                <li><strong>🎨 ITMS Theme:</strong> ธีมสีแดง-ส้ม</li>
             </ul>
         </div>
     </div>
@@ -109,15 +119,15 @@
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="d-flex flex-column h-100">
-                    <button type="button" class="btn btn-outline-success w-100 flex-fill d-flex align-items-center justify-content-center" id="testPhoneDuplicateBtn" style="min-height: 45px;">
+                    <button type="button" class="btn w-100 flex-fill d-flex align-items-center justify-content-center" id="testBranchBtn" style="min-height: 45px; background: linear-gradient(45deg, #B54544, #E6952A); color: white; border: none;">
                         <span class="d-flex align-items-center">
-                            <i class="fas fa-phone me-2"></i>
-                            <span class="d-none d-lg-inline">ทดสอบเบอร์ซ้ำ</span>
-                            <span class="d-lg-none">ทดสอบ</span>
+                            <i class="fas fa-building me-2"></i>
+                            <span class="d-none d-lg-inline">ทดสอบ Branch</span>
+                            <span class="d-lg-none">Branch</span>
                         </span>
                     </button>
                     <div class="form-text mt-2">
-                        <small class="text-success">✅ เบอร์ซ้ำได้แล้ว</small>
+                        <small class="text-success">✅ Branch System Ready</small>
                     </div>
                 </div>
             </div>
@@ -583,7 +593,7 @@
                            id="login_password" 
                            name="login_password" 
                            value="{{ old('login_password') }}"
-                           placeholder="รหัsผ่านเข้าระบบ (12 ตัว)"
+                           placeholder="รหัสผ่านเข้าระบบ (12 ตัว)"
                            required>
                     <button type="button" class="btn btn-outline-primary" data-target="login_password">
                         <i class="fas fa-key"></i>
@@ -672,21 +682,70 @@
         </div>
     </div>
 </div>
-    <!-- แผนกและสิทธิ์ -->
+
+    <!-- แผนก, สาขา และสิทธิ์ (✅ เพิ่ม Branch Selection) -->
     <div class="card mb-4">
-        <div class="card-header">
+        <div class="card-header" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
             <div class="d-flex align-items-center">
-                <div class="border border-2 border-warning rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
-                    <i class="fas fa-building text-warning" style="font-size: 20px;"></i>
+                <div class="border border-2 border-white rounded-circle d-flex align-items-center justify-content-center me-3 bg-light" style="width: 45px; height: 45px; min-width: 45px;">
+                    <i class="fas fa-building" style="font-size: 20px; color: #B54544;"></i>
                 </div>
                 <div>
-                    <h5 class="card-title mb-0">แผนกและสิทธิ์</h5>
-                    <small class="text-muted">แผนกการทำงานและสิทธิ์การใช้งาน</small>
+                    <h5 class="card-title mb-0" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        แผนก, สาขา และสิทธิ์
+                        <span class="badge bg-light text-dark ms-2">
+                            <i class="fas fa-plus-circle me-1"></i>เพิ่ม Branch
+                        </span>
+                    </h5>
+                    <small style="color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        แผนกการทำงาน, สาขาที่สังกัด และสิทธิ์การใช้งาน
+                    </small>
                 </div>
             </div>
         </div>
         <div class="card-body">
             <div class="row g-3">
+                <!-- ✅ NEW: Branch Selection -->
+                <div class="col-md-6">
+                    <label for="branch_id" class="form-label">
+                        สาขาที่สังกัด
+                        <span class="badge bg-gradient text-white ms-2" style="background: linear-gradient(45deg, #B54544, #E6952A);">
+                            <i class="fas fa-building me-1"></i>Branch System
+                        </span>
+                    </label>
+                    <div class="input-group">
+                        <select class="form-select @error('branch_id') is-invalid @enderror" 
+                                id="branch_id" 
+                                name="branch_id">
+                            <option value="">เลือกสาขา (ไม่บังคับ)</option>
+                            <!-- Options will be loaded via JavaScript -->
+                        </select>
+                        <button type="button" class="btn btn-outline-info" id="refreshBranchBtn" title="รีเฟรชรายการสาขา">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="button" class="btn" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white; border: none;" id="branchInfoBtn" title="ดูข้อมูลสาขา">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        <div id="branchInfo" style="display: none;" class="mt-2">
+                            <div class="alert alert-info p-2 mb-0">
+                                <small>
+                                    <strong>ข้อมูลสาขา:</strong>
+                                    <div id="branchDetails"></div>
+                                </small>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            เลือกสาขาที่พนักงานสังกัด (ไม่บังคับ - สามารถเว้นว่างได้)
+                        </small>
+                    </div>
+                    @error('branch_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <!-- Department -->
                 <div class="col-md-6">
                     <label for="department_id" class="form-label">
@@ -816,6 +875,30 @@
                     @error('status')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <!-- ✅ Branch & Department Summary -->
+                <div class="col-md-12">
+                    <div class="alert alert-light border" style="border-color: #B54544 !important;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">
+                                    <i class="fas fa-building me-2"></i>สรุปข้อมูลสาขา
+                                </h6>
+                                <div id="selectedBranchSummary">
+                                    <span class="text-muted">ยังไม่ได้เลือกสาขา</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-warning">
+                                    <i class="fas fa-users me-2"></i>สรุปข้อมูลแผนก
+                                </h6>
+                                <div id="selectedDepartmentSummary">
+                                    <span class="text-muted">ยังไม่ได้เลือกแผนก</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1039,7 +1122,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="previewModalLabel">
-                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (Phone Duplicates Fixed)
+                    <i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลพนักงาน (รองรับ Branch System)
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1056,38 +1139,38 @@
     </div>
 </div>
 
-<!-- Phone Duplicate Test Modal -->
-<div class="modal fade" id="phoneDuplicateModal" tabindex="-1" aria-labelledby="phoneDuplicateModalLabel" aria-hidden="true">
+<!-- ✅ NEW: Branch Test Modal -->
+<div class="modal fade" id="branchTestModal" tabindex="-1" aria-labelledby="branchTestModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="phoneDuplicateModalLabel">
-                    <i class="fas fa-phone me-2"></i>ทดสอบการใช้เบอร์โทรซ้ำ ✅
+            <div class="modal-header" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
+                <h5 class="modal-title" id="branchTestModalLabel">
+                    <i class="fas fa-building me-2"></i>ทดสอบ Branch System ✅
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-success">
-                    <h6><i class="fas fa-check-circle me-2"></i>ฟีเจอร์ใหม่: เบอร์โทรซ้ำได้แล้ว!</h6>
+                    <h6><i class="fas fa-check-circle me-2"></i>Branch Management System พร้อมใช้งาน!</h6>
                 </div>
                 
                 <div class="row">
                     <div class="col-md-6">
-                        <h6>✅ สิ่งที่แก้ไขแล้ว:</h6>
+                        <h6>✅ ฟีเจอร์ที่พร้อม:</h6>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ unique constraint จากฐานข้อมูล</li>
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ validation rule จาก Request</li>
-                            <li><i class="fas fa-check text-success me-2"></i>ลบ validation จาก Controller</li>
-                            <li><i class="fas fa-check text-success me-2"></i>อัปเดต UI แสดงสถานะใหม่</li>
+                            <li><i class="fas fa-check text-success me-2"></i>เลือกสาขาได้</li>
+                            <li><i class="fas fa-check text-success me-2"></i>ดูข้อมูลสาขา</li>
+                            <li><i class="fas fa-check text-success me-2"></i>รีเฟรชรายการ</li>
+                            <li><i class="fas fa-check text-success me-2"></i>ITMS Theme Integration</li>
                         </ul>
                     </div>
                     <div class="col-md-6">
-                        <h6>🎯 ประโยชน์ที่ได้:</h6>
+                        <h6>🎯 การทำงาน:</h6>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-users text-info me-2"></i>ครอบครัวใช้เบอร์เดียวกันได้</li>
-                            <li><i class="fas fa-building text-warning me-2"></i>เพื่อนร่วมงานใช้เบอร์ออฟฟิศ</li>
-                            <li><i class="fas fa-home text-success me-2"></i>ใช้เบอร์บ้านร่วมกันได้</li>
-                            <li><i class="fas fa-mobile text-primary me-2"></i>ยืดหยุ่นในการจัดการ</li>
+                            <li><i class="fas fa-building text-info me-2"></i>โหลดสาขาจาก API</li>
+                            <li><i class="fas fa-sync text-warning me-2"></i>รีเฟรชแบบ Real-time</li>
+                            <li><i class="fas fa-info-circle text-primary me-2"></i>แสดงข้อมูลสาขา</li>
+                            <li><i class="fas fa-mobile text-success me-2"></i>Responsive Design</li>
                         </ul>
                     </div>
                 </div>
@@ -1096,33 +1179,39 @@
                 
                 <div class="row">
                     <div class="col-12">
-                        <h6>🔒 ความปลอดภัยที่ยังคงมี:</h6>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>รหัสพนักงาน</small>
+                        <h6>🏢 Branch Statistics:</h6>
+                        <div id="branchStats" class="row text-center">
+                            <div class="col-md-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <h5 class="text-primary" id="totalBranches">-</h5>
+                                        <small>สาขาทั้งหมด</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>Username</small>
+                            <div class="col-md-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <h5 class="text-success" id="activeBranches">-</h5>
+                                        <small>สาขาที่เปิด</small>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>อีเมล</small>
+                            <div class="col-md-3">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <h5 class="text-info" id="branchesWithManager">-</h5>
+                                        <small>มี Manager</small>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>Express Username</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-danger me-1">Unique</span>
-                                <small>ID Keycard</small>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="badge bg-success me-1">Duplicate OK</span>
-                                <small>เบอร์โทร ✅</small>
+                            <div class="col-md-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h5 class="text-warning" id="employeesInBranches">-</h5>
+                                        <small>พนักงานในสาขา</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1131,7 +1220,7 @@
                 <div class="mt-3">
                     <div class="alert alert-info mb-0">
                         <i class="fas fa-lightbulb me-2"></i>
-                        <strong>ทดสอบ:</strong> ลองใส่เบอร์โทรที่ซ้ำกันและบันทึก - จะไม่มี error แล้ว!
+                        <strong>วิธีใช้:</strong> เลือกสาขาจาก dropdown ด้านบน - ระบบจะแสดงข้อมูลสาขาอัตโนมัติ
                     </div>
                 </div>
             </div>
@@ -1147,10 +1236,9 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/employees-separated.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Employee Create Form Loaded - Phone Duplicates Fixed Version Ready');
+    console.log('🚀 Employee Create Form Loaded - Branch System + ITMS Theme');
     
     // Utility Functions
     const utils = {
@@ -1221,6 +1309,109 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert.remove();
                 }
             }, 5000);
+        }
+    };
+    
+    // ✅ NEW: Branch Management Functions
+    const branchManager = {
+        // Load branches from API
+        loadBranches: async () => {
+            try {
+                const response = await fetch('/api/branches/active');
+                const branches = await response.json();
+                
+                const branchSelect = document.getElementById('branch_id');
+                
+                // Clear existing options (except first one)
+                branchSelect.innerHTML = '<option value="">เลือกสาขา (ไม่บังคับ)</option>';
+                
+                // Add branch options
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.id;
+                    option.textContent = branch.text;
+                    option.dataset.name = branch.name;
+                    option.dataset.code = branch.code;
+                    branchSelect.appendChild(option);
+                });
+                
+                console.log(`✅ Loaded ${branches.length} branches`);
+                return branches;
+                
+            } catch (error) {
+                console.error('❌ Error loading branches:', error);
+                utils.showNotification('❌ ไม่สามารถโหลดข้อมูลสาขาได้', 'error');
+                return [];
+            }
+        },
+        
+        // Get branch info
+        getBranchInfo: async (branchId) => {
+            if (!branchId) return null;
+            
+            try {
+                const response = await fetch(`/api/branches/${branchId}/info`);
+                const branchInfo = await response.json();
+                
+                return branchInfo;
+                
+            } catch (error) {
+                console.error('❌ Error getting branch info:', error);
+                return null;
+            }
+        },
+        
+        // Update branch info display
+        updateBranchInfo: (branchInfo) => {
+            const branchInfoDiv = document.getElementById('branchInfo');
+            const branchDetailsDiv = document.getElementById('branchDetails');
+            const selectedBranchSummary = document.getElementById('selectedBranchSummary');
+            
+            if (branchInfo) {
+                branchDetailsDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>ชื่อสาขา:</strong> ${branchInfo.name}<br>
+                            <strong>รหัสสาขา:</strong> ${branchInfo.code}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>พนักงานปัจจุบัน:</strong> ${branchInfo.current_employees} คน<br>
+                            <strong>ผู้จัดการ:</strong> ${branchInfo.manager ? branchInfo.manager.name : 'ไม่มี'}
+                        </div>
+                    </div>
+                `;
+                branchInfoDiv.style.display = 'block';
+                
+                selectedBranchSummary.innerHTML = `
+                    <span class="badge" style="background: linear-gradient(45deg, #B54544, #E6952A); color: white;">
+                        <i class="fas fa-building me-1"></i>${branchInfo.name} (${branchInfo.code})
+                    </span>
+                    <small class="text-muted ms-2">${branchInfo.current_employees} พนักงาน</small>
+                `;
+            } else {
+                branchInfoDiv.style.display = 'none';
+                selectedBranchSummary.innerHTML = '<span class="text-muted">ยังไม่ได้เลือกสาขา</span>';
+            }
+        },
+        
+        // Load branch statistics
+        loadBranchStats: async () => {
+            try {
+                const response = await fetch('/api/branches/statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.statistics;
+                    
+                    document.getElementById('totalBranches').textContent = stats.total_branches || 0;
+                    document.getElementById('activeBranches').textContent = stats.active_branches || 0;
+                    document.getElementById('branchesWithManager').textContent = stats.branches_with_manager || 0;
+                    document.getElementById('employeesInBranches').textContent = stats.total_employees_in_branches || 0;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading branch statistics:', error);
+            }
         }
     };
     
@@ -1304,6 +1495,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     case 'computer_password':
                         value = utils.generateRandomString(10, true);
                         break;
+                    case 'login_password':
+                        value = generators.password();  // 12 ตัวอักษร
+                        // Auto-sync to hidden password field
+                        const passwordField = document.getElementById('password');
+                        if (passwordField) {
+                            passwordField.value = value;
+                        }
+                        break;
+                    case 'email_password':
+                        value = utils.generateRandomString(10, true);  // 10 ตัวอักษร
+                        break;
                     case 'password':
                         value = generators.password();
                         break;
@@ -1339,6 +1541,18 @@ document.addEventListener('DOMContentLoaded', function() {
                             break;
                         case 'keycard_id':
                             message = `✅ สร้าง ID Keycard สำเร็จ: ${value}`;
+                            break;
+                        case 'computer_password':
+                            message = `✅ สร้างรหัสผ่านคอมพิวเตอร์สำเร็จ (10 ตัวอักษร)`;
+                            break;
+                        case 'login_password':
+                            message = `✅ สร้างรหัสผ่านเข้าระบบสำเร็จ (12 ตัวอักษร)`;
+                            break;
+                        case 'email_password':
+                            message = `✅ สร้างรหัสผ่านอีเมลสำเร็จ (10 ตัวอักษร)`;
+                            break;
+                        case 'password':
+                            message = `✅ สร้างรหัสผ่านสำเร็จ (12 ตัวอักษร)`;
                             break;
                         case 'express_username':
                             message = `✅ สร้าง Express Username สำเร็จ: ${value} (${value.length} ตัวอักษร)`;
@@ -1387,6 +1601,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const departmentSelect = document.getElementById('department_id');
             const expressSection = document.getElementById('expressSection');
             const expressIndicator = document.getElementById('expressIndicator');
+            const selectedDepartmentSummary = document.getElementById('selectedDepartmentSummary');
             
             if (!departmentSelect || !expressSection) return;
             
@@ -1394,10 +1609,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!selectedOption || !selectedOption.value) {
                 expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
+                if (selectedDepartmentSummary) {
+                    selectedDepartmentSummary.innerHTML = '<span class="text-muted">ยังไม่ได้เลือกแผนก</span>';
+                }
                 return;
             }
             
             const expressEnabled = selectedOption.dataset.express === 'true';
+            const departmentName = selectedOption.textContent;
+            
+            // Update department summary
+            if (selectedDepartmentSummary) {
+                selectedDepartmentSummary.innerHTML = `
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-users me-1"></i>${departmentName}
+                    </span>
+                    ${expressEnabled ? '<span class="badge bg-success ms-2"><i class="fas fa-bolt me-1"></i>Express</span>' : ''}
+                `;
+            }
             
             if (expressEnabled) {
                 expressSection.style.display = 'block';
@@ -1417,10 +1646,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                utils.showNotification(`⚡ ${selectedOption.textContent}: เปิดใช้งาน Express แล้ว`, 'success');
+                utils.showNotification(`⚡ ${departmentName}: เปิดใช้งาน Express แล้ว`, 'success');
             } else {
                 expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
+            }
+        },
+        
+        // ✅ NEW: Branch Change Handler
+        handleBranchChange: async () => {
+            const branchSelect = document.getElementById('branch_id');
+            const branchId = branchSelect.value;
+            
+            if (branchId) {
+                const branchInfo = await branchManager.getBranchInfo(branchId);
+                branchManager.updateBranchInfo(branchInfo);
+                
+                if (branchInfo) {
+                    utils.showNotification(`🏢 เลือกสาขา: ${branchInfo.name} (${branchInfo.code})`, 'success');
+                }
+            } else {
+                branchManager.updateBranchInfo(null);
             }
         },
         
@@ -1534,6 +1780,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     previewText.textContent = emailPreview;
                     previewDiv.style.display = 'block';
                     previewDiv.className = 'mt-2 text-success';
+                    
+                    // Auto-sync login email
+                    const loginEmailEl = document.getElementById('login_email');
+                    if (loginEmailEl) {
+                        loginEmailEl.value = emailPreview;
+                    }
+                    
+                    // ✅ Update summary
+                    const summaryEmail = document.getElementById('summaryEmail');
+                    const summaryLoginEmail = document.getElementById('summaryLoginEmail');
+                    if (summaryEmail) summaryEmail.textContent = emailPreview;
+                    if (summaryLoginEmail) summaryLoginEmail.textContent = emailPreview;
                 } else {
                     previewText.textContent = 'กรุณากรอกชื่อ-นามสกุลภาษาอังกฤษเท่านั้น';
                     previewDiv.style.display = 'block';
@@ -1552,7 +1810,7 @@ document.addEventListener('DOMContentLoaded', function() {
             utils.showLoading(button);
             
             try {
-                console.log('🎯 Starting generateAll Phone Duplicates Fixed...');
+                console.log('🎯 Starting generateAll Branch System + ITMS Theme...');
                 
                 // Generate basic codes
                 document.getElementById('employee_code').value = generators.employeeCode();
@@ -1574,9 +1832,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Generate passwords
-                document.getElementById('computer_password').value = utils.generateRandomString(10, true);
-                document.getElementById('password').value = generators.password();
+                // Generate passwords - แยกแล้ว
+                const computerPassword = utils.generateRandomString(10, true);
+                const loginPassword = generators.password(); // 12 ตัวอักษร
+                const emailPassword = utils.generateRandomString(10, true);
+                
+                document.getElementById('computer_password').value = computerPassword;
+                document.getElementById('login_password').value = loginPassword;
+                document.getElementById('email_password').value = emailPassword;
+                
+                // ✅ IMPORTANT: Sync hidden password field for backend
+                document.getElementById('password').value = loginPassword;
                 
                 // Express fields (ถ้าแสดงอยู่)
                 const expressSection = document.getElementById('expressSection');
@@ -1585,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('express_password').value = generators.expressPassword();
                 }
                 
-                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (เบอร์โทรซ้ำได้แล้ว)', 'success');
+                utils.showNotification('🎉 สร้างข้อมูลทั้งหมดสำเร็จ! (รองรับ Branch System)', 'success');
                 
             } catch (error) {
                 console.error('Error in generateAll:', error);
@@ -1604,17 +1870,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 const expressIndicator = document.getElementById('expressIndicator');
                 const vpnStatus = document.getElementById('vpnStatus');
                 const printingStatus = document.getElementById('printingStatus');
+                const branchInfo = document.getElementById('branchInfo');
+                const selectedBranchSummary = document.getElementById('selectedBranchSummary');
+                const selectedDepartmentSummary = document.getElementById('selectedDepartmentSummary');
                 
                 if (emailPreview) emailPreview.style.display = 'none';
                 if (expressSection) expressSection.style.display = 'none';
                 if (expressIndicator) expressIndicator.style.display = 'none';
                 if (vpnStatus) vpnStatus.textContent = 'ไม่อนุญาต';
                 if (printingStatus) printingStatus.textContent = 'ไม่อนุญาต';
+                if (branchInfo) branchInfo.style.display = 'none';
+                if (selectedBranchSummary) selectedBranchSummary.innerHTML = '<span class="text-muted">ยังไม่ได้เลือกสาขา</span>';
+                if (selectedDepartmentSummary) selectedDepartmentSummary.innerHTML = '<span class="text-muted">ยังไม่ได้เลือกแผนก</span>';
                 
                 // Re-generate initial codes
                 setTimeout(() => {
                     document.getElementById('employee_code').value = generators.employeeCode();
                     document.getElementById('keycard_id').value = generators.keycardId();
+                    
+                    // Reload branches
+                    branchManager.loadBranches();
                 }, 100);
                 
                 utils.showNotification('🗑️ ล้างข้อมูลทั้งหมดแล้ว', 'success');
@@ -1622,14 +1897,93 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         
         showPreview: () => {
-            // Preview functionality
+            // Create preview content
+            const previewContent = formActions.generatePreviewContent();
+            document.getElementById('previewContent').innerHTML = previewContent;
+            
             const modal = new bootstrap.Modal(document.getElementById('previewModal'));
             modal.show();
         },
         
-        showPhoneDuplicateTest: () => {
-            const modal = new bootstrap.Modal(document.getElementById('phoneDuplicateModal'));
+        generatePreviewContent: () => {
+            const formData = new FormData(document.getElementById('employeeForm'));
+            const data = Object.fromEntries(formData.entries());
+            
+            // Get selected branch and department names
+            const branchSelect = document.getElementById('branch_id');
+            const departmentSelect = document.getElementById('department_id');
+            const selectedBranch = branchSelect.options[branchSelect.selectedIndex];
+            const selectedDepartment = departmentSelect.options[departmentSelect.selectedIndex];
+            
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">ข้อมูลพื้นฐาน</h6>
+                        <table class="table table-sm">
+                            <tr><th>รหัสพนักงาน:</th><td>${data.employee_code || '-'}</td></tr>
+                            <tr><th>ID Keycard:</th><td>${data.keycard_id || '-'}</td></tr>
+                            <tr><th>ชื่อ-นามสกุล (ไทย):</th><td>${data.first_name_th || ''} ${data.last_name_th || ''}</td></tr>
+                            <tr><th>ชื่อ-นามสกุล (EN):</th><td>${data.first_name_en || ''} ${data.last_name_en || ''}</td></tr>
+                            <tr><th>เบอร์โทร:</th><td>${data.phone || '-'} <span class="badge bg-success">ซ้ำได้</span></td></tr>
+                            <tr><th>ชื่อเล่น:</th><td>${data.nickname || '-'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">ระบบคอมพิวเตอร์</h6>
+                        <table class="table table-sm">
+                            <tr><th>Username:</th><td>${data.username || '-'}</td></tr>
+                            <tr><th>รหัสผ่านคอม:</th><td>${data.computer_password ? '••••••••••' : '-'}</td></tr>
+                            <tr><th>รหัสถ่ายเอกสาร:</th><td>${data.copier_code || '-'}</td></tr>
+                        </table>
+                        
+                        <h6 class="text-info mt-3">ระบบอีเมลและ Login</h6>
+                        <table class="table table-sm">
+                            <tr><th>อีเมล:</th><td>${data.email || '-'}</td></tr>
+                            <tr><th>รหัสผ่านอีเมล:</th><td>${data.email_password ? '••••••••••' : '-'}</td></tr>
+                            <tr><th>รหัสผ่านเข้าระบบ:</th><td>${data.login_password ? '<span class="text-success">••••••••••••</span>' : '-'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 style="color: #B54544;">🏢 สาขา และแผนก</h6>
+                        <table class="table table-sm">
+                            <tr><th>สาขา:</th><td>${selectedBranch && selectedBranch.value ? selectedBranch.textContent : '<span class="text-muted">ไม่ระบุ</span>'}</td></tr>
+                            <tr><th>แผนก:</th><td>${selectedDepartment && selectedDepartment.value ? selectedDepartment.textContent : '-'}</td></tr>
+                            <tr><th>ตำแหน่ง:</th><td>${data.position || '-'}</td></tr>
+                            <tr><th>สิทธิ์:</th><td>${document.querySelector('#role option:checked')?.textContent || '-'}</td></tr>
+                            <tr><th>สถานะ:</th><td>${document.querySelector('#status option:checked')?.textContent || '-'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Express v2.0</h6>
+                        <table class="table table-sm">
+                            <tr><th>Express Username:</th><td>${data.express_username || 'ไม่มี'}</td></tr>
+                            <tr><th>Express Password:</th><td>${data.express_password || 'ไม่มี'}</td></tr>
+                        </table>
+                        
+                        <h6 class="text-secondary mt-3">สิทธิ์พิเศษ</h6>
+                        <table class="table table-sm">
+                            <tr><th>VPN:</th><td>${data.vpn_access ? '<span class="badge bg-success">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
+                            <tr><th>ปริ้นสี:</th><td>${data.color_printing ? '<span class="badge bg-warning text-dark">อนุญาต</span>' : '<span class="badge bg-secondary">ไม่อนุญาต</span>'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>✅ Branch System Ready:</strong> รองรับเลือกสาขาและแผนก พร้อม ITMS Theme
+                </div>
+            `;
+        },
+        
+        showBranchTest: () => {
+            const modal = new bootstrap.Modal(document.getElementById('branchTestModal'));
             modal.show();
+            
+            // Load branch statistics
+            branchManager.loadBranchStats();
         }
     };
     
@@ -1638,6 +1992,44 @@ document.addEventListener('DOMContentLoaded', function() {
         // Click handlers
         document.addEventListener('click', eventHandlers.handleMagicClick);
         document.addEventListener('click', eventHandlers.handlePasswordToggle);
+        
+        // ✅ Branch management handlers
+        const branchSelect = document.getElementById('branch_id');
+        if (branchSelect) {
+            branchSelect.addEventListener('change', eventHandlers.handleBranchChange);
+        }
+        
+        const refreshBranchBtn = document.getElementById('refreshBranchBtn');
+        if (refreshBranchBtn) {
+            refreshBranchBtn.addEventListener('click', async () => {
+                const button = refreshBranchBtn;
+                utils.showLoading(button);
+                
+                try {
+                    await branchManager.loadBranches();
+                    utils.showNotification('🔄 รีเฟรชรายการสาขาเรียบร้อย', 'success');
+                } catch (error) {
+                    utils.showNotification('❌ ไม่สามารถรีเฟรชได้', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+        }
+        
+        const branchInfoBtn = document.getElementById('branchInfoBtn');
+        if (branchInfoBtn) {
+            branchInfoBtn.addEventListener('click', async () => {
+                const branchId = document.getElementById('branch_id').value;
+                if (branchId) {
+                    const branchInfo = await branchManager.getBranchInfo(branchId);
+                    if (branchInfo) {
+                        utils.showNotification(`🏢 ${branchInfo.name}: ${branchInfo.current_employees} พนักงาน`, 'info');
+                    }
+                } else {
+                    utils.showNotification('❌ กรุณาเลือกสาขาก่อน', 'warning');
+                }
+            });
+        }
         
         // Department change handler
         const departmentSelect = document.getElementById('department_id');
@@ -1707,22 +2099,101 @@ document.addEventListener('DOMContentLoaded', function() {
             previewBtn.addEventListener('click', formActions.showPreview);
         }
         
-        const testPhoneDuplicateBtn = document.getElementById('testPhoneDuplicateBtn');
-        if (testPhoneDuplicateBtn) {
-            testPhoneDuplicateBtn.addEventListener('click', formActions.showPhoneDuplicateTest);
+        const testBranchBtn = document.getElementById('testBranchBtn');
+        if (testBranchBtn) {
+            testBranchBtn.addEventListener('click', formActions.showBranchTest);
+        }
+        
+        // ✅ Generate Computer System Button
+        const generateComputerBtn = document.getElementById('generateComputerBtn');
+        if (generateComputerBtn) {
+            generateComputerBtn.addEventListener('click', async () => {
+                const button = generateComputerBtn;
+                utils.showLoading(button);
+                
+                try {
+                    // Generate computer credentials
+                    const username = generators.username();
+                    const computerPassword = utils.generateRandomString(10, true);
+                    const copierCode = generators.copierCode();
+                    
+                    if (username) document.getElementById('username').value = username;
+                    if (computerPassword) document.getElementById('computer_password').value = computerPassword;
+                    if (copierCode) document.getElementById('copier_code').value = copierCode;
+                    
+                    utils.showNotification('🖥️ สร้างระบบคอมพิวเตอร์สำเร็จ!', 'success');
+                } catch (error) {
+                    utils.showNotification('❌ เกิดข้อผิดพลาด', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+        }
+        
+        // ✅ Generate Express Button
+        const generateExpressBtn = document.getElementById('generateExpressBtn');
+        if (generateExpressBtn) {
+            generateExpressBtn.addEventListener('click', async () => {
+                const button = generateExpressBtn;
+                utils.showLoading(button);
+                
+                try {
+                    // Generate Express credentials
+                    const expressUsername = generators.expressUsername();
+                    const expressPassword = generators.expressPassword();
+                    
+                    if (expressUsername) document.getElementById('express_username').value = expressUsername;
+                    if (expressPassword) document.getElementById('express_password').value = expressPassword;
+                    
+                    utils.showNotification('⚡ สร้าง Express Credentials สำเร็จ!', 'success');
+                } catch (error) {
+                    utils.showNotification('❌ เกิดข้อผิดพลาด', 'error');
+                } finally {
+                    utils.hideLoading(button);
+                }
+            });
+        }
+        
+        // ✅ Password field listeners for real-time summary update
+        const emailPasswordField = document.getElementById('email_password');
+        const loginPasswordField = document.getElementById('login_password');
+        
+        if (emailPasswordField) {
+            emailPasswordField.addEventListener('input', () => {
+                const summaryEmailPassword = document.getElementById('summaryEmailPassword');
+                if (summaryEmailPassword) {
+                    summaryEmailPassword.textContent = emailPasswordField.value ? '••••••••••' : '-';
+                }
+            });
+        }
+        
+        if (loginPasswordField) {
+            loginPasswordField.addEventListener('input', () => {
+                const summaryLoginPassword = document.getElementById('summaryLoginPassword');
+                const passwordField = document.getElementById('password');
+                
+                if (summaryLoginPassword) {
+                    summaryLoginPassword.textContent = loginPasswordField.value ? '••••••••••••' : '-';
+                }
+                
+                // Auto-sync hidden password field
+                if (passwordField) {
+                    passwordField.value = loginPasswordField.value;
+                }
+            });
         }
         
         // Setup permission switches
         eventHandlers.handlePermissionSwitches();
         
-        console.log('✅ All event listeners attached successfully');
+        console.log('✅ All event listeners attached successfully (Branch System + ITMS Theme)');
         
     } catch (error) {
         console.error('❌ Error setting up event listeners:', error);
     }
     
     // Initial setup
-    setTimeout(() => {
+    setTimeout(async () => {
         try {
             // Auto-generate employee code and keycard if empty
             const employeeCodeEl = document.getElementById('employee_code');
@@ -1736,16 +2207,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 keycardIdEl.value = generators.keycardId();
             }
             
-            // Initialize department change handler
-            eventHandlers.handleDepartmentChange();
+            // ✅ Load branches
+            await branchManager.loadBranches();
             
-            // Initialize email preview
+            // Initialize handlers
+            eventHandlers.handleDepartmentChange();
             autoGenerate.showEmailPreview();
             
-            console.log('✅ Employee Create Form Ready - Phone Duplicates Fixed Version');
+            // ✅ Test password generators
+            console.log('🧪 Testing Password Generators:');
+            console.log('  - Computer Password (10):', utils.generateRandomString(10, true));
+            console.log('  - Email Password (10):', utils.generateRandomString(10, true));
+            console.log('  - Login Password (12):', generators.password());
+            console.log('  - Express Password (4):', utils.generateUniqueNumbers(4));
+            
+            console.log('✅ Employee Create Form Ready - Branch System + ITMS Theme');
+            console.log('🏢 Branch System: รองรับเลือกสาขาแล้ว');
             console.log('📞 Phone Duplicates: อนุญาตให้ซ้ำได้แล้ว (แก้ไขเรียบร้อย)');
             console.log('🔒 Security: Email, Username, Express Username ยังคง unique');
             console.log('⚡ Express v2.0: ทำงานปกติ');
+            console.log('🎨 ITMS Theme: สีแดง-ส้ม Perfect');
+            console.log('🔑 Password System: Separated System Ready');
+            console.log('  - Email Password: 10 chars');
+            console.log('  - Login Password: 12 chars');
+            console.log('  - Computer Password: 10 chars');
+            console.log('  - Express Password: 4 unique digits');
             
         } catch (error) {
             console.error('❌ Error in initial setup:', error);
@@ -1760,5 +2246,166 @@ function submitForm() {
         form.submit();
     }
 }
+
+console.log('📝 Employee Create Form Script Loaded (Branch System + ITMS Theme)');
+console.log('🔧 Available functions: All Branch Management Functions Ready');
+console.log('⚡ Features: Branch Selection, Auto-fill, Preview, Express v2.0');
+console.log('🏢 Branch System: Load, Refresh, Info Display, Statistics');
+console.log('🎨 ITMS Theme: Red-Orange Gradient Colors Perfect');
+console.log('🔑 Password Generators Available:');
+console.log('  - computer_password (10 chars)');
+console.log('  - email_password (10 chars)'); 
+console.log('  - login_password (12 chars)');
+console.log('  - express_password (4 unique digits)');
 </script>
+
+<style>
+/* ✅ ITMS Theme Integration - Red-Orange Colors */
+.btn-gradient {
+    background: linear-gradient(45deg, #B54544, #E6952A);
+    color: white;
+    border: none;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(45deg, #a03f3e, #d4851f);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.card-header-gradient {
+    background: linear-gradient(45deg, #B54544, #E6952A);
+    color: white;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #B54544, #E6952A);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Branch selection enhancements */
+#branch_id {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+#branch_id:focus {
+    border-color: #B54544;
+    box-shadow: 0 0 0 0.2rem rgba(181, 69, 68, 0.25);
+}
+
+/* Express section animations */
+#expressSection {
+    transition: all 0.5s ease;
+}
+
+#expressSection.show {
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Branch info display */
+#branchInfo {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Enhanced button styles */
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-outline-info:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+/* Enhanced form section headers */
+.card-header {
+    border-bottom: 3px solid transparent;
+    border-image: linear-gradient(45deg, #B54544, #E6952A) 1;
+}
+
+/* Permission cards enhancement */
+.form-check-input:checked {
+    background-color: #B54544;
+    border-color: #B54544;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .card-header h5 {
+        font-size: 1rem;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+    }
+    
+    .btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* Enhanced loading states */
+.btn:disabled {
+    opacity: 0.6;
+}
+
+/* Notification enhancements */
+.alert.position-fixed {
+    border-left: 4px solid;
+    border-left-color: inherit;
+}
+
+.alert-success {
+    border-left-color: #198754;
+}
+
+.alert-danger {
+    border-left-color: #dc3545;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+
+.alert-info {
+    border-left-color: #0dcaf0;
+}
+
+/* Branch statistics cards */
+.card.border-primary { border-color: #0d6efd !important; }
+.card.border-success { border-color: #198754 !important; }
+.card.border-info { border-color: #0dcaf0 !important; }
+.card.border-warning { border-color: #ffc107 !important; }
+
+/* Enhanced preview modal */
+.modal-xl {
+    max-width: 90vw;
+}
+
+@media (max-width: 576px) {
+    .modal-xl {
+        max-width: 95vw;
+        margin: 0.5rem;
+    }
+}
+</style>
 @endpush

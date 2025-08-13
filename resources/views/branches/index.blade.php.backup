@@ -14,7 +14,7 @@
     --text-secondary: #5A6C7D;
 }
 
-/* Header styling */
+/* ✅ แก้ไข: ปรับหัวข้อให้มองเห็นชัด + เพิ่ม Icon สวยงาม */
 .branch-header {
     background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-orange) 100%);
     border-radius: 12px;
@@ -36,6 +36,7 @@
     opacity: 0.95 !important;
 }
 
+/* ✅ เพิ่ม: Header Icon Container สวยงาม */
 .header-icon-container {
     position: relative;
     background: rgba(255, 255, 255, 0.25) !important;
@@ -72,7 +73,6 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Statistics cards */
 .branch-stat-card {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
@@ -86,7 +86,7 @@
     border-color: rgba(181, 69, 68, 0.3);
 }
 
-/* Branch cards */
+/* ✅ แก้ไข: ปรับการจัดวางข้อมูลในการ์ดสาขา */
 .branch-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
@@ -123,7 +123,7 @@
     padding: 20px;
 }
 
-/* Contact info styling */
+/* ✅ ปรับข้อมูลการติดต่อให้ดูดีขึ้น */
 .contact-info {
     background: linear-gradient(135deg, rgba(181, 69, 68, 0.05), rgba(230, 149, 42, 0.05));
     border-radius: 12px;
@@ -161,7 +161,7 @@
     box-shadow: 0 4px 12px rgba(181, 69, 68, 0.3);
 }
 
-/* Employee stats */
+/* ✅ ปรับ Employee Count ให้สวยขึ้น */
 .employee-stats {
     background: linear-gradient(135deg, rgba(181, 69, 68, 0.1), rgba(230, 149, 42, 0.1));
     border-radius: 12px;
@@ -191,11 +191,19 @@
     letter-spacing: 0.5px;
 }
 
-/* Card footer */
+/* ✅ แก้ไข: ปรับ Card Footer ให้มินิมอล */
 .card-footer {
     background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(233, 236, 239, 0.9));
     border-top: 1px solid rgba(181, 69, 68, 0.1);
     padding: 15px;
+}
+
+.action-buttons {
+    /* ลบ margin-bottom เพราะไม่ใช้แล้ว */
+}
+
+.toggle-status-btn {
+    /* ลบ styles เพราะไม่ใช้แล้ว */
 }
 
 .avatar-sm {
@@ -205,7 +213,6 @@
     background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
 }
 
-/* Buttons */
 .btn-primary-red {
     background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
     border: none;
@@ -213,12 +220,6 @@
     font-weight: 600;
     position: relative;
     overflow: hidden;
-    border-radius: 10px;
-    padding: 10px 20px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 6px 20px rgba(181, 69, 68, 0.4);
-    transition: all 0.3s ease;
 }
 
 .btn-primary-red::before {
@@ -234,16 +235,14 @@
 
 .btn-primary-red:hover {
     background: linear-gradient(135deg, var(--accent-red), var(--primary-red));
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(181, 69, 68, 0.5);
-    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(181, 69, 68, 0.3);
 }
 
 .btn-primary-red:hover::before {
     left: 100%;
 }
 
-/* Search card */
 .search-card {
     border: 2px solid rgba(181, 69, 68, 0.1);
     border-radius: 12px;
@@ -275,182 +274,13 @@
     transition: all 0.2s ease;
 }
 
-/* Status badges */
-.badge-itms-active {
-    background: linear-gradient(135deg, var(--primary-orange), var(--accent-orange));
-    color: #FFFFFF !important;
-    animation: glow-orange 2s infinite alternate;
-    font-weight: 800;
-    font-size: 0.9rem;
-    padding: 10px 18px;
-    border-radius: 25px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    box-shadow: 0 4px 15px rgba(230, 149, 42, 0.4);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.badge-itms-secondary {
-    background: linear-gradient(135deg, #6c757d, #495057);
-    color: #FFFFFF !important;
-    font-weight: 800;
-    font-size: 0.9rem;
-    padding: 10px 18px;
-    border-radius: 25px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-@keyframes glow-orange {
-    from { 
-        box-shadow: 0 4px 15px rgba(230, 149, 42, 0.4);
-        transform: scale(1);
-    }
-    to { 
-        box-shadow: 0 6px 25px rgba(230, 149, 42, 0.7);
-        transform: scale(1.05);
-    }
-}
-
-/* Action buttons */
-.btn-outline-info {
-    border: 2px solid #17a2b8;
-    color: #17a2b8;
-    font-weight: 700;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-info:hover {
-    background: #17a2b8;
-    border-color: #17a2b8;
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
-}
-
-.btn-outline-warning {
-    border: 2px solid #ffc107;
-    color: #856404;
-    font-weight: 700;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-warning:hover {
-    background: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
-}
-
-.btn-outline-danger {
-    border: 2px solid #dc3545;
-    color: #dc3545;
-    font-weight: 700;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-danger:hover {
-    background: #dc3545;
-    border-color: #dc3545;
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
-}
-
-.btn-outline-secondary {
-    border: 2px solid #6c757d;
-    color: #6c757d;
-    font-weight: 700;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-secondary:hover {
-    background: #6c757d;
-    border-color: #6c757d;
-    color: white;
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-}
-
-/* Status indicators */
-.status-indicator {
-    position: relative;
-    font-weight: 600;
-}
-
-.status-indicator.online::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -15px;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--primary-orange);
-    animation: pulse-orange 2s infinite;
-}
-
-.status-indicator.offline::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -15px;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #6c757d;
-    animation: pulse-secondary 2s infinite;
-}
-
-@keyframes pulse-orange {
-    0% {
-        transform: translateY(-50%) scale(1);
-        box-shadow: 0 0 0 0 rgba(230, 149, 42, 0.7);
-    }
-    70% {
-        transform: translateY(-50%) scale(1.3);
-        box-shadow: 0 0 0 8px rgba(230, 149, 42, 0);
-    }
-    100% {
-        transform: translateY(-50%) scale(1);
-        box-shadow: 0 0 0 0 rgba(230, 149, 42, 0);
-    }
-}
-
-@keyframes pulse-secondary {
-    0% {
-        transform: translateY(-50%) scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: translateY(-50%) scale(1.2);
-        opacity: 0.5;
-    }
-    100% {
-        transform: translateY(-50%) scale(1);
-        opacity: 1;
-    }
-}
-
-/* Empty state */
 .empty-state {
     background: linear-gradient(135deg, rgba(181, 69, 68, 0.05), rgba(230, 149, 42, 0.05));
     border: 2px solid rgba(181, 69, 68, 0.1);
     border-radius: 15px;
 }
 
-/* Pagination */
+/* ✅ แก้ไข: สร้าง Pagination ใหม่ที่ควบคุมได้ 100% */
 .pagination-container {
     background: linear-gradient(135deg, rgba(248, 249, 250, 0.95), rgba(255, 255, 255, 0.9));
     border: 1px solid rgba(181, 69, 68, 0.12);
@@ -488,6 +318,7 @@
     justify-self: end;
 }
 
+/* ✅ สร้าง Custom Pagination ที่ควบคุมได้ 100% */
 .custom-pagination {
     display: flex;
     align-items: center;
@@ -553,6 +384,7 @@
     transform: none;
 }
 
+/* Previous/Next ปุ่มพิเศษ */
 .custom-pagination .page-item.prev .page-link,
 .custom-pagination .page-item.next .page-link {
     width: 48px;
@@ -568,6 +400,19 @@
     color: white;
 }
 
+/* ซ่อน Laravel pagination เดิมทั้งหมด */
+.pagination-controls .pagination {
+    display: none !important;
+}
+
+.pagination-controls nav {
+    display: none !important;
+}
+
+.pagination-controls .pagination-links {
+    display: none !important;
+}
+
 .card {
     border: none;
     border-radius: 12px;
@@ -579,25 +424,68 @@
     box-shadow: 0 8px 25px rgba(181, 69, 68, 0.1);
 }
 
-.notification-toast {
-    border-left: 5px solid var(--primary-red);
-    border-radius: 8px;
-    box-shadow: 0 8px 25px rgba(181, 69, 68, 0.15);
-}
-
-.text-primary-red {
-    color: var(--primary-red) !important;
+/* Status indicators with ITMS theme */
+.status-indicator {
+    position: relative;
     font-weight: 600;
 }
 
-.employee-count-primary {
-    color: var(--primary-red) !important;
-    font-weight: 700;
+/* ✅ แก้ไข: เปลี่ยน online status ให้เป็นโทน ITMS แทนสีเขียว */
+.status-indicator.online::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -15px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-orange);
+    animation: pulse-orange 2s infinite;
 }
 
-.employee-count-active {
-    color: var(--primary-orange) !important;
-    font-weight: 700;
+.status-indicator.offline::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -15px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6c757d;
+    animation: pulse-secondary 2s infinite;
+}
+
+/* ✅ แก้ไข: เปลี่ยน animation ให้เป็นสีส้มแทนสีเขียว */
+@keyframes pulse-orange {
+    0% {
+        transform: translateY(-50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(230, 149, 42, 0.7);
+    }
+    70% {
+        transform: translateY(-50%) scale(1.3);
+        box-shadow: 0 0 0 8px rgba(230, 149, 42, 0);
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(230, 149, 42, 0);
+    }
+}
+
+@keyframes pulse-secondary {
+    0% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
 }
 
 /* Mobile optimizations */
@@ -610,6 +498,7 @@
         transform: translateY(-2px) scale(1.01);
     }
     
+    /* ✅ Mobile header adjustment */
     .branch-header {
         flex-direction: column !important;
         text-align: center;
@@ -623,6 +512,7 @@
         margin-bottom: 15px !important;
     }
     
+    /* ✅ Mobile pagination - Custom Layout */
     .pagination-container {
         padding: 15px 18px;
     }
@@ -662,6 +552,7 @@
         width: 44px;
     }
     
+    /* ✅ Mobile branch card actions */
     .card-footer .row {
         margin: 0 -3px;
     }
@@ -675,6 +566,7 @@
         font-size: 0.8rem;
     }
     
+    /* ✅ Mobile contact info */
     .contact-info {
         padding: 12px;
     }
@@ -685,6 +577,7 @@
         font-size: 0.8rem;
     }
     
+    /* ✅ Mobile employee stats */
     .employee-stats {
         padding: 15px;
     }
@@ -698,6 +591,7 @@
     }
 }
 
+/* ✅ เพิ่ม responsive ขนาดเล็กมาก */
 @media (max-width: 576px) {
     .branch-stat-card .card-body {
         padding: 20px 15px;
@@ -721,6 +615,7 @@
         margin-bottom: 10px;
     }
     
+    /* ✅ Very small mobile pagination */
     .pagination-container {
         padding: 12px 15px;
         border-radius: 10px;
@@ -757,12 +652,210 @@
         font-size: 1.8rem !important;
     }
 }
+
+/* Notification enhancement */
+.notification-toast {
+    border-left: 5px solid var(--primary-red);
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(181, 69, 68, 0.15);
+}
+
+/* ✅ แก้ไข: ปรับปุ่มสถานะให้ชัดขึ้น */
+.badge-itms-active {
+    background: linear-gradient(135deg, var(--primary-orange), var(--accent-orange));
+    color: #FFFFFF !important;
+    animation: glow-orange 2s infinite alternate;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 10px 18px;
+    border-radius: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    box-shadow: 0 4px 15px rgba(230, 149, 42, 0.4);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.badge-itms-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: #FFFFFF !important;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 10px 18px;
+    border-radius: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes glow-orange {
+    from { 
+        box-shadow: 0 4px 15px rgba(230, 149, 42, 0.4);
+        transform: scale(1);
+    }
+    to { 
+        box-shadow: 0 6px 25px rgba(230, 149, 42, 0.7);
+        transform: scale(1.05);
+    }
+}
+
+/* ✅ แก้ไข: ปรับปุ่มควบคุมให้เด่นขึ้น */
+.btn-outline-info {
+    border: 2px solid #17a2b8;
+    color: #17a2b8;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-info:hover {
+    background: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+}
+
+.btn-outline-warning {
+    border: 2px solid #ffc107;
+    color: #856404;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-warning:hover {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+.btn-outline-danger {
+    border: 2px solid #dc3545;
+    color: #dc3545;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+}
+
+/* ✅ ปุ่มเปิด/ปิดสาขาให้เด่นมาก */
+.btn-primary-red {
+    background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
+    border: none;
+    color: white;
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    padding: 10px 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 6px 20px rgba(181, 69, 68, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary-red:hover {
+    background: linear-gradient(135deg, var(--accent-red), var(--primary-red));
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(181, 69, 68, 0.5);
+    color: white;
+}
+
+/* ✅ เพิ่ม: ITMS Theme Badge Colors */
+.badge-itms-primary {
+    background: linear-gradient(135deg, var(--primary-red), var(--primary-orange));
+    color: white;
+}
+
+/* ✅ เพิ่ม: Text utilities */
+.text-primary-red {
+    color: var(--primary-red) !important;
+    font-weight: 600;
+}
+
+/* ✅ ป้องกันการซ้อนทับของ pagination */
+.pagination-controls .pagination {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+/* ซ่อนข้อความซ้ำที่อาจมาจาก Laravel pagination view */
+.pagination .sr-only,
+.pagination .page-item .page-link .sr-only {
+    display: none !important;
+}
+
+/* จัดการ pagination text ที่อาจซ้ำ */
+.pagination-controls *[aria-label="pagination"] {
+    display: none;
+}
+
+/* ให้แน่ใจว่า pagination ไม่มีข้อความพิเศษ */
+.pagination .page-item .page-link[aria-label]:not([aria-label=""]):after {
+    content: none;
+}
+
+/* ปรับ layout ให้ชัดเจน */
+.pagination-container > .d-flex {
+    min-height: 50px;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .pagination-container > .d-flex {
+        min-height: auto;
+    }
+    
+    .pagination-controls .pagination {
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}
+
+/* ✅ เพิ่ม: Employee count styling ให้เป็นโทน ITMS */
+.employee-count-primary {
+    color: var(--primary-red) !important;
+    font-weight: 700;
+}
+
+.employee-count-active {
+    color: var(--primary-orange) !important;
+    font-weight: 700;
+}
 </style>
 @endpush
 
 @section('content')
 <div class="container-fluid">
-    <!-- Header Section with ITMS Theme -->
+    <!-- Header Section with ITMS Theme - Enhanced with Icon -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center p-4 rounded-3 text-white branch-header">
@@ -775,11 +868,9 @@
                         <p class="mb-0 opacity-90">บริหารจัดการสาขาทั้งหมดของบริษัท</p>
                     </div>
                 </div>
-                @if(in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
                 <a href="{{ route('branches.create') }}" class="btn btn-light btn-lg shadow-sm font-weight-bold">
                     <i class="fas fa-plus me-2"></i>เพิ่มสาขาใหม่
                 </a>
-                @endif
             </div>
         </div>
     </div>
@@ -883,7 +974,9 @@
                         <div class="row align-items-center">
                             <div class="col-8">
                                 <h5 class="mb-0 font-weight-bold">{{ $branch->name }}</h5>
-                                <small style="opacity: 0.9;">{{ $branch->code }}</small>
+                                <small style="opacity: 0.9;">
+                                    <i class="mb-0"></i>{{ $branch->code }}
+                                </small>
                             </div>
                             <div class="col-4 text-right">
                                 <span class="badge {{ $branch->is_active ? 'badge-itms-active' : 'badge-itms-secondary' }} badge-pill font-weight-bold status-indicator {{ $branch->is_active ? 'online' : 'offline' }}">
@@ -903,9 +996,7 @@
                                 </div>
                                 <div>
                                     <small class="text-muted d-block">ผู้จัดการ</small>
-                                    <strong style="color: var(--text-primary);">
-                                        {{ $branch->manager ? ($branch->manager->full_name_th ?? $branch->manager->name) : 'ไม่ระบุ' }}
-                                    </strong>
+                                    <strong style="color: var(--text-primary);">{{ $branch->manager ? $branch->manager->name : 'ไม่ระบุ' }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -951,7 +1042,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="stat-item">
-                                        <div class="stat-number employee-count-active">{{ $branch->employees->where('status', 'active')->count() }}</div>
+                                        <div class="stat-number employee-count-active">{{ $branch->employees->where('is_active', true)->count() }}</div>
                                         <div class="stat-label">ทำงานอยู่</div>
                                     </div>
                                 </div>
@@ -959,7 +1050,7 @@
                         </div>
                     </div>
 
-                    <!-- Card Footer -->
+                    <!-- Card Footer - Minimal Single Row Design -->
                     <div class="card-footer border-0">
                         <div class="row g-2">
                             <div class="col-3">
@@ -969,7 +1060,6 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </div>
-                            @if(in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
                             <div class="col-3">
                                 <a href="{{ route('branches.edit', $branch) }}" 
                                    class="btn btn-outline-warning btn-sm w-100"
@@ -977,8 +1067,6 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </div>
-                            @endif
-                            @if(in_array(auth()->user()->role, ['super_admin', 'it_admin']))
                             <div class="col-3">
                                 <form action="{{ route('branches.destroy', $branch) }}" 
                                       method="POST" 
@@ -992,8 +1080,6 @@
                                     </button>
                                 </form>
                             </div>
-                            @endif
-                            @if(in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
                             <div class="col-3">
                                 <form action="{{ route('branches.toggle-status', $branch) }}" method="POST" class="d-inline w-100">
                                     @csrf
@@ -1005,7 +1091,6 @@
                                     </button>
                                 </form>
                             </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -1019,18 +1104,16 @@
                         </div>
                         <h4 class="text-muted">ไม่พบข้อมูลสาขา</h4>
                         <p class="text-muted mb-4">ยังไม่มีสาขาในระบบ หรือไม่พบผลการค้นหา</p>
-                        @if(in_array(auth()->user()->role, ['super_admin', 'it_admin', 'hr']))
                         <a href="{{ route('branches.create') }}" class="btn btn-primary-red">
                             <i class="fas fa-plus mr-2"></i>เพิ่มสาขาแรก
                         </a>
-                        @endif
                     </div>
                 </div>
             </div>
         @endforelse
     </div>
 
-    <!-- Pagination -->
+    <!-- Pagination - Custom Clean Design (No Laravel Conflicts) -->
     @if($branches->hasPages())
         <div class="row mt-4">
             <div class="col-12">
@@ -1099,9 +1182,6 @@
 </div>
 
 @push('scripts')
-<!-- SweetAlert2 for confirmation dialogs -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 $(document).ready(function() {
     // Auto-submit search form on Enter
@@ -1146,10 +1226,6 @@ $(document).ready(function() {
         showNotification('warning', '{{ session('warning') }}');
     @endif
 
-    @if(session('info'))
-        showNotification('info', '{{ session('info') }}');
-    @endif
-
     function showNotification(type, message) {
         const typeConfig = {
             success: { 
@@ -1169,12 +1245,6 @@ $(document).ready(function() {
                 icon: 'fa-exclamation-triangle', 
                 title: 'คำเตือน!',
                 color: '#E0A800'
-            },
-            info: { 
-                class: 'alert-info', 
-                icon: 'fa-info-circle', 
-                title: 'ข้อมูล!',
-                color: '#138496'
             }
         };
         
@@ -1238,10 +1308,6 @@ $(document).ready(function() {
             .notification-toast.alert-warning {
                 border-left-color: #E0A800;
             }
-            
-            .notification-toast.alert-info {
-                border-left-color: #138496;
-            }
         `;
         document.head.appendChild(style);
     }
@@ -1282,6 +1348,7 @@ $(document).ready(function() {
         
         if (query.length >= 3) {
             searchTimeout = setTimeout(() => {
+                // You can implement live search here
                 console.log('Searching for:', query);
             }, 500);
         }
@@ -1296,25 +1363,30 @@ $(document).ready(function() {
         });
     }
 
-    // Custom Pagination loading states
+    // ✅ Custom Pagination loading states
     $('.custom-pagination .page-link').on('click', function(e) {
+        // Add loading state untuk navigasi halaman
         if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
             const originalContent = $(this).html();
             $(this).html('<i class="fas fa-spinner fa-spin"></i>');
             
+            // Restore content setelah 2 detik (fallback)
             setTimeout(() => {
                 $(this).html(originalContent);
             }, 2000);
         }
     });
 
-    // Ensure clean pagination display
+    // ✅ Ensure clean pagination display
     $('.custom-pagination').each(function() {
+        // Remove any unwanted text nodes
         $(this).find('.page-item').each(function() {
             const $link = $(this).find('.page-link');
+            // Clean up any extra whitespace or unwanted content
             if ($link.length) {
                 const content = $link.html().trim();
                 if (content && !content.includes('<i class="fas')) {
+                    // If it's just a number, keep it clean
                     if (/^\d+$/.test(content)) {
                         $link.html(content);
                     }
@@ -1324,10 +1396,9 @@ $(document).ready(function() {
     });
 
     // ITMS Theme console log
-    console.log('🏢 ITMS Branch Management - Routes Fixed');
-    console.log('✅ Toggle Status Route: branches.toggle-status');
+    console.log('🏢 ITMS Branch Management - Custom Pagination Perfect');
     console.log('🎨 Theme Colors: Primary Red #B54544, Primary Orange #E6952A');
-    console.log('✨ Features: Permission-based UI, Custom Pagination, Status Toggle');
+    console.log('✨ Features: 100% Custom Pagination, No Laravel Conflicts, Clean Layout');
     
     // Performance monitoring
     const loadTime = performance.now();
