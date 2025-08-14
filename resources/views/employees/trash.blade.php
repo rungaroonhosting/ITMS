@@ -38,6 +38,73 @@ html, body {
     margin-top: 0 !important;
 }
 
+/* ✅ Fade-in Animation System - Same as index.blade.php */
+.fade-in-element {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in-element.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-in-scale {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fade-in-scale.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.fade-in-slide-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in-slide-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.fade-in-slide-right {
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in-slide-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.fade-in-bounce {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8);
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.fade-in-bounce.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.fade-in-rotate {
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.9);
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-in-rotate.visible {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
 /* ✅ Header styling - Exact same as index.blade.php */
 .trash-header {
     background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-orange) 100%);
@@ -109,7 +176,7 @@ html, body {
     100% { transform: rotate(360deg); }
 }
 
-/* ✅ Statistics cards - Same style as index.blade.php */
+/* ✅ Statistics cards - Enhanced fade-in effects */
 .trash-stat-card {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
@@ -166,7 +233,7 @@ html, body {
     letter-spacing: 0.5px;
 }
 
-/* ✅ Alert Section - Same style as index.blade.php */
+/* ✅ Alert Section - Enhanced visibility */
 .alert-enhanced {
     border: none;
     border-radius: 12px;
@@ -175,11 +242,14 @@ html, body {
     position: relative;
     overflow: hidden;
     border-left: 5px solid;
+    backdrop-filter: blur(10px);
 }
 
 .alert-enhanced.alert-warning {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     border-left-color: #ffc107;
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
 }
 
 .alert-enhanced .alert-icon {
@@ -230,7 +300,7 @@ html, body {
     box-shadow: 0 0 0 0.2rem rgba(181, 69, 68, 0.15);
 }
 
-/* ✅ Table Card - Same style as index.blade.php */
+/* ✅ Table Card - Enhanced fade-in effects */
 .trash-table-card {
     border: 2px solid rgba(181, 69, 68, 0.1);
     border-radius: 12px;
@@ -298,11 +368,12 @@ html, body {
     cursor: pointer;
 }
 
-/* ✅ FIXED: Simple Row Hover - Same as index.blade.php */
+/* ✅ Row Hover Effects - Smooth fade-in */
 .table-enhanced tbody tr:hover {
     background: linear-gradient(135deg, rgba(181, 69, 68, 0.08), rgba(230, 149, 42, 0.08)) !important;
     box-shadow: 0 8px 25px rgba(181, 69, 68, 0.15);
     border-radius: 8px;
+    transform: translateY(-2px);
 }
 
 .table-enhanced tbody tr:hover td:first-child {
@@ -384,7 +455,7 @@ html, body {
     }
 }
 
-/* ✅ Action Buttons - Same style as index.blade.php */
+/* ✅ Action Buttons - Enhanced hover effects */
 .action-btn-group {
     display: flex;
     gap: 0.35rem;
@@ -399,7 +470,7 @@ html, body {
     align-items: center;
     justify-content: center;
     font-size: 0.85rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid;
     padding: 0;
     text-decoration: none;
@@ -407,7 +478,7 @@ html, body {
 }
 
 .action-btn:hover {
-    transform: scale(1.1);
+    transform: scale(1.1) translateY(-2px);
     text-decoration: none;
 }
 
@@ -447,7 +518,7 @@ html, body {
     box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
 }
 
-/* ✅ Buttons - Same style as index.blade.php */
+/* ✅ Buttons - Enhanced effects */
 .btn-primary-red {
     background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
     border: none;
@@ -505,7 +576,7 @@ html, body {
     color: #212529;
 }
 
-/* ✅ Empty State - Same style as index.blade.php */
+/* ✅ Empty State - Enhanced fade-in */
 .empty-state-enhanced {
     background: linear-gradient(135deg, rgba(181, 69, 68, 0.05), rgba(230, 149, 42, 0.05));
     border: 2px solid rgba(181, 69, 68, 0.1);
@@ -521,7 +592,7 @@ html, body {
     margin-bottom: 1.5rem;
 }
 
-/* ✅ Selected Items Counter - Same as index.blade.php */
+/* ✅ Selected Items Counter */
 .selected-counter {
     position: fixed;
     bottom: 20px;
@@ -536,7 +607,7 @@ html, body {
     animation: slideUp 0.3s ease;
 }
 
-/* ✅ Modal Styling - Same style as index.blade.php */
+/* ✅ Modal Styling */
 .modal-content {
     border: none;
     border-radius: 15px;
@@ -582,7 +653,7 @@ html, body {
     border-left: 3px solid var(--primary-red);
 }
 
-/* ✅ Mobile Cards - Same style as index.blade.php */
+/* ✅ Mobile Cards - Enhanced fade-in effects */
 .employee-mobile-card-enhanced {
     border: 2px solid rgba(181, 69, 68, 0.1);
     border-radius: 12px;
@@ -610,7 +681,7 @@ html, body {
     border-color: rgba(181, 69, 68, 0.3);
 }
 
-/* ✅ Refresh Button - Same position as index.blade.php */
+/* ✅ Refresh Button */
 .refresh-btn {
     position: fixed;
     bottom: 90px;
@@ -628,6 +699,13 @@ html, body {
     justify-content: center;
     transition: all 0.3s ease;
     font-size: 1.2rem;
+    opacity: 0;
+    transform: translateY(100px);
+}
+
+.refresh-btn.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .refresh-btn:hover {
@@ -657,7 +735,7 @@ html, body {
     font-weight: 600; 
 }
 
-/* ✅ Mobile Responsive - Same as index.blade.php */
+/* ✅ Mobile Responsive */
 @media (max-width: 768px) {
     .trash-header {
         text-align: center;
@@ -722,7 +800,7 @@ html, body {
     }
 }
 
-/* ✅ SweetAlert2 Styles - Same as index.blade.php */
+/* ✅ SweetAlert2 Styles */
 .swal2-popup {
     border-radius: 15px !important;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2) !important;
@@ -757,7 +835,7 @@ html, body {
     font-weight: 600 !important;
 }
 
-/* ✅ Animations - Same as index.blade.php */
+/* ✅ Animations */
 @keyframes slideUp {
     from { opacity: 0; transform: translateY(100%); }
     to { opacity: 1; transform: translateY(0); }
@@ -795,25 +873,128 @@ html, body {
 .notification-toast.alert-info {
     border-left-color: #138496;
 }
+
+/* ✅ Enhanced Stagger Animation for Cards */
+.stagger-item {
+    animation-fill-mode: both;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+
+/* ✅ Progressive Enhancement Loading */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 2s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ✅ Enhanced Focus States */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid var(--primary-orange);
+    outline-offset: 2px;
+}
+
+/* ✅ Smooth Page Transitions */
+.page-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-fade-in {
+    animation: pageSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✅ Enhanced Card Fade-in - เหมือน branches */
+.fade-card {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ✅ Loading skeleton effect */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ✅ Enhanced Button Loading */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pageSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid">
-    <!-- ✅ Header Section - Same style as index.blade.php -->
+<div class="container-fluid page-fade-in">
+    <!-- ✅ Header Section - Enhanced Fade-in -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center p-4 rounded-3 text-white trash-header">
+            <div class="d-flex justify-content-between align-items-center p-4 rounded-3 text-white trash-header fade-in-element" data-delay="0">
                 <div class="d-flex align-items-center">
-                    <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3 header-icon-container">
+                    <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3 header-icon-container fade-in-scale" data-delay="100">
                         <i class="fas fa-trash fa-2x text-white"></i>
                     </div>
-                    <div>
+                    <div class="fade-in-slide-left" data-delay="200">
                         <h1 class="mb-1 font-weight-bold">ถังขยะ - พนักงาน</h1>
                         <p class="mb-0 opacity-90">จัดการพนักงานที่ถูกลบแล้ว พร้อมระบบกู้คืนและลบถาวร (เฉพาะ Super Admin)</p>
                     </div>
                 </div>
-                <div class="d-none d-md-flex gap-2">
+                <div class="d-none d-md-flex gap-2 fade-in-slide-right" data-delay="300">
                     <a href="{{ route('employees.index') }}" class="btn btn-light btn-lg shadow-sm font-weight-bold">
                         <i class="fas fa-arrow-left me-2"></i>กลับไปรายการพนักงาน
                     </a>
@@ -831,10 +1012,10 @@ html, body {
         </div>
     </div>
 
-    <!-- ✅ Statistics Cards - Same style as index.blade.php -->
+    <!-- ✅ Statistics Cards - Enhanced Stagger Animation -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm trash-stat-card h-100">
+            <div class="card border-0 shadow-sm trash-stat-card h-100 fade-in-bounce stagger-item stagger-1">
                 <div class="card-body text-center">
                     <div class="stat-icon-container" style="background: linear-gradient(135deg, #dc3545, #c82333);">
                         <i class="fas fa-trash text-white fa-lg"></i>
@@ -846,7 +1027,7 @@ html, body {
         </div>
         
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm trash-stat-card h-100">
+            <div class="card border-0 shadow-sm trash-stat-card h-100 fade-in-bounce stagger-item stagger-2">
                 <div class="card-body text-center">
                     <div class="stat-icon-container" style="background: linear-gradient(135deg, #ffc107, var(--primary-orange));">
                         <i class="fas fa-clock text-white fa-lg"></i>
@@ -864,7 +1045,7 @@ html, body {
         </div>
         
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm trash-stat-card h-100">
+            <div class="card border-0 shadow-sm trash-stat-card h-100 fade-in-bounce stagger-item stagger-3">
                 <div class="card-body text-center">
                     <div class="stat-icon-container" style="background: linear-gradient(135deg, #28a745, #20c997);">
                         <i class="fas fa-shield-alt text-white fa-lg"></i>
@@ -876,7 +1057,7 @@ html, body {
         </div>
         
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm trash-stat-card h-100">
+            <div class="card border-0 shadow-sm trash-stat-card h-100 fade-in-bounce stagger-item stagger-4">
                 <div class="card-body text-center">
                     <div class="stat-icon-container" style="background: linear-gradient(135deg, #17a2b8, #138496);">
                         <i class="fas fa-undo text-white fa-lg"></i>
@@ -889,8 +1070,8 @@ html, body {
     </div>
 
     @if($trashedEmployees->count() > 0)
-    <!-- ✅ Warning Alert - Same style as index.blade.php -->
-    <div class="alert alert-enhanced alert-warning d-flex align-items-center mb-4" role="alert">
+    <!-- ✅ Warning Alert - Enhanced fade-in -->
+    <div class="alert alert-enhanced alert-warning d-flex align-items-center mb-4 fade-in-element stagger-5" role="alert">
         <i class="fas fa-exclamation-triangle alert-icon"></i>
         <div>
             <h6 class="mb-1 fw-bold" style="color: #2c3e50; font-size: 1.1rem;">⚠️ คำเตือนสำคัญ</h6>
@@ -901,8 +1082,8 @@ html, body {
         </div>
     </div>
 
-    <!-- ✅ Search and Filter - Same style as index.blade.php -->
-    <div class="card search-card-enhanced">
+    <!-- ✅ Search and Filter - Enhanced fade-in -->
+    <div class="card search-card-enhanced fade-in-slide-left stagger-6">
         <div class="card-body p-3">
             <div class="row g-2">
                 <div class="col-md-6">
@@ -935,8 +1116,8 @@ html, body {
         </div>
     </div>
 
-    <!-- ✅ Trashed Employees Table - Same style as index.blade.php -->
-    <div class="card trash-table-card">
+    <!-- ✅ Trashed Employees Table - Enhanced fade-in -->
+    <div class="card trash-table-card fade-in-element stagger-7">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
@@ -968,8 +1149,11 @@ html, body {
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($trashedEmployees as $employee)
-                                <tr data-id="{{ $employee->id }}" data-deleted-date="{{ $employee->deleted_at->format('Y-m-d') }}">
+                            @foreach($trashedEmployees as $index => $employee)
+                                <tr data-id="{{ $employee->id }}" 
+                                    data-deleted-date="{{ $employee->deleted_at->format('Y-m-d') }}"
+                                    class="fade-in-element stagger-item"
+                                    style="animation-delay: {{ 0.8 + ($index * 0.1) }}s;">
                                     <td>
                                         <div class="form-check">
                                             <input class="form-check-input trashed-employee-checkbox" type="checkbox" value="{{ $employee->id }}"
@@ -1089,10 +1273,11 @@ html, body {
 
             <!-- ✅ Mobile Card View -->
             <div class="d-lg-none" id="mobileTrashList">
-                @foreach($trashedEmployees as $employee)
-                    <div class="employee-mobile-card-enhanced p-3" 
+                @foreach($trashedEmployees as $index => $employee)
+                    <div class="employee-mobile-card-enhanced p-3 fade-in-element stagger-item" 
                          data-id="{{ $employee->id }}" 
-                         data-deleted-date="{{ $employee->deleted_at->format('Y-m-d') }}">
+                         data-deleted-date="{{ $employee->deleted_at->format('Y-m-d') }}"
+                         style="animation-delay: {{ 0.8 + ($index * 0.05) }}s;">
                         <div class="row align-items-center">
                             <div class="col-8">
                                 <div class="d-flex align-items-start">
@@ -1153,8 +1338,8 @@ html, body {
     </div>
 
     @else
-    <!-- ✅ Empty State - Same style as index.blade.php -->
-    <div class="empty-state-enhanced">
+    <!-- ✅ Empty State - Enhanced fade-in -->
+    <div class="empty-state-enhanced fade-in-bounce stagger-5">
         <div class="empty-icon">
             <i class="fas fa-trash"></i>
         </div>
@@ -1232,7 +1417,7 @@ html, body {
 </div>
 
 <!-- ✅ Refresh Button -->
-<button type="button" class="refresh-btn" id="refreshBtn" onclick="location.reload()" title="รีเฟรชหน้า" style="display: none;">
+<button type="button" class="refresh-btn" id="refreshBtn" onclick="location.reload()" title="รีเฟรชหน้า">
     <i class="fas fa-sync-alt"></i>
 </button>
 
@@ -1243,6 +1428,89 @@ html, body {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🗑️ Enhanced Trash Management System Loading...');
+    
+    // ✅ Enhanced Fade-in Animation System - เหมือน branches index
+function initFadeInAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '50px'
+    };
+
+    const cardObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+                cardObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Apply fade-in to cards with stagger delay
+    document.querySelectorAll('.trash-stat-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease';
+        
+        setTimeout(() => {
+            cardObserver.observe(card);
+        }, index * 100);
+    });
+
+    // Apply to other elements
+    document.querySelectorAll('.fade-in-element, .fade-in-scale, .fade-in-slide-left, .fade-in-slide-right, .fade-in-bounce, .fade-in-rotate').forEach((element, index) => {
+        const delay = element.dataset.delay || (index * 100);
+        setTimeout(() => {
+            element.classList.add('visible');
+        }, parseInt(delay));
+    });
+
+    // Progressive table row loading
+    setTimeout(() => {
+        progressiveTableLoad();
+    }, 800);
+
+    // Show refresh button with delay
+    setTimeout(() => {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.classList.add('visible');
+        }
+    }, 1500);
+}
+
+// ✅ Progressive Table Loading - เหมือน branches
+function progressiveTableLoad() {
+    const rows = document.querySelectorAll('#trashedEmployeesTable tbody tr');
+    const cards = document.querySelectorAll('.employee-mobile-card-enhanced');
+    
+    // Desktop table rows
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        row.style.transition = 'all 0.4s ease';
+        
+        setTimeout(() => {
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+    
+    // Mobile cards
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(-30px)';
+        card.style.transition = 'all 0.5s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateX(0)';
+        }, index * 80);
+    });
+}
+
+    // ✅ Initialize animations
+    initFadeInAnimations();
     
     // ✅ Global Variables
     let selectedTrashedEmployees = new Set();
@@ -1528,7 +1796,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
+    // ✅ Enhanced Action Button Loading States
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.action-btn')) {
+        const btn = e.target.closest('.action-btn');
+        const originalContent = btn.innerHTML;
+        const originalClasses = btn.className;
+        
+        // Add loading state
+        btn.classList.add('btn-loading');
+        btn.disabled = true;
+        
+        // Restore after realistic delay
+        setTimeout(() => {
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }, 1500);
+    }
+});
+
     // ✅ Functions
     async function restoreEmployee(employeeId, employeeName) {
         try {
@@ -1590,7 +1878,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } catch (error) {
-            console.error('⌘ Restore error:', error);
+            console.error('⚠️ Restore error:', error);
             showNotification('เกิดข้อผิดพลาดในการกู้คืน', 'error');
         }
     }
@@ -1636,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.isConfirmed) {
                 const confirmResult = await Swal.fire({
-                    title: '⌘ ยืนยันอีกครั้งสุดท้าย',
+                    title: '⚠️ ยืนยันอีกครั้งสุดท้าย',
                     html: `
                         <div style="text-align: center; color: #333;">
                             <div style="background: linear-gradient(135deg, #fee2e2, #fecaca); border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin: 15px 0;">
@@ -1681,7 +1969,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         } catch (error) {
-            console.error('⌘ Force delete error:', error);
+            console.error('⚠️ Force delete error:', error);
             showNotification('เกิดข้อผิดพลาดในการลบถาวร', 'error');
         }
     }
@@ -1857,7 +2145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } catch (error) {
-                console.error('⌘ Bulk restore error:', error);
+                console.error('⚠️ Bulk restore error:', error);
                 showNotification('เกิดข้อผิดพลาดในการกู้คืนหลายรายการ', 'error');
             } finally {
                 this.disabled = false;
@@ -1879,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     html: `
                         <div style="text-align: left; color: #333;">
                             <div style="background: linear-gradient(135deg, #f8d7da, #f1b0b7); border: 2px solid #dc3545; border-radius: 12px; padding: 20px; margin: 15px 0;">
-                                <div style="display: flex; align-items-center; margin-bottom: 15px;">
+                                <div style="display: flex; align-items: center; margin-bottom: 15px;">
                                     <i class="fas fa-fire" style="color: #dc3545; font-size: 36px; margin-right: 15px;"></i>
                                     <div>
                                         <h3 style="color: #721c24; margin-bottom: 5px;">ล้างถังขยะทั้งหมด</h3>
@@ -1980,7 +2268,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } catch (error) {
-                console.error('⌘ Empty trash error:', error);
+                console.error('⚠️ Empty trash error:', error);
                 showNotification('เกิดข้อผิดพลาดในการล้างถังขยะ', 'error');
                 this.disabled = false;
                 this.innerHTML = '<i class="fas fa-fire me-1"></i>ล้างถังขยะ';
@@ -1988,7 +2276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ Notification System - Same as index.blade.php
+    // ✅ Notification System - Enhanced fade-in effects
     function showNotification(message, type = 'info', duration = 4000) {
         try {
             const typeConfig = {
@@ -2020,7 +2308,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const config = typeConfig[type];
             const notification = document.createElement('div');
-            notification.className = `alert ${config.class} alert-dismissible fade show position-fixed notification-toast`;
+            notification.className = `alert ${config.class} alert-dismissible fade show position-fixed notification-toast fade-in-slide-right`;
             notification.style.cssText = `
                 top: 20px; 
                 right: 20px; 
@@ -2030,7 +2318,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 border-radius: 12px;
                 box-shadow: 0 8px 25px rgba(181, 69, 68, 0.15);
                 font-size: 0.9rem;
-                animation: slideInRight 0.4s ease;
+                transform: translateX(100%);
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             `;
             notification.innerHTML = `
                 <div class="d-flex align-items-center">
@@ -2048,9 +2338,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             document.body.appendChild(notification);
             
+            // Trigger fade-in animation
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 100);
+            
             setTimeout(() => {
                 if (notification.parentNode) {
-                    notification.style.animation = 'slideOutRight 0.4s ease';
+                    notification.style.transform = 'translateX(100%)';
+                    notification.style.opacity = '0';
                     setTimeout(() => notification.remove(), 400);
                 }
             }, duration);
@@ -2098,7 +2395,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ Enhanced table interactions - Same as index.blade.php
+    // ✅ Enhanced table interactions
     document.querySelectorAll('#trashedEmployeesTable tbody tr, .employee-mobile-card-enhanced').forEach(row => {
         // Double click to preview
         row.addEventListener('dblclick', function() {
@@ -2118,61 +2415,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 checkbox.dispatchEvent(new Event('change'));
             }
             
-            // Show context effect
+            // Show context effect with fade
+            this.style.transition = 'all 0.3s ease';
             this.style.backgroundColor = 'rgba(181, 69, 68, 0.1)';
+            this.style.transform = 'scale(1.02)';
             setTimeout(() => {
                 this.style.backgroundColor = '';
+                this.style.transform = '';
             }, 1000);
         });
-    });
-
-    // ✅ Refresh Button Functionality
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', function() {
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            this.disabled = true;
-            
-            showNotification('กำลังรีเฟรชข้อมูล...', 'info', 2000);
-            
-            setTimeout(() => {
-                location.reload();
-            }, 500);
-        });
-        
-        // Show refresh button smoothly after page load
-        setTimeout(() => {
-            if (refreshBtn) {
-                refreshBtn.style.display = 'flex';
-                refreshBtn.style.animation = 'slideUp 0.5s ease';
-            }
-        }, 1000);
-    }
-
-    // ✅ Card hover effects with performance optimization - Same as index.blade.php
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '50px'
-    };
-
-    const cardObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Apply intersection observer to cards
-    document.querySelectorAll('.trash-stat-card, .employee-mobile-card-enhanced').forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease';
-        
-        setTimeout(() => {
-            cardObserver.observe(card);
-        }, index * 100);
     });
 
     // ✅ Touch-friendly interactions for mobile
@@ -2188,41 +2439,127 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ✅ Progressive loading enhancement
+    function addProgressiveLoadingEffect() {
+        const elements = document.querySelectorAll('.fade-in-element:not(.visible)');
+        elements.forEach((element, index) => {
+            setTimeout(() => {
+                if (!element.classList.contains('visible')) {
+                    element.classList.add('visible');
+                }
+            }, index * 50);
+        });
+    }
+
     // ✅ Initialize
     setTimeout(() => {
         updateVisibleTrashCount();
+        addProgressiveLoadingEffect();
     }, 200);
+
+    // ✅ Reset and re-animate filtered results
+setTimeout(() => {
+    resetFilterAnimations();
+}, 100);
+
+// ✅ Reset Filter Animations Function (เพิ่มหลัง updateVisibleTrashCount)
+function resetFilterAnimations() {
+    // Reset table rows
+    const visibleRows = document.querySelectorAll('#trashedEmployeesTable tbody tr[style*="display: none"], #trashedEmployeesTable tbody tr:not([style*="display: none"])');
+    visibleRows.forEach((row, index) => {
+        if (row.style.display !== 'none') {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 30);
+        }
+    });
     
-    // Focus search input
-    if (searchInput) {
-        setTimeout(() => {
-            try {
-                searchInput.focus();
-            } catch (e) {
-                console.log('Search input focus failed:', e);
-            }
-        }, 300);
-    }
+    // Reset mobile cards
+    const visibleCards = document.querySelectorAll('.employee-mobile-card-enhanced');
+    visibleCards.forEach((card, index) => {
+        if (card.style.display !== 'none') {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(-20px)';
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateX(0)';
+            }, index * 40);
+        }
+    });
+}
+
+    // Focus search input with enhanced effect
+if (searchInput) {
+    setTimeout(() => {
+        try {
+            searchInput.focus();
+            searchInput.style.boxShadow = '0 0 0 0.2rem rgba(181, 69, 68, 0.25)';
+            searchInput.style.borderColor = 'var(--primary-red)';
+            searchInput.style.transform = 'scale(1.02)';
+            
+            setTimeout(() => {
+                searchInput.style.boxShadow = '';
+                searchInput.style.borderColor = '';
+                searchInput.style.transform = '';
+            }, 2000);
+        } catch (e) {
+            console.log('Search input focus failed:', e);
+        }
+    }, 800);
+}
+    
+    // ✅ Performance monitoring and cleanup
+    const startTime = performance.now();
+    
+    window.addEventListener('beforeunload', function() {
+        // Cleanup animations
+        document.querySelectorAll('.fade-in-element, .fade-in-scale, .fade-in-slide-left, .fade-in-slide-right, .fade-in-bounce, .fade-in-rotate').forEach(element => {
+            element.style.transition = 'none';
+        });
+    });
     
     // ✅ Final initialization log
     setTimeout(() => {
+        const loadTime = performance.now() - startTime;
         console.log('🗑️ Enhanced Trash Management System Ready!');
-        console.log('✅ Features: Smooth Effects | Permission System | Bulk Operations');
+        console.log('✅ Features: Enhanced Fade-in Effects | Permission System | Bulk Operations');
         console.log(`📊 Total trashed employees: {{ $trashedEmployees->count() }}`);
-        console.log('🎨 Theme: ITMS Red-Orange | Same effects as index.blade.php');
-        console.log('🔄 Refresh Button: Bottom Right Corner');
-    }, 500);
+        console.log('🎨 Theme: ITMS Red-Orange | Enhanced fade-in animations');
+        console.log('🔄 Refresh Button: Smooth fade-in effect');
+        console.log(`⚡ Initialization completed in ${Math.round(loadTime)}ms`);
+    }, 1000);
 
     // ✅ Add global function for modal opening
     window.openBulkRestoreModal = openBulkRestoreModal;
 });
 
-// ✅ Add touch-active style for mobile - Same as index.blade.php
+// ✅ Enhanced touch-active style for mobile
 const mobileStyle = document.createElement('style');
 mobileStyle.textContent = `
     .touch-active {
-        transform: scale(0.98) !important;
-        transition: transform 0.1s ease !important;
+        transform: scale(0.98) translateY(-2px) !important;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 8px 25px rgba(181, 69, 68, 0.2) !important;
+    }
+    
+    /* Enhanced loading states */
+    .btn:disabled {
+        opacity: 0.7;
+        transform: none !important;
+    }
+    
+    /* Smooth focus transitions */
+    .form-control:focus,
+    .form-select:focus {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Enhanced hover states */
+    .action-btn:hover {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 `;
 document.head.appendChild(mobileStyle);
